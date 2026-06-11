@@ -55,7 +55,7 @@
 
 ## Generated Artifact Policy
 
-- User-visible Change: `yes`
+- User-visible Change: `no`
 - Artifact Type: `published Git marketplace repository and markdown install docs`
 - Acceptance Surface:
   - `plugins/PARTNER_INSTALL.md`
@@ -140,10 +140,10 @@
   evidence: `.gstack/task-boundaries/2026-06-11_codex-git-marketplace-publish.md`
   note: 本次 fast-lane 小需求不改变 stack domain 产品或工程真源。
 - implement:
-  status: pending
+  status: done
   evidence: `.gstack/task-boundaries/2026-06-11_codex-git-marketplace-publish.md`
 - qa:
-  status: pending
+  status: done
   command: qa-only
   evidence: `.gstack/qa-reports/2026-06-11_codex-git-marketplace-publish-qa.md`
 
