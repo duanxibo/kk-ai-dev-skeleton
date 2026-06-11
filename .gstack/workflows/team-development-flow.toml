@@ -1,0 +1,126 @@
+version = 1
+name = "KK Dev Skeleton fixed gstack development flow"
+
+# 每个进入正式开发的团队任务，都必须按这个顺序走。
+# office-hours 可以作为前置探索，但不替代下面任何一个强制阶段。
+# 本配置不区分单人模式或多人模式；同一个人可以产出全部 evidence。
+# 门禁只检查阶段文档是否落地，不检查角色身份是否不同。
+# 每个正式实现任务的 boundary 还必须声明 Subagent Plan；
+# 不使用 subagent 时写 Mode: not-used，复杂任务用 kk-subagent-orchestrator 规划分工。
+# Required Gates 的状态不写入本 TOML。本配置只承载固定研发流阶段顺序；
+# data-access / data-query / prototype-logic-extraction 等专项 gate 由 task boundary 中的
+# `Required Gates` block 表达，并由 .gstack/scripts/required_gates_audit.py warning-first 审计。
+required_sequence = [
+  "requirement-brief",
+  "plan-ceo-review",
+  "requirement-freeze",
+  "plan-eng-review",
+  "domain-spec-readiness",
+  "implement",
+  "qa",
+]
+
+pre_commit_requires_before_implementation = [
+  "requirement-brief",
+  "plan-ceo-review",
+  "requirement-freeze",
+  "plan-eng-review",
+  "domain-spec-readiness",
+]
+
+pre_push_requires = [
+  "requirement-brief",
+  "plan-ceo-review",
+  "requirement-freeze",
+  "plan-eng-review",
+  "domain-spec-readiness",
+  "implement",
+  "qa",
+]
+
+[command_alternatives]
+requirement-freeze = ["prototype-freeze"]
+qa = ["qa-only"]
+
+[paths]
+# 默认路径仅用于模板说明和 fallback。运行时 guard 会先读取 active adapter 的
+# `runtime.json`，并用其中的 paths 覆盖本节同名配置。
+implementation_prefixes = [
+  "app/backend/",
+  "app/frontend/",
+  "scripts/",
+  "tests/",
+  "fixtures/",
+  "app/restricted-module/server/",
+  "app/restricted-module/public/",
+  "app/restricted-module/scripts/",
+  "app/restricted-module/tests/",
+  "app/restricted-module/fixtures/",
+]
+
+# 原型 / baseline 代码改动不是新任务默认路径；如确需改动，必须有 stack domain spec readiness evidence。
+prototype_prefixes = [
+  "archive/baseline/example-baseline/app/",
+  "archive/baseline/example-baseline/scripts/",
+  "archive/baseline/example-baseline/templates/",
+  "archive/baseline/example-baseline/seeds/",
+]
+
+# stack 后端实现必须与测试和模块化规范文档一起落地。
+stack_backend_prefixes = [
+  "app/backend/src/main/",
+  "app/backend/pom.xml",
+]
+
+backend_test_prefixes = [
+  "app/backend/src/test/",
+  "tests/",
+]
+
+backend_domain_spec_prefix = "docs/specs/"
+
+deprecated_backend_spec_prefixes = [
+  "docs/specs/archive/backend-legacy/",
+]
+
+boundary_prefix = ".gstack/task-boundaries/"
+requirement_prefix = ".gstack/requirements/"
+ceo_review_prefix = ".gstack/reviews/"
+domain_spec_prefix = "docs/specs/"
+eng_review_prefix = ".gstack/reviews/"
+qa_prefix = ".gstack/qa-reports/"
+
+[commands.requirement-brief]
+label = "需求描述"
+required_status = "done"
+evidence_prefixes = [".gstack/requirements/"]
+
+[commands.plan-ceo-review]
+label = "/plan-ceo-review"
+required_status = "done"
+evidence_prefixes = [".gstack/reviews/", ".gstack/designs/"]
+
+[commands.requirement-freeze]
+label = "需求冻结 / 原型冻结"
+required_status = "done"
+evidence_prefixes = [".gstack/requirements/", "archive/baseline/example-baseline/docs/", ".gstack/designs/"]
+
+[commands.domain-spec-readiness]
+label = "domain spec readiness"
+required_status = "done"
+evidence_prefixes = ["docs/specs/", "app/restricted-module/docs/", "app/restricted-module/specs/"]
+
+[commands.plan-eng-review]
+label = "/plan-eng-review"
+required_status = "done"
+evidence_prefixes = [".gstack/reviews/", ".gstack/designs/"]
+
+[commands.implement]
+label = "开发"
+required_status = "done"
+evidence_prefixes = [".gstack/task-boundaries/"]
+
+[commands.qa]
+label = "/qa 或 /qa-only"
+required_status = "done"
+evidence_prefixes = [".gstack/qa-reports/"]

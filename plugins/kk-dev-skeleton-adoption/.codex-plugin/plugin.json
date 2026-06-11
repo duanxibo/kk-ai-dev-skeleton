@@ -1,0 +1,32 @@
+{
+  "name": "kk-dev-skeleton-adoption",
+  "version": "0.1.0",
+  "description": "Codex workflow for adopting KK Dev Skeleton in internal repositories.",
+  "author": {
+    "name": "KK Dev Skeleton Team"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "codex",
+    "adoption",
+    "ai-development",
+    "kk-dev-skeleton"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "KK Dev Skeleton Adoption",
+    "shortDescription": "Guide Codex through KK Dev Skeleton project adoption.",
+    "longDescription": "Provides a natural-language Codex workflow for detecting, planning, applying, verifying, and reporting KK Dev Skeleton adoption in an internal repository.",
+    "developerName": "KK Dev Skeleton Team",
+    "category": "Productivity",
+    "capabilities": [
+      "Write",
+      "Review"
+    ],
+    "defaultPrompt": [
+      "接入 KK Dev Skeleton",
+      "检查骨架接入状态",
+      "生成接入计划和报告"
+    ]
+  }
+}

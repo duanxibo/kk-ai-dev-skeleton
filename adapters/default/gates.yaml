@@ -1,0 +1,22 @@
+required_gates:
+  data-access:
+    description: "任务涉及真实数据、源系统、API 契约或数据 scope 时使用。"
+    required_before: "engineering-review"
+  data-query:
+    description: "任务需要探索性或高风险数据查询时使用。"
+    required_before: "engineering-review"
+  prototype-logic-extraction:
+    description: "后端或 service 承接既有 prototype、fixture、mock 或前端 helper 行为时使用。"
+    required_before: "engineering-review"
+  subagent-plan:
+    description: "声明是否使用 subagent。"
+    required_before: "implementation"
+  doc-backfill:
+    description: "实现已存在但真源文档缺失或滞后时使用。"
+    required_before: "review"
+  data-knowledge-sync:
+    description: "API、数据模型、读模型或数据产品发生变化时使用。"
+    required_before: "review"
+  ui-interaction-qa:
+    description: "UI、HTML、dashboard 或可视化交互变化时使用。"
+    required_before: "qa"

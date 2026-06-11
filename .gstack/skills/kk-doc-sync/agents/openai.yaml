@@ -1,0 +1,4 @@
+interface:
+  display_name: "文档同步"
+  short_description: "按 KK Dev Skeleton 证据门禁同步 review、QA、decision 与真源文档"
+  default_prompt: "Use $kk-doc-sync to inspect a KK Dev Skeleton task and sync the right repo-native documents based on evidence."

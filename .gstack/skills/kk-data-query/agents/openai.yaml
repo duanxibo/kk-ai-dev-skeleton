@@ -1,0 +1,4 @@
+interface:
+  display_name: "数据查询"
+  short_description: "在 data-access gate 语境下整理 Query Brief、定位数据源、生成只读 SQL 并复核结果"
+  default_prompt: "Use $kk-data-query only when dispatched by $kk-data-kickoff inside a data-access gate context. Convert the user's business question into a Query Brief, discover source candidates, write read-only SQL when allowed, review SQL/results independently, enforce no raw phone output, store artifacts in the documented data-query locations rather than the data-access root, and return evidence back to $kk-data-kickoff."

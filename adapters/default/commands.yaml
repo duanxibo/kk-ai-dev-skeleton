@@ -1,0 +1,15 @@
+doctor:
+  - python3
+  - .gstack/scripts/gstack_doctor.py
+  - check
+dashboard:
+  - python3
+  - .gstack/scripts/gstack_dashboard.py
+  - show
+natural_language_smoke:
+  - python3
+  - .gstack/scripts/natural_language_dev_smoke.py
+spec_sync:
+  - python3
+  - .gstack/scripts/spec_sync_guard.py
+

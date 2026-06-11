@@ -1,0 +1,4 @@
+interface:
+  display_name: "任务开工"
+  short_description: "按 KK Dev Skeleton 仓库规则启动任务、判断 Required Gates 并维护 active boundary"
+  default_prompt: "Use $kk-task-kickoff to start a KK Dev Skeleton task. Treat new tasks, bugs, and implementation requests as implicit kickoff. Own the active boundary. Declare Required Gates such as data-access and prototype-logic-extraction when needed. For backend API/read model/service work sourced from frontend prototypes or mocks, set prototype-logic-extraction owner=kk-task-kickoff and required_before=plan-eng-review, then dispatch specialized skills only inside that boundary context."

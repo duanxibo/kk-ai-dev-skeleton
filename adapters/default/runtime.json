@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "name": "default",
+  "description": "默认项目 adapter 的机器可读运行配置。真实项目应复制 adapters/default 后改写本文件。",
+  "paths": {
+    "implementation_prefixes": [
+      "app/backend/",
+      "app/frontend/",
+      "scripts/",
+      "tests/",
+      "fixtures/",
+      "app/restricted-module/server/",
+      "app/restricted-module/public/",
+      "app/restricted-module/scripts/",
+      "app/restricted-module/tests/",
+      "app/restricted-module/fixtures/",
+      "archive/baseline/example-baseline/app/",
+      "archive/baseline/example-baseline/scripts/",
+      "archive/baseline/example-baseline/templates/",
+      "archive/baseline/example-baseline/seeds/"
+    ],
+    "spec_prefixes": [
+      "docs/specs/",
+      "app/restricted-module/docs/",
+      "app/restricted-module/specs/",
+      "archive/baseline/example-baseline/docs/"
+    ],
+    "prototype_prefixes": [
+      "archive/baseline/example-baseline/app/",
+      "archive/baseline/example-baseline/scripts/",
+      "archive/baseline/example-baseline/templates/",
+      "archive/baseline/example-baseline/seeds/"
+    ],
+    "backend_implementation_prefixes": [
+      "app/backend/src/main/",
+      "app/backend/pom.xml",
+      "app/restricted-module/server/"
+    ],
+    "backend_test_prefixes": [
+      "app/backend/src/test/",
+      "tests/",
+      "app/restricted-module/tests/"
+    ],
+    "backend_domain_spec_prefix": "docs/specs/",
+    "deprecated_backend_spec_prefixes": [
+      "docs/specs/archive/backend-legacy/"
+    ],
+    "boundary_prefix": ".gstack/task-boundaries/",
+    "requirement_prefix": ".gstack/requirements/",
+    "review_prefix": ".gstack/reviews/",
+    "ceo_review_prefix": ".gstack/reviews/",
+    "eng_review_prefix": ".gstack/reviews/",
+    "qa_prefix": ".gstack/qa-reports/",
+    "design_prefix": ".gstack/designs/",
+    "domain_spec_prefix": "docs/specs/",
+    "data_access_trigger_prefixes": [
+      "app/backend/src/main/",
+      "app/restricted-module/server/",
+      "docs/specs/",
+      "app/restricted-module/docs/",
+      "app/restricted-module/specs/",
+      "app/frontend/",
+      "app/restricted-module/public/",
+      ".gstack/templates/data-interface-design.template.md",
+      ".gstack/knowledge/data-access/source-registry.md",
+      ".gstack/knowledge/data-access/sources/",
+      ".gstack/knowledge/data-access/sql-drafts/",
+      ".gstack/knowledge/data-access/requirement-gaps/"
+    ],
+    "frontend_hint_prefixes": [
+      "archive/baseline/example-baseline/app/",
+      "app/frontend/",
+      "app/restricted-module/public/"
+    ],
+    "prototype_logic_evidence_prefixes": [
+      ".gstack/designs/",
+      ".gstack/reviews/",
+      ".gstack/knowledge/",
+      ".gstack/knowledge/data-access/",
+      "app/",
+      "docs/specs/",
+      "stack/",
+      "archive/baseline/",
+      "baseline/"
+    ]
+  },
+  "commands": {
+    "dev_stack_entry": "scripts/dev_stack.sh",
+    "init_project": "scripts/init_project.py",
+    "doctor": [
+      "python3",
+      ".gstack/scripts/gstack_doctor.py",
+      "check"
+    ],
+    "dashboard": [
+      "python3",
+      ".gstack/scripts/gstack_dashboard.py",
+      "show"
+    ]
+  },
+  "gates": {
+    "data_access_status_requirements": [
+      {
+        "prefixes": [
+          "app/backend/src/main/",
+          "app/restricted-module/server/"
+        ],
+        "statuses": [
+          "done",
+          "blocked",
+          "deferred"
+        ],
+        "reason": "business data implementation paths require `data-access` done / blocked / deferred"
+      },
+      {
+        "prefixes": [
+          "docs/specs/",
+          "app/restricted-module/docs/",
+          "app/restricted-module/specs/"
+        ],
+        "statuses": [
+          "done",
+          "not-required"
+        ],
+        "reason": "interface/spec/data docs require `data-access` done or reasoned not-required"
+      },
+      {
+        "prefixes": [
+          "app/frontend/",
+          "app/restricted-module/public/"
+        ],
+        "statuses": [
+          "done",
+          "not-required",
+          "blocked",
+          "deferred"
+        ],
+        "reason": "frontend data wiring requires `data-access` evidence or reasoned not-required"
+      },
+      {
+        "prefixes": [
+          ".gstack/templates/data-interface-design.template.md"
+        ],
+        "statuses": [
+          "done",
+          "planned"
+        ],
+        "reason": "data-interface design changes require `data-access` done or planned"
+      }
+    ]
+  }
+}

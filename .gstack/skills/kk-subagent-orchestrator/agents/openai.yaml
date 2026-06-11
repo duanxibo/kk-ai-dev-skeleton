@@ -1,0 +1,4 @@
+interface:
+  display_name: "Subagent 编排"
+  short_description: "判断是否使用 subagent，并把探索、评审、执行和文档治理拆进 boundary"
+  default_prompt: "Use $kk-subagent-orchestrator to decide whether this KK Dev Skeleton task should use subagents. Update the active boundary Subagent Plan before spawning, define write scopes and evidence, then integrate results back into repo-native docs."

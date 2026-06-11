@@ -1,0 +1,4 @@
+interface:
+  display_name: "自然语言开发"
+  short_description: "让用户只用普通话描述需求，由 Codex 在内部完成工程流程"
+  default_prompt: "用 $kk-natural-language-dev 把用户的自然语言需求转成内部工程流程，用户侧只展示人话确认、进展和验收结果。"

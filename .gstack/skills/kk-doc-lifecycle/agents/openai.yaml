@@ -1,0 +1,4 @@
+interface:
+  display_name: "文档治理"
+  short_description: "先检查文档该更新还是归档，再按 KK Dev Skeleton 真源分层执行"
+  default_prompt: "Use $kk-doc-lifecycle to audit KK Dev Skeleton project documents. Update current source documents first when evidence is clear; only archive documents after confirming they have left the current source-of-truth path."

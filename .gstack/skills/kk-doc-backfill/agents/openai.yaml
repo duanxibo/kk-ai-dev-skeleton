@@ -1,0 +1,4 @@
+interface:
+  display_name: "补文档"
+  short_description: "从代码、diff、测试和现有 spec 反推缺失文档，并标注证据等级"
+  default_prompt: "Use $kk-doc-backfill to backfill missing KK Dev Skeleton docs from code, diff, tests, fixtures, and existing specs. Mark code-proven, test-proven, inferred, and needs-confirmation claims clearly."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "协作模式"
+  short_description: "选择以下协作模式之一：自主执行、关键确认、手动控制"
+  default_prompt: "用 $kk-codex-mode 从自主执行、关键确认、手动控制中选择协作模式。"

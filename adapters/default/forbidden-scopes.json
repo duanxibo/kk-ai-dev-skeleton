@@ -1,0 +1,14 @@
+{
+  "forbidden_scopes": [
+    {
+      "label": "受限业务模块",
+      "path": "app/restricted-module/**",
+      "keywords": [
+        "受限业务模块",
+        "受限业务治理",
+        "restricted-module",
+        "restricted module"
+      ]
+    }
+  ]
+}

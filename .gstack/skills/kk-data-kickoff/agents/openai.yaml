@@ -1,0 +1,4 @@
+interface:
+  display_name: "数据专项 gate"
+  short_description: "在 kk-task-kickoff boundary 语境下执行 data-access gate，产出数据证据"
+  default_prompt: "Use $kk-data-kickoff only inside a kk-task-kickoff boundary context as the data-access gate operator. Confirm the active boundary and data-access gate first, then read the data-access knowledge base and produce gate evidence for data intent, source docs, scope, interface inputs/outputs, and reuse boundaries. If the data task is sourced from frontend/prototype/mock logic, assist by telling kk-task-kickoff to mark prototype-logic-extraction with owner=kk-task-kickoff and required_before=plan-eng-review; do not own that gate."

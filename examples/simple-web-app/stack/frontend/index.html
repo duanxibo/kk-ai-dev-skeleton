@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>简单任务看板</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <h1>任务看板</h1>
+        <p>KK Dev Skeleton 的小型示例应用。</p>
+      </header>
+
+      <section class="toolbar" aria-label="任务筛选">
+        <label>
+          搜索
+          <input id="search" type="search" placeholder="搜索任务">
+        </label>
+        <label>
+          状态
+          <select id="status">
+            <option value="all">全部</option>
+            <option value="open">待完成</option>
+            <option value="done">已完成</option>
+          </select>
+        </label>
+      </section>
+
+      <p id="count" class="count"></p>
+      <ul id="tasks" class="tasks"></ul>
+      <p id="empty" class="empty" hidden>没有任务匹配当前筛选条件。</p>
+    </main>
+    <script src="main.js"></script>
+  </body>
+</html>

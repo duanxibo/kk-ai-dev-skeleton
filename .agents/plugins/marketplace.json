@@ -1,0 +1,20 @@
+{
+  "name": "kk-dev-skeleton-internal",
+  "interface": {
+    "displayName": "KK Dev Skeleton Internal"
+  },
+  "plugins": [
+    {
+      "name": "kk-dev-skeleton-adoption",
+      "source": {
+        "source": "local",
+        "path": "./plugins/kk-dev-skeleton-adoption"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
