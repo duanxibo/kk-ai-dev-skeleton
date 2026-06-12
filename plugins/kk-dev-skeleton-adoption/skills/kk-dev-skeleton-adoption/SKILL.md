@@ -17,6 +17,12 @@ Users should ask in natural language, for example:
 请把当前项目接入 KK Dev Skeleton。
 ```
 
+For an already adopted project, users should ask:
+
+```text
+请按最新版 KK Dev Skeleton 升级当前项目。先生成增量升级计划，不要重新接入新项目。
+```
+
 Do not require business users to learn CLI flags. Commands are internal execution details that Codex may run and summarize.
 
 ## Workflow
@@ -39,15 +45,24 @@ Do not require business users to learn CLI flags. Commands are internal executio
    - detect: `python3 scripts/init_project.py --adapter <adapter> --detect`
    - plan: `python3 scripts/init_project.py --adapter <adapter> --plan`
    - apply: `python3 scripts/init_project.py --adapter <adapter> --apply`
+   - existing project upgrade plan: `python3 scripts/init_project.py --adapter <adapter> --upgrade-plan`
+   - existing project safe upgrade apply: `python3 scripts/init_project.py --adapter <adapter> --upgrade-apply`
    - verify/report: `python3 scripts/init_project.py --adapter <adapter> --verify --report`
    The helper must create or preserve `stack/<adapter>/` as the default application source-of-truth layout.
    If it detects root-level application paths such as `src/`, `prisma/`, `e2e/`, `app/`,
    `packages/`, or root framework config files, do not silently treat that scattered layout as
    final. Report them as migration candidates and ask Codex to create a migration plan before
    moving application code.
-4. If the repository does not contain the helper, explain that the framework core or internal template must be added first. Ask for the approved skeleton source or template path only when it cannot be inferred from the current workspace.
-5. Create or update project adapter files only after the target repository's task boundary permits that scope.
-6. Summarize the result in user language:
+4. Existing Project Upgrade:
+   - Use this lane when the user asks to apply new plugin / skeleton capabilities to a repository that was already adopted.
+   - Do not tell the user to create a new project or rerun first-time adoption.
+   - First run `--upgrade-plan` and summarize which items are already done, which safe items can be applied, and which items need a migration or merge plan.
+   - Only run `--upgrade-apply` for safe, idempotent changes such as creating missing `stack/<adapter>/` directories.
+   - Never overwrite adapter files, move root-level application code, or sync framework core files wholesale without a separate explicit plan and user approval.
+   - If `--upgrade-plan` is not supported because the target repository has an older helper, do not ask the user to create a new project. Explain that the project helper is stale, then generate a compatibility upgrade plan: preserve the current adapter, detect or create `stack/<adapter>/`, list root-level migration candidates, and propose syncing the latest helper as a separate reviewed change.
+5. If the repository does not contain the helper, explain that the framework core or internal template must be added first. Ask for the approved skeleton source or template path only when it cannot be inferred from the current workspace.
+6. Create or update project adapter files only after the target repository's task boundary permits that scope.
+7. Summarize the result in user language:
    - what was detected
    - what was created or preserved
    - which checks passed or failed
@@ -71,6 +86,7 @@ When adoption succeeds, report:
 - adapter path
 - stack path
 - plugin update check status
+- existing project upgrade plan status, when relevant
 - active boundary path
 - V1 helper report summary
 - guard and smoke status

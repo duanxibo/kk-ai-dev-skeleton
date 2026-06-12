@@ -22,6 +22,12 @@
   `stack/<project>/specs/ui/`
 - 测试口径：
   `stack/<project>/specs/testing/`
+- 前置蓝图：
+  `blueprint/`
+- 历史归档：
+  `archive/`
+- 共享输入：
+  `shared/`
 
 根据你的项目调整这些路径。
 
@@ -30,6 +36,8 @@
 - `adapters/default/runtime.json`
 
 初始化会默认创建 `stack/<project>/`。如果你的真实项目已有 `src/`、`prisma/`、`e2e/`、`packages/`、`services/` 或其它根目录代码，不要让 Codex 静默接受散落一级目录的最终形态；先生成迁移计划，再分步迁入 `stack/<project>/`。
+
+初始化也会创建 `blueprint/`、`archive/`、`shared/`、`.gstack/designs/` 和 `.gstack/migrations/` 的空层说明。它们是公共协作落点，不包含任何真实业务资产。
 
 ## 实现路径
 
@@ -53,6 +61,8 @@
 - 生成的构建产物
 - 真实客户数据
 - 未经迁移计划批准的根目录业务代码移动
+- 未经明确授权写入 `archive/` 的历史材料
+- 未经脱敏或授权的 `shared/` 输入文件
 
 ## Forbidden Scope Mapping（禁止业务范围映射）
 

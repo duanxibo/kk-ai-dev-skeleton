@@ -16,9 +16,11 @@
 
 - task boundaries
 - requirement briefs 和 freezes
+- designs
 - review reports
 - QA reports
 - decision records
+- migrations
 - reusable learnings
 - workflow skills
 - templates
@@ -26,6 +28,39 @@
 - 可复用 AI 协作知识
 
 不要把完整应用 spec 或业务实现细节放在这里，除非它们只是 examples。
+
+## 放入 `blueprint/`
+
+`blueprint/` 用于正式实现前的系统级构想：
+
+- 项目为什么存在
+- 核心对象和系统边界
+- 初版设计原则
+- 阶段演进和关键取舍
+- 尚未进入正式 stack spec 的开放问题
+
+蓝图不是当前实现真源。被采纳的内容必须同步到 `stack/<project>/specs/`、adapter 或 `.gstack/` evidence。
+
+## 放入 `archive/`
+
+`archive/` 用于历史归档：
+
+- 旧原型、旧 demo、旧页面行为
+- 已废弃实现或旧规格
+- baseline snapshot
+- 迁移前的历史对照材料
+
+不要把 `archive/` 当默认实现来源。只有 active boundary 明确需要历史追溯时才读取；采纳 / 放弃结论必须写回当前真源。
+
+## 放入 `shared/`
+
+`shared/` 用于跨模块共享材料：
+
+- 经过授权或脱敏的原始输入样例
+- 跨 stack 复用 fixtures
+- 可重新生成的中间产物
+
+应用级 fixtures 优先放到 `stack/<project>/fixtures/`。真实客户数据、密钥、生产导出和未脱敏文件不得默认放入公共骨架。
 
 ## 放入 `adapters/`
 

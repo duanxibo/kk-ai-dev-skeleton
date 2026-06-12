@@ -33,6 +33,7 @@ agent 应该把这些自然语言目标整理成：
 推荐交付内容：
 
 - 完整仓库目录：`AGENTS.md`、`.gstack/`、`adapters/`、`scripts/`、`examples/` 和 `tests/`
+- 公共 workspace layers：`blueprint/`、`archive/`、`shared/` 和 `stack/`
 - 默认 adapter：`adapters/default/adapter.md` 给人读，`adapters/default/runtime.json` 给脚本读
 - 自然语言接入提示：用户在目标项目里对 Codex 说明“请把当前项目接入 KK Dev Skeleton”
 - 内部执行工具：`scripts/` 和 `.gstack/scripts/` 供 Codex 初始化、检查和排障，不要求业务用户手动运行
@@ -47,6 +48,7 @@ agent 应该把这些自然语言目标整理成：
 - 下一步：使用 Codex 调用的 V1 内部安装器，把探测、计划、adapter 创建、检查和报告收敛成确定性 helper。
 - 后续：使用 `plugins/kk-dev-skeleton-adoption/` 和 `.agents/plugins/marketplace.json` 作为公司内部 Codex 接入器源目录与 marketplace source；已经发布到 `https://github.com/duanxibo/kk-ai-dev-skeleton.git` 后，可按 `plugins/PARTNER_INSTALL.md` 和 `plugins/MARKETPLACE_ROLLOUT.md` 组织安装、升级和验收。
 - 插件产品化：`kk-dev-skeleton-adoption` 内置非阻断式更新检查，伙伴下次使用插件时可自动感知 GitHub `main` 上是否有新版，并得到刷新 marketplace 的提醒。
+- 已有项目升级：伙伴更新插件后，可以让 Codex 对当前项目生成增量升级计划并执行安全改造，不需要新建项目重新接入。
 
 新项目接入时，用户对 Codex 说：
 
@@ -74,6 +76,15 @@ Codex 应负责：
 - 生成接入总结、剩余问题和试点任务建议
 
 Codex 背后的 V1 内部安装器能力已经收敛在 `scripts/init_project.py`：支持 detect、plan、apply、verify 和 report。它是 Codex 的执行层，不是业务用户需要学习的入口。
+
+已有项目升级时，用户对 Codex 说：
+
+```text
+请使用最新版 KK Dev Skeleton Adoption，按最新版骨架升级当前项目。
+先生成增量升级计划，不要重新接入新项目，不要覆盖现有 adapter，不要移动业务代码。
+```
+
+Codex 应先运行 `--upgrade-plan`，只在用户授权和 boundary 允许时执行 `--upgrade-apply` 这类安全幂等改造。
 
 ## 核心能力
 
@@ -132,14 +143,23 @@ Codex 背后的 V1 内部安装器能力已经收敛在 `scripts/init_project.py
   workflows/        协作流程文档
   task-boundaries/  具体任务边界
   requirements/     需求 brief 和 freeze
+  designs/          设计过程产物
   reviews/          评审证据
   qa-reports/       QA 证据
   decisions/        决策记录
+  migrations/       迁移计划和迁移记录
   learnings/        可复用经验
 adapters/
   default/          默认项目适配器模板
+blueprint/
+  README.md         前置蓝图层，记录系统构想、核心对象和阶段演进
+archive/
+  baseline/         历史原型、旧 demo 和 baseline snapshot，只作追溯
 stack/
   <project>/        初始化后项目应用真源层，承载源码、spec、测试、fixtures 和项目脚本
+shared/
+  raw-inputs/       经过授权或脱敏的共享输入样例
+  fixtures/         跨 stack 复用的 fixtures
 examples/
   simple-web-app/   最小示例项目
 tests/              骨架级 smoke wrapper
@@ -192,6 +212,17 @@ python3 .gstack/scripts/spec_sync_guard.py
 
 - `adapter.md` 面向人和 AI 读，解释项目语义和协作规则。
 - `runtime.json` 面向脚本读，驱动 `spec_sync_guard`、`required_gates_audit`、`team_flow_guard` 和 `gstack_doctor` 的路径判断。
+
+## 历史和蓝图层
+
+公共骨架保留空的 `blueprint/`、`archive/` 和 `shared/` 层，但不提供任何真实业务资产。
+
+- `blueprint/`：前置构想、核心对象、初版原则和阶段演进。
+- `archive/`：已退出当前真源链路的历史材料，只作追溯。
+- `archive/baseline/`：历史原型、旧 demo、旧页面行为和 baseline snapshot。
+- `shared/`：跨模块共享的脱敏输入、fixtures 和可复用中间产物。
+
+新功能默认从 `stack/<project>/specs/` 和 adapter 出发。只有 active boundary 明确需要历史追溯时，才读 `archive/`；采纳结论必须回写到当前真源。
 
 ## 能力保真规则
 

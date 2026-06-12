@@ -80,3 +80,21 @@ codex plugin add kk-dev-skeleton-adoption@kk-dev-skeleton-internal
 ```text
 请检查 KK Dev Skeleton 插件是否有更新。如果有，请刷新 kk-dev-skeleton-internal marketplace，并把 KK Dev Skeleton Adoption 插件更新到最新版本。
 ```
+
+## 更新后改造已有项目
+
+插件更新后，伙伴不需要重新起一个新项目重新接入。应在已有项目的 Codex 线程里说：
+
+```text
+请使用最新版 KK Dev Skeleton Adoption，按最新版骨架升级当前项目。
+
+先生成增量升级计划，不要重新接入新项目，不要覆盖现有 adapter，不要移动业务代码。
+只允许先做安全、幂等的改造；涉及 src/prisma/e2e/package.json 等迁移时，先给我迁移计划。
+```
+
+Codex 背后的等价动作是先运行升级计划，再按授权执行安全改造：
+
+```bash
+python3 scripts/init_project.py --adapter <project> --upgrade-plan
+python3 scripts/init_project.py --adapter <project> --upgrade-apply
+```

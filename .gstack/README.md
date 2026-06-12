@@ -20,12 +20,16 @@
   具体任务边界。
 - `requirements/`
   需求 brief 和 freeze。
+- `designs/`
+  设计过程产物、架构调整计划和原型逻辑抽取设计。
 - `reviews/`
   评审证据。
 - `qa-reports/`
   QA 和验收证据。
 - `decisions/`
   决策记录。
+- `migrations/`
+  迁移计划、目录重构记录和 framework core 升级计划。
 - `learnings/`
   可复用经验。
 - `rules/`
