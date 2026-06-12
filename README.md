@@ -46,6 +46,7 @@ agent 应该把这些自然语言目标整理成：
 - 现在：发完整骨架包或内部模板仓库，用户通过 Codex 自然语言接入。
 - 下一步：使用 Codex 调用的 V1 内部安装器，把探测、计划、adapter 创建、检查和报告收敛成确定性 helper。
 - 后续：使用 `plugins/kk-dev-skeleton-adoption/` 和 `.agents/plugins/marketplace.json` 作为公司内部 Codex 接入器源目录与 marketplace source；已经发布到 `https://github.com/duanxibo/kk-ai-dev-skeleton.git` 后，可按 `plugins/PARTNER_INSTALL.md` 和 `plugins/MARKETPLACE_ROLLOUT.md` 组织安装、升级和验收。
+- 插件产品化：`kk-dev-skeleton-adoption` 内置非阻断式更新检查，伙伴下次使用插件时可自动感知 GitHub `main` 上是否有新版，并得到刷新 marketplace 的提醒。
 
 新项目接入时，用户对 Codex 说：
 

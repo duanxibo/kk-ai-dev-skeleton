@@ -66,3 +66,17 @@ Codex 背后的等价动作是：
 codex plugin marketplace upgrade kk-dev-skeleton-internal
 codex plugin add kk-dev-skeleton-adoption@kk-dev-skeleton-internal
 ```
+
+## 自动更新提醒
+
+新版 `kk-dev-skeleton-adoption` 会在接入、检查、升级或报告工作流开始时先做非阻断式版本检查。
+
+- 如果本地插件已经是最新版本，Codex 会继续当前任务。
+- 如果本地插件落后 GitHub `main` 上的最新插件，Codex 会先提醒伙伴刷新 `kk-dev-skeleton-internal` marketplace。
+- 如果网络不可用或远端不可读，检查不会阻断当前任务。
+
+伙伴仍然可以直接对 Codex 说：
+
+```text
+请检查 KK Dev Skeleton 插件是否有更新。如果有，请刷新 kk-dev-skeleton-internal marketplace，并把 KK Dev Skeleton Adoption 插件更新到最新版本。
+```

@@ -1,6 +1,6 @@
 {
   "name": "kk-dev-skeleton-adoption",
-  "version": "0.1.0+codex.20260612040400",
+  "version": "0.1.0+codex.20260612045315",
   "description": "Codex workflow for adopting KK Dev Skeleton in internal repositories.",
   "author": {
     "name": "KK Dev Skeleton Team"

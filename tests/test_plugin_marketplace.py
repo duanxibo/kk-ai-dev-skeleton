@@ -35,6 +35,7 @@ class PluginMarketplaceTest(unittest.TestCase):
         self.assertTrue(
             (PLUGIN_ROOT / "skills" / "kk-dev-skeleton-adoption" / "SKILL.md").is_file()
         )
+        self.assertTrue((PLUGIN_ROOT / "scripts" / "check_update.py").is_file())
 
     def test_plugin_entry_has_required_policy(self):
         entry = self.load_marketplace()["plugins"][0]

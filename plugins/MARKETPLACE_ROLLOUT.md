@@ -15,6 +15,7 @@
 - 安装说明: `plugins/MARKETPLACE_INSTALL.md`
 - 管理员清单: `plugins/ADMIN_INSTALL_CHECKLIST.md`
 - 试点反馈表: `plugins/PILOT_FEEDBACK.md`
+- 插件内置更新提醒: `plugins/kk-dev-skeleton-adoption/scripts/check_update.py`
 
 ## 角色分工
 
@@ -46,6 +47,7 @@
 - 汇总试点伙伴反馈。
 - 优先修复三类问题：自然语言提示不清、adapter 草案不准、验证报告不可读。
 - 如果问题来自 plugin skill 或 V1 helper，先在本仓库修复并重新验证，再让管理员按安装说明升级。
+- 发布新版后，插件会在下一次使用时检查 GitHub `main` 上的插件版本；如果伙伴本机版本落后，Codex 应先提醒刷新 `kk-dev-skeleton-internal` marketplace。
 
 ### Day 7: 扩大或暂停
 
@@ -90,6 +92,7 @@ codex plugin add kk-dev-skeleton-adoption@kk-dev-skeleton-internal
 
 - Codex 中能看到或触发 `kk-dev-skeleton-adoption`。
 - 试点伙伴能用自然语言启动接入，不需要手动学习脚本参数。
+- 伙伴使用插件时能自动获得非阻断式更新提醒。
 - Codex 能生成 adapter 草案、接入自检结果和第一个低风险试点任务建议。
 - 接入报告能明确哪些检查通过、哪些缺失、哪些动作需要用户授权。
 - 试点任务没有默认触碰真实数据、生产、数据库或 git workflow action。

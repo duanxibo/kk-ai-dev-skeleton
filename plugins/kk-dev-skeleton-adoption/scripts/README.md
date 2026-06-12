@@ -1,6 +1,27 @@
 # Scripts
 
-This plugin intentionally keeps executable adoption behavior in the target repository.
+This plugin keeps project adoption behavior in the target repository, but owns a small productized update reminder.
+
+## Plugin update reminder
+
+Codex should run the non-blocking checker at the start of plugin workflows:
+
+```bash
+python3 scripts/check_update.py --format text
+```
+
+The checker compares the installed plugin manifest with the GitHub `main` manifest. If the local plugin is stale, it prints both the natural-language update prompt and equivalent CLI commands:
+
+```bash
+codex plugin marketplace upgrade kk-dev-skeleton-internal
+codex plugin add kk-dev-skeleton-adoption@kk-dev-skeleton-internal
+```
+
+Network or remote errors do not block the current user task.
+
+## Target repository adoption helper
+
+Executable adoption behavior stays in the target repository.
 
 Codex should call the target repository's V1 helper:
 

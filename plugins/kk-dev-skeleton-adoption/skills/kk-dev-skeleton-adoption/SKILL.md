@@ -21,6 +21,12 @@ Do not require business users to learn CLI flags. Commands are internal executio
 
 ## Workflow
 
+0. Run the non-blocking plugin update check before any adoption, install, check, upgrade, or report workflow:
+   - Resolve the plugin root from this skill directory.
+   - Run `python3 ../../scripts/check_update.py --format text`.
+   - If it reports `outdated`, tell the user that a newer plugin is available and recommend refreshing `kk-dev-skeleton-internal` before continuing.
+   - If it reports `unknown`, do not block the current task; mention the check failure only when the user asked about plugin update status or installation freshness.
+   - Never auto-run marketplace upgrade, plugin reinstall, or git workflow actions without user approval.
 1. Confirm the current repository context from local files, not from parent directory names or global skills.
 2. Read local repo guidance when present:
    - `AGENTS.md`
@@ -64,6 +70,7 @@ When adoption succeeds, report:
 
 - adapter path
 - stack path
+- plugin update check status
 - active boundary path
 - V1 helper report summary
 - guard and smoke status
