@@ -67,6 +67,8 @@ Codex 应负责：
 
 - 创建或更新 `adapters/my-project/adapter.md`
 - 创建或更新 `adapters/my-project/runtime.json`
+- 创建或保留 `stack/my-project/`，作为后续应用源码、spec、测试、fixtures 和项目脚本的默认真源目录
+- 如果检测到根目录已有 `src/`、`prisma/`、`e2e/`、`package.json` 等应用代码或配置，先输出迁移计划，不自动搬迁
 - 运行 doctor、guard 和 smoke 检查
 - 生成接入总结、剩余问题和试点任务建议
 
@@ -135,6 +137,8 @@ Codex 背后的 V1 内部安装器能力已经收敛在 `scripts/init_project.py
   learnings/        可复用经验
 adapters/
   default/          默认项目适配器模板
+stack/
+  <project>/        初始化后项目应用真源层，承载源码、spec、测试、fixtures 和项目脚本
 examples/
   simple-web-app/   最小示例项目
 tests/              骨架级 smoke wrapper

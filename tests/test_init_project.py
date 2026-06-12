@@ -44,15 +44,29 @@ class InitProjectTest(unittest.TestCase):
         self.assertEqual(self.module.slugify("中文项目"), "project")
 
     def test_apply_adapter_creates_from_default(self):
+        (self.module.DEFAULT_ADAPTER / "runtime.json").write_text(
+            '{"version": 1, "name": "default", "paths": {"implementation_prefixes": ["stack/default/src/"]}}\n',
+            encoding="utf-8",
+        )
+
         result = self.module.apply_adapter("demo", force=False)
 
         self.assertTrue(result.created)
         self.assertFalse(result.replaced)
+        self.assertTrue(result.stack_created)
         self.assertTrue((self.root / "adapters" / "demo" / "adapter.md").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "README.md").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "specs" / "README.md").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "src" / ".gitkeep").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "tests" / ".gitkeep").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "fixtures" / ".gitkeep").exists())
+        self.assertTrue((self.root / "stack" / "demo" / "scripts" / ".gitkeep").exists())
         runtime_text = (self.root / "adapters" / "demo" / "runtime.json").read_text(
             encoding="utf-8"
         )
         self.assertIn('"name": "demo"', runtime_text)
+        self.assertIn('"stack/demo/src/"', runtime_text)
+        self.assertNotIn("stack/default/src/", runtime_text)
 
     def test_apply_adapter_does_not_overwrite_without_force(self):
         adapter_dir = self.root / "adapters" / "demo"
@@ -66,6 +80,7 @@ class InitProjectTest(unittest.TestCase):
         self.assertFalse(result.created)
         self.assertFalse(result.replaced)
         self.assertEqual(marker.read_text(encoding="utf-8"), "keep me\n")
+        self.assertTrue((self.root / "stack" / "demo" / "README.md").exists())
 
     def test_detect_project_reports_adapter_and_missing_core(self):
         self.module.apply_adapter("demo", force=False)
@@ -75,7 +90,21 @@ class InitProjectTest(unittest.TestCase):
         self.assertTrue(state["adapter_exists"])
         self.assertTrue(state["adapter_md_exists"])
         self.assertTrue(state["runtime_json_exists"])
+        self.assertTrue(state["stack_dir_exists"])
+        self.assertTrue(state["stack_specs_exists"])
+        self.assertTrue(state["stack_src_exists"])
         self.assertIn("AGENTS.md", state["core_missing"])
+
+    def test_detect_project_reports_root_code_migration_candidates(self):
+        (self.root / "src").mkdir()
+        (self.root / "prisma").mkdir()
+        (self.root / "package.json").write_text('{"scripts": {}}\n', encoding="utf-8")
+
+        state = self.module.detect_project("demo")
+
+        self.assertIn("src", state["root_code_paths"])
+        self.assertIn("prisma", state["root_code_paths"])
+        self.assertIn("package.json", state["root_code_paths"])
 
     def test_plan_adoption_preserves_existing_adapter(self):
         self.module.apply_adapter("demo", force=False)
@@ -84,7 +113,16 @@ class InitProjectTest(unittest.TestCase):
         plan = self.module.plan_adoption(state)
 
         self.assertTrue(any("保留现有 adapters/demo" in step for step in plan))
+        self.assertTrue(any("stack/demo" in step for step in plan))
         self.assertTrue(any("自然语言" in step for step in plan))
+
+    def test_plan_adoption_mentions_root_code_migration(self):
+        (self.root / "src").mkdir()
+        state = self.module.detect_project("demo")
+
+        plan = self.module.plan_adoption(state)
+
+        self.assertTrue(any("迁移计划" in step for step in plan))
 
     def test_verify_commands_uses_active_boundary_when_present(self):
         boundary_dir = self.root / ".gstack" / "task-boundaries"
@@ -108,6 +146,7 @@ class InitProjectTest(unittest.TestCase):
         report = self.module.render_report("demo", state)
 
         self.assertIn("KK Dev Skeleton 接入报告", report)
+        self.assertIn("stack dir", report)
         self.assertIn("第一个低风险试点任务", report)
 
 

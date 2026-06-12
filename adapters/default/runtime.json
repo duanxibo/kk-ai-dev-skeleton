@@ -1,29 +1,16 @@
 {
   "version": 1,
   "name": "default",
-  "description": "默认项目 adapter 的机器可读运行配置。真实项目应复制 adapters/default 后改写本文件。",
+  "description": "默认项目 adapter 的机器可读运行配置。真实项目应复制 adapters/default 后改写本文件；初始化 helper 会把 stack/default/ 模板路径替换成 stack/<project>/。",
   "paths": {
     "implementation_prefixes": [
-      "app/backend/",
-      "app/frontend/",
-      "scripts/",
-      "tests/",
-      "fixtures/",
-      "app/restricted-module/server/",
-      "app/restricted-module/public/",
-      "app/restricted-module/scripts/",
-      "app/restricted-module/tests/",
-      "app/restricted-module/fixtures/",
-      "archive/baseline/example-baseline/app/",
-      "archive/baseline/example-baseline/scripts/",
-      "archive/baseline/example-baseline/templates/",
-      "archive/baseline/example-baseline/seeds/"
+      "stack/default/src/",
+      "stack/default/scripts/",
+      "stack/default/tests/",
+      "stack/default/fixtures/"
     ],
     "spec_prefixes": [
-      "docs/specs/",
-      "app/restricted-module/docs/",
-      "app/restricted-module/specs/",
-      "archive/baseline/example-baseline/docs/"
+      "stack/default/specs/"
     ],
     "prototype_prefixes": [
       "archive/baseline/example-baseline/app/",
@@ -32,16 +19,14 @@
       "archive/baseline/example-baseline/seeds/"
     ],
     "backend_implementation_prefixes": [
-      "app/backend/src/main/",
-      "app/backend/pom.xml",
-      "app/restricted-module/server/"
+      "stack/default/src/backend/",
+      "stack/default/src/server/"
     ],
     "backend_test_prefixes": [
-      "app/backend/src/test/",
-      "tests/",
-      "app/restricted-module/tests/"
+      "stack/default/tests/backend/",
+      "stack/default/tests/"
     ],
-    "backend_domain_spec_prefix": "docs/specs/",
+    "backend_domain_spec_prefix": "stack/default/specs/",
     "deprecated_backend_spec_prefixes": [
       "docs/specs/archive/backend-legacy/"
     ],
@@ -52,15 +37,10 @@
     "eng_review_prefix": ".gstack/reviews/",
     "qa_prefix": ".gstack/qa-reports/",
     "design_prefix": ".gstack/designs/",
-    "domain_spec_prefix": "docs/specs/",
+    "domain_spec_prefix": "stack/default/specs/",
     "data_access_trigger_prefixes": [
-      "app/backend/src/main/",
-      "app/restricted-module/server/",
-      "docs/specs/",
-      "app/restricted-module/docs/",
-      "app/restricted-module/specs/",
-      "app/frontend/",
-      "app/restricted-module/public/",
+      "stack/default/src/",
+      "stack/default/specs/",
       ".gstack/templates/data-interface-design.template.md",
       ".gstack/knowledge/data-access/source-registry.md",
       ".gstack/knowledge/data-access/sources/",
@@ -68,20 +48,29 @@
       ".gstack/knowledge/data-access/requirement-gaps/"
     ],
     "frontend_hint_prefixes": [
-      "archive/baseline/example-baseline/app/",
-      "app/frontend/",
-      "app/restricted-module/public/"
+      "stack/default/src/frontend/",
+      "stack/default/src/app/",
+      "archive/baseline/example-baseline/app/"
     ],
     "prototype_logic_evidence_prefixes": [
       ".gstack/designs/",
       ".gstack/reviews/",
       ".gstack/knowledge/",
       ".gstack/knowledge/data-access/",
-      "app/",
-      "docs/specs/",
-      "stack/",
+      "stack/default/",
       "archive/baseline/",
       "baseline/"
+    ],
+    "migration_candidate_prefixes": [
+      "src/",
+      "app/",
+      "prisma/",
+      "e2e/",
+      "apps/",
+      "packages/",
+      "services/",
+      "backend/",
+      "frontend/"
     ]
   },
   "commands": {
@@ -102,8 +91,8 @@
     "data_access_status_requirements": [
       {
         "prefixes": [
-          "app/backend/src/main/",
-          "app/restricted-module/server/"
+          "stack/default/src/backend/",
+          "stack/default/src/server/"
         ],
         "statuses": [
           "done",
@@ -114,9 +103,7 @@
       },
       {
         "prefixes": [
-          "docs/specs/",
-          "app/restricted-module/docs/",
-          "app/restricted-module/specs/"
+          "stack/default/specs/"
         ],
         "statuses": [
           "done",
@@ -126,8 +113,8 @@
       },
       {
         "prefixes": [
-          "app/frontend/",
-          "app/restricted-module/public/"
+          "stack/default/src/frontend/",
+          "stack/default/src/app/"
         ],
         "statuses": [
           "done",

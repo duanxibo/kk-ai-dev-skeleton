@@ -60,3 +60,16 @@
   运行 marketplace structure test、plugin validator、skill validator、marketplace name reader、gstack guard，以及命令行优先文案和旧项目上下文检索。
 - 相关 adapter 或项目路径：
   `.agents/plugins/marketplace.json`、`plugins/MARKETPLACE_INSTALL.md`、`tests/test_plugin_marketplace.py`。
+
+## Stack-first Adoption Layout
+
+- 适用场景：
+  新项目或已有项目首次接入 KK Dev Skeleton，需要避免应用代码长期散落在仓库一级目录。
+- 推荐做法：
+  初始化 helper 默认创建或保留 `stack/<adapter>/`，并把实现、spec、测试、fixtures 和项目脚本路由到 `stack/<adapter>/...`。已有根目录 `src/`、`prisma/`、`e2e/`、`package.json` 等只报告为迁移候选。
+- 不适用场景：
+  不适用于未经用户确认的自动搬迁。移动已有项目代码必须先有迁移计划、验证计划和回滚方案。
+- 验证方式：
+  `scripts/init_project.py --apply` 的测试必须断言 `stack/<adapter>/`、`specs/`、`src/`、`tests/` 等被创建，并且报告中列出根目录迁移候选。
+- 相关 adapter 或项目路径：
+  `scripts/init_project.py`、`adapters/default/runtime.json`、`tests/test_init_project.py`。

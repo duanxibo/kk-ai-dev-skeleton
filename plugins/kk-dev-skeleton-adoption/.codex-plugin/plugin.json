@@ -1,6 +1,6 @@
 {
   "name": "kk-dev-skeleton-adoption",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260612040400",
   "description": "Codex workflow for adopting KK Dev Skeleton in internal repositories.",
   "author": {
     "name": "KK Dev Skeleton Team"
@@ -24,9 +24,9 @@
       "Review"
     ],
     "defaultPrompt": [
-      "接入 KK Dev Skeleton",
-      "检查骨架接入状态",
-      "生成接入计划和报告"
+      "\u63a5\u5165 KK Dev Skeleton",
+      "\u68c0\u67e5\u9aa8\u67b6\u63a5\u5165\u72b6\u6001",
+      "\u751f\u6210\u63a5\u5165\u8ba1\u5212\u548c\u62a5\u544a"
     ]
   }
 }

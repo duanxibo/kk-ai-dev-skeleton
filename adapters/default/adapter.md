@@ -13,15 +13,15 @@
 ## 真源文档
 
 - 产品 spec：
-  `docs/specs/`
+  `stack/<project>/specs/`
 - API 契约：
-  `docs/api/`
+  `stack/<project>/specs/api/`
 - 数据模型：
-  `docs/data/`
+  `stack/<project>/specs/data/`
 - UI 行为：
-  `docs/ui/`
+  `stack/<project>/specs/ui/`
 - 测试口径：
-  `docs/testing/`
+  `stack/<project>/specs/testing/`
 
 根据你的项目调整这些路径。
 
@@ -29,20 +29,20 @@
 
 - `adapters/default/runtime.json`
 
-如果你的真实项目使用 `src/`、`packages/`、`services/` 或 monorepo 结构，把对应前缀写入 `runtime.json` 的 `paths` 区块。
+初始化会默认创建 `stack/<project>/`。如果你的真实项目已有 `src/`、`prisma/`、`e2e/`、`packages/`、`services/` 或其它根目录代码，不要让 Codex 静默接受散落一级目录的最终形态；先生成迁移计划，再分步迁入 `stack/<project>/`。
 
 ## 实现路径
 
 - 前端：
-  `app/frontend/`
+  `stack/<project>/src/frontend/`
 - 后端：
-  `app/backend/`
+  `stack/<project>/src/backend/`
 - 脚本：
-  `scripts/`
+  `stack/<project>/scripts/`
 - 测试：
-  `tests/`
+  `stack/<project>/tests/`
 - Fixtures：
-  `fixtures/`
+  `stack/<project>/fixtures/`
 
 ## Forbidden Paths（禁止路径）
 
@@ -52,6 +52,7 @@
 - 生产部署配置
 - 生成的构建产物
 - 真实客户数据
+- 未经迁移计划批准的根目录业务代码移动
 
 ## Forbidden Scope Mapping（禁止业务范围映射）
 
@@ -65,7 +66,7 @@
 
 - `受限业务模块` -> `app/restricted-module/**`
 
-真实项目应复制并改写这份配置，不要把某个私有项目的模块名写进 framework core。
+真实项目应复制并改写这份配置，不要把某个私有项目的模块名写进 framework core。默认映射应指向 `stack/<project>/...` 下的业务路径。
 
 ## 命令
 

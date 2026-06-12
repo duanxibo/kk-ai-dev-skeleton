@@ -34,6 +34,11 @@ Do not require business users to learn CLI flags. Commands are internal executio
    - plan: `python3 scripts/init_project.py --adapter <adapter> --plan`
    - apply: `python3 scripts/init_project.py --adapter <adapter> --apply`
    - verify/report: `python3 scripts/init_project.py --adapter <adapter> --verify --report`
+   The helper must create or preserve `stack/<adapter>/` as the default application source-of-truth layout.
+   If it detects root-level application paths such as `src/`, `prisma/`, `e2e/`, `app/`,
+   `packages/`, or root framework config files, do not silently treat that scattered layout as
+   final. Report them as migration candidates and ask Codex to create a migration plan before
+   moving application code.
 4. If the repository does not contain the helper, explain that the framework core or internal template must be added first. Ask for the approved skeleton source or template path only when it cannot be inferred from the current workspace.
 5. Create or update project adapter files only after the target repository's task boundary permits that scope.
 6. Summarize the result in user language:
@@ -58,9 +63,11 @@ Do not require business users to learn CLI flags. Commands are internal executio
 When adoption succeeds, report:
 
 - adapter path
+- stack path
 - active boundary path
 - V1 helper report summary
 - guard and smoke status
+- root-level migration candidates, if any
 - remaining missing information
 - recommended first pilot task
 

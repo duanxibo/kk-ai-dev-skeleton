@@ -68,14 +68,17 @@
 
 ### 应用代码
 
-每个使用本骨架的项目都应在 adapter 中定义自己的应用源码路径。常见选择包括：
+每个使用本骨架的项目都应在 adapter 中定义自己的应用源码路径。默认推荐并由初始化 helper 创建：
 
-- `app/`
-- `src/`
-- `stack/<service>/`
-- `packages/<package>/`
+- `stack/<project>/src/`
+- `stack/<project>/specs/`
+- `stack/<project>/tests/`
+- `stack/<project>/fixtures/`
+- `stack/<project>/scripts/`
 
-框架核心不得写死其中任何一种。
+已有项目如果在根目录存在 `src/`、`app/`、`prisma/`、`e2e/`、`packages/`、`services/` 或框架配置文件，应先列为迁移候选并生成迁移计划；不要把一级目录散落状态当成初始化后的最终目标。
+
+框架核心不得写死某个业务项目路径，但可以保持 `stack/<project>/` 的可复用布局约束。
 
 ## Skill 入口
 

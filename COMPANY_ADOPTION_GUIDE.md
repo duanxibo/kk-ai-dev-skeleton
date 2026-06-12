@@ -74,6 +74,8 @@ Codex 接到这条自然语言请求后，应负责：
 - 判断当前项目是否已经包含骨架；如果没有，说明需要先把骨架文件加入仓库或工作区。
 - 创建或更新 `adapters/<project>/adapter.md`。
 - 创建或更新 `adapters/<project>/runtime.json`。
+- 创建或保留 `stack/<project>/`，把它作为后续应用源码、spec、测试、fixtures 和项目脚本的默认真源目录。
+- 如果目标项目已有根目录 `src/`、`prisma/`、`e2e/`、`package.json` 等应用代码或配置，列为迁移候选；不要在未确认迁移计划时自动移动。
 - 设置或说明当前 adapter。
 - 运行 doctor、guard 和 smoke 检查。
 - 生成接入总结：已完成项、缺失信息、风险、下一步试点任务。
@@ -140,6 +142,7 @@ Codex 接到这条自然语言请求后，应负责：
 一个新项目至少满足这些条件，才算接入成功：
 
 - Codex 报告 doctor 中 `adapter-runtime` 为通过。
+- Codex 报告已存在 `stack/<project>/`，或接入报告明确说明为何暂时只做迁移计划。
 - Codex 报告 `dev-stack-entry` 为通过，或 adapter 明确声明该项目不需要统一启动入口。
 - Codex 报告 spec sync guard 通过。
 - Codex 报告 team flow guard 通过，或在非 git worktree 下进入 static audit 并通过。

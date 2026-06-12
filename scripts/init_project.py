@@ -40,6 +40,33 @@ CORE_REQUIRED_PATHS = (
     "adapters/default/adapter.md",
     "adapters/default/runtime.json",
 )
+STACK_TEMPLATE_ROOT = "stack/default/"
+ROOT_CODE_CANDIDATES = (
+    "src",
+    "app",
+    "prisma",
+    "e2e",
+    "apps",
+    "packages",
+    "services",
+    "backend",
+    "frontend",
+    "package.json",
+    "pnpm-lock.yaml",
+    "package-lock.json",
+    "yarn.lock",
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.ts",
+    "vite.config.js",
+    "vite.config.ts",
+    "vitest.config.js",
+    "vitest.config.ts",
+    "playwright.config.js",
+    "playwright.config.ts",
+    "docker-compose.yml",
+    "docker-compose.yaml",
+)
 
 
 @dataclass(frozen=True)
@@ -58,8 +85,11 @@ class CommandRun:
 @dataclass(frozen=True)
 class ApplyResult:
     adapter_dir: Path
+    stack_dir: Path
     created: bool
     replaced: bool
+    stack_created: bool
+    root_code_paths: tuple[str, ...]
     message: str
 
 
@@ -75,6 +105,80 @@ def repo_relative(path: Path) -> str:
     return path.resolve().relative_to(REPO_ROOT).as_posix()
 
 
+def rewrite_stack_template_paths(value: Any, name: str) -> Any:
+    if isinstance(value, dict):
+        return {key: rewrite_stack_template_paths(item, name) for key, item in value.items()}
+    if isinstance(value, list):
+        return [rewrite_stack_template_paths(item, name) for item in value]
+    if isinstance(value, str):
+        return value.replace(STACK_TEMPLATE_ROOT, f"stack/{name}/")
+    return value
+
+
+def stack_dir_for(name: str) -> Path:
+    return REPO_ROOT / "stack" / name
+
+
+def root_code_paths() -> tuple[str, ...]:
+    return tuple(
+        candidate for candidate in ROOT_CODE_CANDIDATES if (REPO_ROOT / candidate).exists()
+    )
+
+
+def ensure_stack_layout(name: str) -> tuple[Path, bool]:
+    stack_dir = stack_dir_for(name)
+    created = not stack_dir.exists()
+    stack_dir.mkdir(parents=True, exist_ok=True)
+
+    readme = stack_dir / "README.md"
+    if not readme.exists():
+        readme.write_text(
+            "\n".join(
+                [
+                    f"# {name} Stack",
+                    "",
+                    "这个目录是当前项目的应用真源层。",
+                    "",
+                    "- `specs/`: 产品、接口、数据、UI 和测试口径。",
+                    "- `src/`: 应用源码。",
+                    "- `tests/`: 应用级测试。",
+                    "- `fixtures/`: 脱敏 fixtures 和示例数据。",
+                    "- `scripts/`: 项目专属脚本。",
+                    "",
+                    "初始化不会自动移动已有根目录代码。若项目已有 `src/`、`prisma/`、"
+                    "`e2e/` 或根目录配置文件，请让 Codex 先生成迁移计划，再分步迁入本目录。",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+    specs_dir = stack_dir / "specs"
+    specs_dir.mkdir(parents=True, exist_ok=True)
+    specs_readme = specs_dir / "README.md"
+    if not specs_readme.exists():
+        specs_readme.write_text(
+            "\n".join(
+                [
+                    f"# {name} Specs",
+                    "",
+                    "这里沉淀当前项目的产品语义、接口契约、数据模型、UI 行为和测试口径。",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+    for child in ("src", "tests", "fixtures", "scripts"):
+        child_dir = stack_dir / child
+        child_dir.mkdir(parents=True, exist_ok=True)
+        keep = child_dir / ".gitkeep"
+        if not keep.exists():
+            keep.write_text("", encoding="utf-8")
+
+    return stack_dir, created
+
+
 def update_runtime_name(adapter_dir: Path, name: str) -> None:
     runtime_path = adapter_dir / "runtime.json"
     if not runtime_path.exists():
@@ -82,6 +186,7 @@ def update_runtime_name(adapter_dir: Path, name: str) -> None:
     payload = json.loads(runtime_path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError(f"{repo_relative(runtime_path)} must contain a JSON object")
+    payload = rewrite_stack_template_paths(payload, name)
     payload["name"] = name
     payload["description"] = (
         f"{name} 项目的机器可读 adapter runtime。请按真实项目路径、命令和 gate 规则改写。"
@@ -107,14 +212,20 @@ def create_adapter(name: str, *, force: bool) -> Path:
 
 def apply_adapter(name: str, *, force: bool) -> ApplyResult:
     target = REPO_ROOT / "adapters" / name
+    stack_dir, stack_created = ensure_stack_layout(name)
+    candidates = root_code_paths()
     if target.exists() and not force:
         return ApplyResult(
             adapter_dir=target,
+            stack_dir=stack_dir,
             created=False,
             replaced=False,
+            stack_created=stack_created,
+            root_code_paths=candidates,
             message=(
                 f"Adapter already exists: {repo_relative(target)}. "
-                "默认不会覆盖；如需替换必须显式传 --force。"
+                f"默认不会覆盖；已确保 stack layout: {repo_relative(stack_dir)}。"
+                "如需替换必须显式传 --force。"
             ),
         )
 
@@ -122,10 +233,14 @@ def apply_adapter(name: str, *, force: bool) -> ApplyResult:
     adapter_dir = create_adapter(name, force=force)
     return ApplyResult(
         adapter_dir=adapter_dir,
+        stack_dir=stack_dir,
         created=not replaced,
         replaced=replaced,
+        stack_created=stack_created,
+        root_code_paths=candidates,
         message=(
-            f"已{'替换' if replaced else '创建'} adapter: {repo_relative(adapter_dir)}"
+            f"已{'替换' if replaced else '创建'} adapter: {repo_relative(adapter_dir)}；"
+            f"已确保 stack layout: {repo_relative(stack_dir)}"
         ),
     )
 
@@ -153,6 +268,7 @@ def is_git_worktree() -> bool:
 
 def detect_project(adapter: str) -> dict[str, Any]:
     adapter_dir = REPO_ROOT / "adapters" / adapter
+    stack_dir = stack_dir_for(adapter)
     core_present = [path for path in CORE_REQUIRED_PATHS if (REPO_ROOT / path).exists()]
     core_missing = [path for path in CORE_REQUIRED_PATHS if not (REPO_ROOT / path).exists()]
     return {
@@ -165,6 +281,11 @@ def detect_project(adapter: str) -> dict[str, Any]:
         "default_adapter_exists": DEFAULT_ADAPTER.exists(),
         "active_boundary": read_active_boundary(),
         "git_worktree": is_git_worktree(),
+        "stack_dir": repo_relative(stack_dir),
+        "stack_dir_exists": stack_dir.exists(),
+        "stack_specs_exists": (stack_dir / "specs").exists(),
+        "stack_src_exists": (stack_dir / "src").exists(),
+        "root_code_paths": list(root_code_paths()),
         "core_present": core_present,
         "core_missing": core_missing,
     }
@@ -186,9 +307,22 @@ def plan_adoption(state: dict[str, Any]) -> list[str]:
     else:
         steps.append(f"保留现有 adapters/{state['adapter']}，不默认覆盖。")
 
+    if state.get("stack_dir_exists"):
+        steps.append(f"保留现有 {state['stack_dir']}，后续新代码默认进入该 stack 目录。")
+    else:
+        steps.append(f"创建 {state['stack_dir']}，作为应用源码、spec、测试和 fixtures 的默认真源目录。")
+
+    root_paths = state.get("root_code_paths") or []
+    if root_paths:
+        joined = "、".join(f"`{path}`" for path in root_paths)
+        steps.append(
+            f"检测到根目录已有代码或配置：{joined}。不自动移动；先让 Codex 生成迁移计划，再分步迁入 stack。"
+        )
+
     steps.extend(
         [
             "让 Codex 根据用户自然语言补全 adapter 里的项目目标、路径、命令和风险规则。",
+            "把 adapter runtime 的实现、spec 和测试前缀改为 `stack/<project>/...`，根目录旧路径只作为迁移候选。",
             "运行 doctor、spec sync guard、team flow guard、Required Gates audit 和 natural language smoke。",
             "生成接入总结：已完成项、缺失项、风险和第一个低风险试点任务。",
         ]
@@ -267,9 +401,10 @@ def render_next_steps(adapter: str, adapter_dir: Path) -> str:
             "下一步：",
             f"1. 修改 `{repo_relative(adapter_dir / 'adapter.md')}`，写入项目目标、真源路径、命令和风险规则。",
             f"2. 修改 `{repo_relative(adapter_dir / 'runtime.json')}`，写入机器可读的 paths / commands / gates。",
-            "3. 让 Codex 运行内部接入验证：`python3 scripts/init_project.py --adapter "
+            f"3. 将后续应用代码、spec、测试和 fixtures 默认放入 `stack/{adapter}/`；已有根目录代码先生成迁移计划，不自动搬迁。",
+            "4. 让 Codex 运行内部接入验证：`python3 scripts/init_project.py --adapter "
             f"{adapter} --verify --report`。",
-            "4. 把自然语言接入提示发给使用者；脚本由 Codex 在后台调用。",
+            "5. 把自然语言接入提示发给使用者；脚本由 Codex 在后台调用。",
         ]
     )
 
@@ -286,10 +421,18 @@ def render_detection(state: dict[str, Any]) -> str:
         f"- adapter.md exists: `{str(state['adapter_md_exists']).lower()}`",
         f"- runtime.json exists: `{str(state['runtime_json_exists']).lower()}`",
         f"- default adapter exists: `{str(state['default_adapter_exists']).lower()}`",
-        f"- active boundary: `{state['active_boundary'] or 'not-found'}`",
-        f"- git worktree: `{str(state['git_worktree']).lower()}`",
-        f"- core missing count: `{len(missing)}`",
+            f"- active boundary: `{state['active_boundary'] or 'not-found'}`",
+            f"- git worktree: `{str(state['git_worktree']).lower()}`",
+            f"- stack dir: `{state['stack_dir']}`",
+            f"- stack dir exists: `{str(state['stack_dir_exists']).lower()}`",
+            f"- stack specs exists: `{str(state['stack_specs_exists']).lower()}`",
+            f"- stack src exists: `{str(state['stack_src_exists']).lower()}`",
+            f"- root code path count: `{len(state['root_code_paths'])}`",
+            f"- core missing count: `{len(missing)}`",
     ]
+    if state["root_code_paths"]:
+        lines.append("- root code paths needing migration review:")
+        lines.extend(f"  - `{path}`" for path in state["root_code_paths"])
     if missing:
         lines.append("- core missing:")
         lines.extend(f"  - `{path}`" for path in missing)
@@ -311,16 +454,24 @@ def render_plan(adapter: str, state: dict[str, Any]) -> str:
 
 
 def render_apply_result(result: ApplyResult) -> str:
-    return "\n".join(
-        [
-            "接入应用结果",
-            "",
-            f"- adapter dir: `{repo_relative(result.adapter_dir)}`",
-            f"- created: `{str(result.created).lower()}`",
-            f"- replaced: `{str(result.replaced).lower()}`",
-            f"- message: {result.message}",
-        ]
-    )
+    lines = [
+        "接入应用结果",
+        "",
+        f"- adapter dir: `{repo_relative(result.adapter_dir)}`",
+        f"- stack dir: `{repo_relative(result.stack_dir)}`",
+        f"- created: `{str(result.created).lower()}`",
+        f"- replaced: `{str(result.replaced).lower()}`",
+        f"- stack created: `{str(result.stack_created).lower()}`",
+        f"- message: {result.message}",
+    ]
+    if result.root_code_paths:
+        lines.extend(
+            [
+                "- migration candidates:",
+                *[f"  - `{path}`" for path in result.root_code_paths],
+            ]
+        )
+    return "\n".join(lines)
 
 
 def render_verification(results: list[CommandRun]) -> str:
@@ -459,12 +610,20 @@ def main() -> int:
         apply_result = apply_adapter(adapter, force=args.force)
         adapter_dir = apply_result.adapter_dir
     elif args.create_adapter:
+        stack_dir, stack_created = ensure_stack_layout(adapter)
+        candidates = root_code_paths()
         adapter_dir = create_adapter(adapter, force=args.force)
         apply_result = ApplyResult(
             adapter_dir=adapter_dir,
+            stack_dir=stack_dir,
             created=True,
             replaced=args.force,
-            message=f"已创建 adapter: {repo_relative(adapter_dir)}",
+            stack_created=stack_created,
+            root_code_paths=candidates,
+            message=(
+                f"已创建 adapter: {repo_relative(adapter_dir)}；"
+                f"已确保 stack layout: {repo_relative(stack_dir)}"
+            ),
         )
 
     if not has_v1_action and not adapter_dir.exists():
@@ -492,8 +651,11 @@ def main() -> int:
         if apply_result is not None:
             payload["apply"] = {
                 "adapter_dir": repo_relative(apply_result.adapter_dir),
+                "stack_dir": repo_relative(apply_result.stack_dir),
                 "created": apply_result.created,
                 "replaced": apply_result.replaced,
+                "stack_created": apply_result.stack_created,
+                "root_code_paths": list(apply_result.root_code_paths),
                 "message": apply_result.message,
             }
         if verification_results is not None:

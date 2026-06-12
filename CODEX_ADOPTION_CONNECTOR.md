@@ -58,6 +58,8 @@ Codex 负责判断是否需要复制骨架文件、创建 adapter、运行自检
 - 对比 framework core 版本，列出缺失或过期文件。
 - 复制或更新 `AGENTS.md`、`.gstack/`、`scripts/`、`examples/` 和 `tests/`。
 - 保留并合并真实项目的 `adapters/<project>/adapter.md` 和 `runtime.json`。
+- 创建或保留 `stack/<project>/`，并把后续应用源码、spec、测试、fixtures 和项目脚本默认路由到该目录。
+- 检测根目录已有应用代码和配置，输出迁移候选清单；不在未确认迁移计划时自动移动业务代码。
 - 生成接入计划、变更摘要和回滚提示。
 - 调用 doctor、spec sync guard、team flow guard、Required Gates audit 和 natural language smoke。
 - 给出第一个低风险试点任务建议。
@@ -161,6 +163,7 @@ Codex 负责判断是否需要复制骨架文件、创建 adapter、运行自检
 - `detect`：检测当前骨架、adapter、active boundary 和 git worktree 状态。
 - `plan`：生成接入计划。
 - `apply`：安全创建 adapter；默认不覆盖已有 adapter。
+- `apply`：同时确保 `stack/<adapter>/` 存在；已有根目录代码只列为迁移候选。
 - `verify`：串联 doctor、spec sync guard、team flow guard、Required Gates audit 和 natural language smoke。
 - `report`：生成接入报告和低风险试点任务建议。
 
