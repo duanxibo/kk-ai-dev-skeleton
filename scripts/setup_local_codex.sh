@@ -62,7 +62,11 @@ else
 fi
 
 if [ "$SKIP_HOOKS" -eq 0 ]; then
-  bash .gstack/scripts/install_git_hooks.sh
+  if git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    bash .gstack/scripts/install_git_hooks.sh
+  else
+    echo "[SKIP] git hooks installation (not a git worktree)"
+  fi
 else
   echo "[SKIP] git hooks installation"
 fi

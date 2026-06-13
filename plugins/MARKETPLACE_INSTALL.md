@@ -55,23 +55,26 @@ Use this only after the team approves installing the repo-local marketplace in a
 
 1. Validate the plugin source.
 
-```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
-  plugins/kk-dev-skeleton-adoption
+Ask Codex to run the locally installed `plugin-creator` validator against:
+
+```text
+plugins/kk-dev-skeleton-adoption
 ```
 
 2. Validate the skill source.
 
-```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-  plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+Ask Codex to run the locally installed `skill-creator` validator against:
+
+```text
+plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 3. Read the marketplace name.
 
-```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py \
-  --marketplace-path .agents/plugins/marketplace.json
+Ask Codex to run the locally installed `plugin-creator` marketplace-name reader with:
+
+```text
+--marketplace-path .agents/plugins/marketplace.json
 ```
 
 4. Add the repo root as a non-default local marketplace, or use the published Git marketplace.
@@ -98,9 +101,10 @@ codex plugin add kk-dev-skeleton-adoption@kk-dev-skeleton-internal
 2. Run plugin and skill validation.
 3. If Codex needs to pick up local plugin changes, update the plugin cachebuster through the plugin-creator helper.
 
-```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py \
-  plugins/kk-dev-skeleton-adoption
+Ask Codex to run the locally installed `plugin-creator` cachebuster helper against:
+
+```text
+plugins/kk-dev-skeleton-adoption
 ```
 
 4. Reinstall the plugin from the internal marketplace.

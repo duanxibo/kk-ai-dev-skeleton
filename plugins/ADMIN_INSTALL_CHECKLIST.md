@@ -17,18 +17,18 @@
 
 在仓库根目录运行以下检查：
 
-```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py \
+请让 Codex 使用本机已安装的 `plugin-creator` / `skill-creator` validator。不要在公开文档里写死某台机器的绝对路径。
+
+Codex 背后的等价检查是：
+
+```text
+plugin-creator validate_plugin:
   plugins/kk-dev-skeleton-adoption
-```
 
-```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
+skill-creator quick_validate:
   plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
-```
 
-```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py \
+plugin-creator read_marketplace_name:
   --marketplace-path .agents/plugins/marketplace.json
 ```
 

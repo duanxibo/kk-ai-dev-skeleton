@@ -54,6 +54,9 @@ REQUIRED_SCRIPTS = (
 REQUIRED_CORE_DOCS = (
     "AGENTS.md",
     "README.md",
+    "QUICK_START_FOR_PARTNERS.md",
+    "COMPANY_ADOPTION_GUIDE.md",
+    "CODEX_ADOPTION_CONNECTOR.md",
     ".gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md",
     ".gstack/README.md",
     ".gstack/knowledge/CODEMAP.md",
@@ -70,6 +73,14 @@ REQUIRED_CORE_DOCS = (
     ".gstack/task-boundaries/CURRENT.md",
     "adapters/default/adapter.md",
     "adapters/default/runtime.json",
+    "plugins/PARTNER_INSTALL.md",
+    "plugins/MARKETPLACE_INSTALL.md",
+    "plugins/ADMIN_INSTALL_CHECKLIST.md",
+    "scripts/setup_local_codex.sh",
+    "blueprint/README.md",
+    "archive/README.md",
+    "archive/baseline/README.md",
+    "shared/README.md",
 )
 CONTEXT_RISK_PARENT_PATTERNS = ("tian" + "gong",)
 EXTERNAL_SKILL_PREFIXES = ("tg-",)
@@ -663,7 +674,16 @@ def human_next_step(result: CheckResult) -> str:
     if result.check_id == "skills":
         return "Codex 可同步本机工作流技能链接。"
     if result.check_id == "context-isolation":
-        return "Codex 应先清理外部 skill symlink；父目录名只作为提醒，不应影响项目身份判断。"
+        detail_text = "\n".join(result.details)
+        has_symlink = "外部 skill symlink" in detail_text
+        has_nonlink = "普通目录" in detail_text
+        if has_symlink and has_nonlink:
+            return "Codex 可清理外部 skill symlink；普通目录需要用户确认后人工处理。父目录名只作为提醒。"
+        if has_symlink:
+            return "Codex 可清理外部 skill symlink；父目录名只作为提醒，不应影响项目身份判断。"
+        if has_nonlink:
+            return "检测到外部 skill 普通目录；doctor 不会自动删除，需用户确认后人工处理。父目录名只作为提醒。"
+        return "父目录名只作为提醒，不应影响项目身份判断。"
     if result.check_id == "scripts":
         return "Codex 需要检查缺失的协作脚本，并在仓库内补齐。"
     if result.check_id == "core-docs":
