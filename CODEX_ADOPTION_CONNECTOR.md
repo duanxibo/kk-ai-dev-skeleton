@@ -133,6 +133,7 @@ Codex 负责判断是否需要复制骨架文件、创建 adapter、运行自检
 交付物：
 
 - `README.md`
+- `QUICK_START_FOR_PARTNERS.md`
 - `COMPANY_ADOPTION_GUIDE.md`
 - `CODEX_ADOPTION_CONNECTOR.md`
 - 默认 adapter
@@ -152,6 +153,7 @@ Codex 负责判断是否需要复制骨架文件、创建 adapter、运行自检
 现有 helper：
 
 - `scripts/init_project.py`：承担 adapter 创建和接入计划生成。
+- `scripts/setup_local_codex.sh`：承担本机 repo-native skills 同步、git hooks 安装和 doctor 复查。
 - `.gstack/scripts/gstack_doctor.py`：承担环境和上下文诊断。
 - `.gstack/scripts/spec_sync_guard.py`：承担真源同步检查。
 - `.gstack/scripts/team_flow_guard.py`：承担 task boundary 和 evidence 检查。

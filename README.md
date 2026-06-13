@@ -24,6 +24,8 @@ agent 应该把这些自然语言目标整理成：
 - QA evidence
 - delivery summary
 
+如果只是把入口发给普通伙伴，优先发 [QUICK_START_FOR_PARTNERS.md](QUICK_START_FOR_PARTNERS.md)。那份文档只保留“在 Codex 里怎么说、做完怎么看结果、什么时候需要确认”。
+
 ## 推荐发放形式
 
 公司内推广时，建议把它当作一个“可复制的仓库骨架”发放，而不是只发一份提示词或文档包。
@@ -33,6 +35,7 @@ agent 应该把这些自然语言目标整理成：
 推荐交付内容：
 
 - 完整仓库目录：`AGENTS.md`、`.gstack/`、`adapters/`、`scripts/`、`examples/` 和 `tests/`
+- 普通伙伴短入口：`QUICK_START_FOR_PARTNERS.md`
 - 公共 workspace layers：`blueprint/`、`archive/`、`shared/` 和 `stack/`
 - 默认 adapter：`adapters/default/adapter.md` 给人读，`adapters/default/runtime.json` 给脚本读
 - 自然语言接入提示：用户在目标项目里对 Codex 说明“请把当前项目接入 KK Dev Skeleton”
@@ -41,6 +44,7 @@ agent 应该把这些自然语言目标整理成：
 - repo-local marketplace source：`.agents/plugins/marketplace.json`，供明确授权后的内部安装 / 升级流程使用
 - published Git marketplace：`https://github.com/duanxibo/kk-ai-dev-skeleton.git`
 - marketplace/plugin 推广包：`plugins/PARTNER_INSTALL.md`、`plugins/MARKETPLACE_ROLLOUT.md`、`plugins/ADMIN_INSTALL_CHECKLIST.md` 和 `plugins/PILOT_FEEDBACK.md`
+- 本地产品化准备脚本：`scripts/setup_local_codex.sh`，供 Codex / 维护者同步 repo-native skills、安装 hooks 并复跑 doctor；普通伙伴不需要手动记这个命令
 
 推荐路线：
 
@@ -173,6 +177,24 @@ plugins/
 ```
 
 ## 快速检查
+
+```bash
+python3 .gstack/scripts/gstack_doctor.py check
+```
+
+如果 Codex 需要一次性整理本机 Codex 接入状态，可在幕后运行：
+
+```bash
+bash scripts/setup_local_codex.sh
+```
+
+如果 doctor 明确提示存在旧 `tg-*` symlink 且本机不再需要它们，可运行：
+
+```bash
+bash scripts/setup_local_codex.sh --remove-tg-links
+```
+
+更细的检查命令：
 
 ```bash
 python3 .gstack/scripts/gstack_doctor.py check

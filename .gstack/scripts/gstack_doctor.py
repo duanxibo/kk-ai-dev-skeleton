@@ -413,8 +413,11 @@ def check_context_isolation() -> CheckResult:
         }
     )
     if risky_parts:
-        warnings.append("父目录路径包含旧项目命名片段；不能据此推断当前项目名。")
-        details.append("可疑父目录片段: " + ", ".join(risky_parts))
+        details.append(
+            "父目录命名提示: "
+            + ", ".join(risky_parts)
+            + "；仅作提醒，不作为项目身份来源。"
+        )
 
     external_skills: list[str] = []
     kept_nonlinks: list[str] = []
@@ -453,8 +456,11 @@ def check_context_isolation() -> CheckResult:
     return CheckResult(
         "context-isolation",
         "ok",
-        "未发现明显外部上下文污染线索。",
-        ["项目身份应继续以当前仓库、adapter、boundary 和用户输入为准。"],
+        "未发现会改变当前项目身份的外部 skill 污染线索。",
+        [
+            *details,
+            "项目身份应继续以当前仓库、adapter、boundary 和用户输入为准。",
+        ],
     )
 
 
@@ -622,7 +628,7 @@ def human_result_text(result: CheckResult) -> str:
         return "没有完全同步，Codex 可以运行同步脚本补齐本机 skill 链接。"
     if check_id == "context-isolation":
         if status == "ok":
-            return "正常，当前没有明显外部上下文污染线索。"
+            return "正常，当前没有会改变项目身份的外部 skill 污染线索。"
         return "有串味风险；Codex 必须只按当前仓库、adapter、boundary 和用户输入判断项目身份。"
     if check_id == "scripts":
         if status == "ok":
@@ -657,7 +663,7 @@ def human_next_step(result: CheckResult) -> str:
     if result.check_id == "skills":
         return "Codex 可同步本机工作流技能链接。"
     if result.check_id == "context-isolation":
-        return "Codex 应忽略父目录名和外部 skill；如果你不再需要旧 symlink，可显式运行清理命令。"
+        return "Codex 应先清理外部 skill symlink；父目录名只作为提醒，不应影响项目身份判断。"
     if result.check_id == "scripts":
         return "Codex 需要检查缺失的协作脚本，并在仓库内补齐。"
     if result.check_id == "core-docs":

@@ -4,6 +4,8 @@
 
 默认接入方式是：用户在目标项目里用自然语言告诉 Codex“请把当前项目接入 KK Dev Skeleton”。用户不需要手动执行初始化命令；命令和脚本是 Codex 背后的执行工具和排障工具。
 
+如果只是让普通伙伴尽快用起来，优先发 [QUICK_START_FOR_PARTNERS.md](QUICK_START_FOR_PARTNERS.md)。这份公司接入指南面向维护者、管理员和试点负责人。
+
 推荐把骨架作为完整仓库目录发放，而不是只发提示词、单份文档或压缩后的 `.gstack/` 片段。完整骨架能保留 agent 规则、adapter、脚本、模板、任务边界、QA 证据和可持续回写能力。
 
 内部安装器 / Codex 接入器的产品化路线见 [CODEX_ADOPTION_CONNECTOR.md](CODEX_ADOPTION_CONNECTOR.md)。当前阶段采用“完整骨架包 + Codex 自然语言接入”；V1 内部安装器已经提供 Codex 可调用的 detect、plan、apply、verify 和 report helper。
@@ -18,6 +20,7 @@
 
 - `AGENTS.md`
 - `README.md`
+- `QUICK_START_FOR_PARTNERS.md`
 - `COMPANY_ADOPTION_GUIDE.md`
 - `CODEX_ADOPTION_CONNECTOR.md`
 - `.gstack/`
@@ -81,6 +84,8 @@ Codex 接到这条自然语言请求后，应负责：
 - 生成接入总结：已完成项、缺失信息、风险、下一步试点任务。
 
 命令行形式只作为 Codex 内部执行和排障参考，不作为业务用户的接入方式。V1 内部安装器集中在 `scripts/init_project.py`，供 Codex 在接入任务里调用。
+
+本机 Codex 接入状态整理集中在 `scripts/setup_local_codex.sh`。Codex / 维护者可用它同步 repo-native skills、安装 git hooks 并复跑 doctor；普通业务用户不需要学习这个命令。
 
 ## 后续产品化路径
 

@@ -2,6 +2,8 @@
 
 本文是发给公司伙伴的最短安装入口。伙伴不需要理解本仓库结构，也不需要手动学习脚本参数。
 
+如果只想发一份更短的普通用户说明，使用根目录的 [QUICK_START_FOR_PARTNERS.md](../QUICK_START_FOR_PARTNERS.md)。
+
 ## 直接发给伙伴的话
 
 让伙伴在 Codex 新线程里发送：

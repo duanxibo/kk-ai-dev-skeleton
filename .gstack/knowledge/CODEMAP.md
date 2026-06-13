@@ -104,6 +104,26 @@
 
 骨架级检查和 wrapper tests。
 
+### 产品化入口
+
+普通伙伴优先读：
+
+- `QUICK_START_FOR_PARTNERS.md`
+
+管理员、维护者和试点负责人优先读：
+
+- `COMPANY_ADOPTION_GUIDE.md`
+- `CODEX_ADOPTION_CONNECTOR.md`
+- `plugins/PARTNER_INSTALL.md`
+- `plugins/MARKETPLACE_ROLLOUT.md`
+- `plugins/ADMIN_INSTALL_CHECKLIST.md`
+
+Codex / 维护者背后的确定性本机准备入口：
+
+- `scripts/setup_local_codex.sh`
+
+该脚本用于同步 repo-native skills、安装 git hooks 并复跑 doctor。普通伙伴不需要手动学习它。
+
 ### 应用代码
 
 每个使用本骨架的项目都应在 adapter 中定义自己的应用源码路径。默认推荐并由初始化 helper 创建：
