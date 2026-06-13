@@ -29,7 +29,7 @@
 
 ## Forbidden Files
 
-- 目标试点项目真实代码：`/Users/edy/work/codespace/ai/task-manager-cp/**`
+- 目标试点项目真实代码：`<pilot-project>/**`
 - marketplace manifest：`.agents/plugins/marketplace.json`
 - 当前机器 Codex plugin cache / personal marketplace
 - 数据库配置、真实凭证、`.env*`、`.gstack/data-access/*.local.*`
@@ -38,7 +38,7 @@
 ## Functional Non-goals
 
 - 不自动移动已有项目的 `src/`、`prisma/`、`e2e/`、`tests/` 或配置文件。
-- 不修改真实试点项目 `task-manager-cp`。
+- 不修改真实试点项目 `pilot-project`。
 - 不改 marketplace 发布配置。
 - 不发布 / commit / push，除非用户另行明确批准。
 - 不做生产、数据库、真实数据或部署操作。
@@ -232,10 +232,10 @@ required_gates:
 - `python3 -m unittest tests/test_git_marketplace_publish_docs.py tests/test_marketplace_rollout_docs.py tests/test_plugin_marketplace.py tests/test_init_project.py`
 - `python3 -m py_compile scripts/init_project.py tests/test_init_project.py`
 - `python3 scripts/init_project.py --adapter default --detect --format json`
-- `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption`
-- `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
-- `python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
-- `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
+- `python3 <codex-home>/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption`
+- `python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
+- `python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
+- `python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
 - `python3 .gstack/scripts/spec_sync_guard.py`
 - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`
 - `python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-12_stack-first-adoption-layout.md`

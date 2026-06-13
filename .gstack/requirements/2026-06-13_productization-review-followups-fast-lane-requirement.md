@@ -29,7 +29,7 @@
 
 ## 验收标准
 
-- 公开文档不再出现 `/Users/edy/...` 这类本机绝对路径。
+- 公开文档不再出现 `<local-home>/...` 这类本机绝对路径。
 - `scripts/setup_local_codex.sh` 在非 git worktree 中可以跳过 hooks 并运行 doctor。
 - doctor core docs 能检查 `QUICK_START_FOR_PARTNERS.md`、`scripts/setup_local_codex.sh`、`blueprint/`、`archive/`、`shared/` 等新增入口。
 - context-isolation 的用户下一步能根据 symlink / 普通目录区别说明。

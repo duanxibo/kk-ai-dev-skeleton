@@ -73,7 +73,7 @@ python3 -m unittest tests/test_git_marketplace_publish_docs.py tests/test_market
 ### Plugin validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -81,7 +81,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 ### Skill validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -114,8 +114,8 @@ python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundari
 
 ## 未触碰范围
 
-- 未复制 TianGong 私有 `archive/`、`blueprint/` 或 `shared/` 内容。
-- 未修改真实试点项目 `/Users/edy/work/codespace/ai/task-manager-cp/`。
+- 未复制 源项目 私有 `archive/`、`blueprint/` 或 `shared/` 内容。
+- 未修改真实试点项目 `<pilot-project>/`。
 - 未修改 `.agents/plugins/marketplace.json`。
 - 未修改当前机器 Codex plugin cache 或 personal marketplace。
 - 未引入真实客户数据、Excel、CSV、SQL evidence、旧页面或旧业务脚本。

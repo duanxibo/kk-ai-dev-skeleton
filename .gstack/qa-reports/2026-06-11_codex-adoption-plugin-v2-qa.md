@@ -28,7 +28,7 @@
 命令：
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：
@@ -38,7 +38,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 命令：
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：
@@ -119,7 +119,7 @@ rg --hidden -n "用户.*执行.*python3|业务用户.*运行.*python3|在目标�
 命令：
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" plugins/kk-dev-skeleton-adoption CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" plugins/kk-dev-skeleton-adoption CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
 ```
 
 结果：

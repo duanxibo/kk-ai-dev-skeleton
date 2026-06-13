@@ -107,10 +107,10 @@
   - 当前任务 `chinese-first-skeleton-docs` 显示 `7/7`、全部完成、正常。
 - `rg` 扫描保留英文说明模式和私有残留：
   - 明显英文说明残留：无输出。
-  - `tg-`、`TianGong`、私有业务路径、本地敏感配置残留：无输出。
+  - `tg-`、`源项目`、私有业务路径、本地敏感配置残留：无输出。
 - `python3 .gstack/scripts/spec_sync_guard.py`
   - `PASS: static skeleton guard passed.`
-- Chrome DevTools 打开 `file:///Users/edy/work/codespace/ai/tiangong/ai-dev-skeleton/examples/simple-web-app/stack/frontend/index.html`
+- Chrome DevTools 打开 `file://<repo-root>/examples/simple-web-app/stack/frontend/index.html`
   - 页面标题：`简单任务看板`
   - H1：`任务看板`
   - 搜索 `部署` 后：`当前显示 1 个任务`

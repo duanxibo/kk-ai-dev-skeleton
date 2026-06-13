@@ -78,7 +78,7 @@ rg --hidden -n "对 Codex 说|自然语言|Codex 接入器|内部安装器" CODE
 命令：
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
 ```
 
 结果：

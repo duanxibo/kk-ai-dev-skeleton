@@ -59,9 +59,9 @@
 
 - 需要运行的测试 / 脚本 / 页面验证：
   - `python3 -m unittest tests/test_plugin_marketplace.py`
-  - `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
-  - `python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
-  - `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
+  - `python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
+  - `python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
+  - `python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
   - `python3 scripts/init_project.py --adapter default --verify --report`
   - `python3 .gstack/scripts/spec_sync_guard.py`
   - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`

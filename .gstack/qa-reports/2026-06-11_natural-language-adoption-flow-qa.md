@@ -49,7 +49,7 @@ rg --hidden -n "通过 Codex|自然语言|对 Codex 说|用户对 Codex" COMPANY
 - 说明：命中 README 和接入指南中的自然语言接入说明。
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" COMPANY_ADOPTION_GUIDE.md README.md -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" COMPANY_ADOPTION_GUIDE.md README.md -S
 ```
 
 - 结果：`pass`

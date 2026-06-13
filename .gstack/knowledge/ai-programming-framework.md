@@ -75,7 +75,7 @@ KK Dev Skeleton 把可复用 AI 开发能力和项目专属规则分开。
 - workflow 中写死的路径如果属于项目专属内容，必须迁入 adapter 或明确标记为 example。
 - doctor 应尽量检查核心入口、skills、scripts 和 active boundary 是否可用。
 
-如果为了抽离而删除某份 TianGong 文档，必须判断它属于哪类：
+如果为了抽离而删除某份 源项目 文档，必须判断它属于哪类：
 
 - 业务真源：删除或迁到 example。
 - 私有历史证据：删除。

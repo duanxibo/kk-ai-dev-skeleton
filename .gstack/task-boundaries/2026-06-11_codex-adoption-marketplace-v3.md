@@ -231,16 +231,16 @@ required_gates:
 ## Verification
 
 - `python3 -m unittest tests/test_plugin_marketplace.py`
-- `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
-- `python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
-- `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
+- `python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
+- `python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption`
+- `python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json`
 - `python3 scripts/init_project.py --adapter default --verify --report`
 - `python3 .gstack/scripts/spec_sync_guard.py`
 - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`
 - `python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-11_codex-adoption-marketplace-v3.md`
 - `rg --hidden -n "codex plugin marketplace add|codex plugin add" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins/MARKETPLACE_INSTALL.md .agents/plugins/README.md -S`
 - `rg --hidden -n "用户.*执行.*python3|业务用户.*运行.*python3|在目标项目根目录内执行|复制到新项目后的最小步骤" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins .agents -S`
-- `rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins .agents tests/test_plugin_marketplace.py -S`
+- `rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins .agents tests/test_plugin_marketplace.py -S`
 
 ## Lessons To Write Back
 

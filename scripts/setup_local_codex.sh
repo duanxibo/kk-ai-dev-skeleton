@@ -52,11 +52,11 @@ done
 cd "$REPO_ROOT"
 
 if [ "$SKIP_SKILLS" -eq 0 ]; then
-  skill_args=()
   if [ "$REMOVE_TG_LINKS" -eq 1 ]; then
-    skill_args+=(--remove-tg-links)
+    bash .gstack/scripts/sync_repo_skills.sh --remove-tg-links
+  else
+    bash .gstack/scripts/sync_repo_skills.sh
   fi
-  bash .gstack/scripts/sync_repo_skills.sh "${skill_args[@]}"
 else
   echo "[SKIP] repo-native skill sync"
 fi

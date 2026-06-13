@@ -77,7 +77,7 @@ python3 -m unittest tests/test_git_marketplace_publish_docs.py tests/test_market
 ### Plugin validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -85,7 +85,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 ### Skill validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -93,7 +93,7 @@ python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py
 ### Cachebuster
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。版本从 `0.1.0+codex.20260612073926` 更新为 `0.1.0+codex.20260612074242`。
@@ -126,7 +126,7 @@ python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundari
 
 ## 未触碰范围
 
-- 未修改真实试点项目 `/Users/edy/work/codespace/ai/task-manager-cp/`。
+- 未修改真实试点项目 `<pilot-project>/`。
 - 未修改 `.agents/plugins/marketplace.json`。
 - 未修改当前机器 Codex plugin cache 或 personal marketplace。
 - 未自动覆盖 adapter。

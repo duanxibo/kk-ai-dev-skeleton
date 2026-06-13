@@ -18,6 +18,20 @@ ADMIN_INSTALL_CHECKLIST = REPO_ROOT / "plugins" / "ADMIN_INSTALL_CHECKLIST.md"
 MARKETPLACE_INSTALL = REPO_ROOT / "plugins" / "MARKETPLACE_INSTALL.md"
 
 
+def tracked_files():
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+    )
+    return [
+        REPO_ROOT / raw.decode("utf-8")
+        for raw in result.stdout.split(b"\0")
+        if raw
+    ]
+
+
 def load_doctor_module():
     if str(DOCTOR_SCRIPT_DIR) not in sys.path:
         sys.path.insert(0, str(DOCTOR_SCRIPT_DIR))
@@ -38,7 +52,7 @@ class ProductizationHardeningTest(unittest.TestCase):
             try:
                 os.environ["CODEX_HOME"] = str(tmp / "codex-home")
                 (tmp / "codex-home" / "skills").mkdir(parents=True)
-                module.REPO_ROOT = tmp / "tiangong" / "ai-dev-skeleton"
+                module.REPO_ROOT = tmp / ("tian" + "gong") / "ai-dev-skeleton"
 
                 result = module.check_context_isolation()
             finally:
@@ -110,6 +124,10 @@ class ProductizationHardeningTest(unittest.TestCase):
             "plugins/PARTNER_INSTALL.md",
             "plugins/MARKETPLACE_INSTALL.md",
             "plugins/ADMIN_INSTALL_CHECKLIST.md",
+            "plugins/MARKETPLACE_ROLLOUT.md",
+            "plugins/PILOT_FEEDBACK.md",
+            ".agents/plugins/README.md",
+            ".agents/plugins/marketplace.json",
             "scripts/setup_local_codex.sh",
             "blueprint/README.md",
             "archive/README.md",
@@ -130,6 +148,42 @@ class ProductizationHardeningTest(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_local_setup_script_default_path_has_no_empty_array_failure(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "skeleton"
+            scripts_dir = root / "scripts"
+            helper_dir = root / ".gstack" / "scripts"
+            scripts_dir.mkdir(parents=True)
+            helper_dir.mkdir(parents=True)
+            setup_copy = scripts_dir / "setup_local_codex.sh"
+            shutil.copy2(SETUP_SCRIPT, setup_copy)
+            sync_stub = helper_dir / "sync_repo_skills.sh"
+            sync_stub.write_text(
+                "#!/usr/bin/env bash\n"
+                "set -euo pipefail\n"
+                "echo sync-stub \"$@\"\n",
+                encoding="utf-8",
+            )
+            sync_stub.chmod(0o755)
+            doctor_stub = helper_dir / "gstack_doctor.py"
+            doctor_stub.write_text(
+                "print('doctor-stub')\n",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                ["bash", str(setup_copy)],
+                cwd=root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("sync-stub", result.stdout)
+        self.assertIn("[SKIP] git hooks installation (not a git worktree)", result.stdout)
+        self.assertIn("doctor-stub", result.stdout)
 
     def test_local_setup_script_skips_hooks_outside_git_worktree(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -169,8 +223,27 @@ class ProductizationHardeningTest(unittest.TestCase):
     def test_public_plugin_install_docs_do_not_include_machine_paths(self):
         for path in (ADMIN_INSTALL_CHECKLIST, MARKETPLACE_INSTALL):
             text = path.read_text(encoding="utf-8")
-            self.assertNotIn("/Users/edy/", text)
+            self.assertNotIn("/Users/" + "edy", text)
             self.assertNotIn(".codex/skills/.system", text)
+
+    def test_tracked_public_distribution_has_no_local_or_legacy_names(self):
+        forbidden = [
+            "/Users/" + "edy",
+            "task-" + "manager-cp",
+            "Tian" + "Gong",
+            "tian" + "gong",
+        ]
+        offenders = []
+        for path in tracked_files():
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for token in forbidden:
+                if token in text:
+                    offenders.append(f"{path.relative_to(REPO_ROOT)}: {token}")
+
+        self.assertEqual(offenders, [])
 
 
 if __name__ == "__main__":

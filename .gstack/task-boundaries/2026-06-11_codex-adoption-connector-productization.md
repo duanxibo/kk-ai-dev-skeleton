@@ -219,7 +219,7 @@ required_gates:
 - `python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-11_codex-adoption-connector-productization.md`
 - `rg --hidden -n "用户.*执行.*python3|业务用户.*运行.*python3|在目标项目根目录内执行|复制到新项目后的最小步骤" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S`
 - `rg --hidden -n "对 Codex 说|自然语言|Codex 接入器|内部安装器" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S`
-- `rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S`
+- `rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S`
 
 ## Lessons To Write Back
 

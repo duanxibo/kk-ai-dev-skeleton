@@ -188,7 +188,7 @@ rg --hidden -n "detect|plan|apply|verify|report|内部安装器|Codex 接入器"
 命令：
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" scripts/init_project.py tests/test_init_project.py CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" scripts/init_project.py tests/test_init_project.py CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md -S
 ```
 
 结果：

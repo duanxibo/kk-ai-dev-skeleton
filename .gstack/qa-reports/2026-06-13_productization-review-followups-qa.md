@@ -10,7 +10,7 @@
 
 ## 修复覆盖
 
-- 安装文档不再包含 `/Users/edy/...` 或 `.codex/skills/.system` 这类本机绝对路径。
+- 安装文档不再包含 `<local-home>/...` 或 `.codex/skills/.system` 这类本机绝对路径。
 - `scripts/setup_local_codex.sh` 在非 git worktree 中自动跳过 hooks 安装并继续 doctor。
 - doctor core docs 检查从 18 个入口扩展为 29 个入口，覆盖普通伙伴快速入口、安装文档、setup helper 和公共 workspace layers。
 - context-isolation 的下一步说明已区分外部 skill symlink 和普通目录。
@@ -19,7 +19,7 @@
 
 ```bash
 python3 -m unittest tests/test_productization_hardening.py -v
-rg -n "/Users/edy|\\.codex/skills/\\.system" README.md COMPANY_ADOPTION_GUIDE.md CODEX_ADOPTION_CONNECTOR.md QUICK_START_FOR_PARTNERS.md plugins .gstack/knowledge .gstack/scripts scripts --glob '!tests/**'
+rg -n "<local-home>|\\.codex/skills/\\.system" README.md COMPANY_ADOPTION_GUIDE.md CODEX_ADOPTION_CONNECTOR.md QUICK_START_FOR_PARTNERS.md plugins .gstack/knowledge .gstack/scripts scripts --glob '!tests/**'
 bash -n scripts/setup_local_codex.sh
 python3 -m py_compile .gstack/scripts/gstack_doctor.py
 python3 -m unittest discover -s tests -v

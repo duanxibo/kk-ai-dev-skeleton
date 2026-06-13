@@ -48,7 +48,7 @@
 - `secrets/**`
 - production configs
 - real customer data
-- TianGong business specs, archived business evidence, or private data assets
+- 源项目 business specs, archived business evidence, or private data assets
 - git workflow actions
 
 ## Functional Non-goals
@@ -255,7 +255,7 @@ required_gates:
 - `python3 .gstack/scripts/gstack_doctor.py check`
 - `python3 .gstack/scripts/spec_sync_guard.py`
 - `python3 .gstack/scripts/natural_language_dev_smoke.py`
-- `rg --hidden` 检查 `TianGong / lunhui / cohort / product-review` 等私有业务残留。
+- `rg --hidden` 检查 `源项目 / lunhui / cohort / product-review` 等私有业务残留。
 - `rg --hidden` 检查新增断链引用。
 
 ## Lessons To Write Back

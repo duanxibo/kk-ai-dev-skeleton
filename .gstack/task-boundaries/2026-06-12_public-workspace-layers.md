@@ -29,10 +29,10 @@
 
 ## Forbidden Files
 
-- TianGong 私有历史内容：`/Users/edy/work/codespace/ai/tiangong/TianGong/archive/**`
-- TianGong 私有 blueprint 内容：`/Users/edy/work/codespace/ai/tiangong/TianGong/blueprint/**`
-- TianGong 真实 shared 输入：`/Users/edy/work/codespace/ai/tiangong/TianGong/shared/**`
-- 真实试点项目：`/Users/edy/work/codespace/ai/task-manager-cp/**`
+- 源项目 私有历史内容：`<private-source-project>/archive/**`
+- 源项目 私有 blueprint 内容：`<private-source-project>/blueprint/**`
+- 源项目 真实 shared 输入：`<private-source-project>/shared/**`
+- 真实试点项目：`<pilot-project>/**`
 - `.agents/plugins/marketplace.json`
 - 当前机器 Codex plugin cache / personal marketplace
 - `.env*`、真实凭证、生产配置、真实客户数据
@@ -40,7 +40,7 @@
 
 ## Functional Non-goals
 
-- 不复制 TianGong 业务文档、旧页面、旧脚本、Excel、CSV 或 SQL evidence。
+- 不复制 源项目 业务文档、旧页面、旧脚本、Excel、CSV 或 SQL evidence。
 - 不把 archive 当当前实现真源。
 - 不移动已有业务代码。
 - 不发布 / commit / push。

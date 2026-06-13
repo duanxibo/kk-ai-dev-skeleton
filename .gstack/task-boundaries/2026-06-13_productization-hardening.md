@@ -31,8 +31,8 @@
 
 ## Forbidden Files
 
-- `/Users/edy/work/codespace/ai/tiangong/TianGong/**`
-- `/Users/edy/work/codespace/ai/task-manager-cp/**`
+- `<private-source-project>/**`
+- `<pilot-project>/**`
 - 真实试点项目代码
 - `.env*`、真实凭证、生产配置、真实客户数据
 - 当前机器 Codex plugin cache / personal marketplace，除非只做只读诊断

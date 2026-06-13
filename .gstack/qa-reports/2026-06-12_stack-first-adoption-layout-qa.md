@@ -75,7 +75,7 @@ python3 scripts/init_project.py --adapter default --detect --format json
 ### Cachebuster
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。版本从 `0.1.0` 更新为 `0.1.0+codex.20260612040400`，避免后续 marketplace 更新被旧 cache 复用。
@@ -83,7 +83,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/update_plugin_ca
 ### Plugin validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -91,7 +91,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 ### Skill validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -99,7 +99,7 @@ python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py
 ### Marketplace name
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
+python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
 ```
 
 结果：`kk-dev-skeleton-internal`。
@@ -132,7 +132,7 @@ python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundari
 
 ## 未触碰范围
 
-- 未修改真实试点项目 `/Users/edy/work/codespace/ai/task-manager-cp/`。
+- 未修改真实试点项目 `<pilot-project>/`。
 - 未移动任何已有项目根目录代码。
 - 未修改 marketplace manifest。
 - 未执行生产、数据库、真实数据或部署操作。
@@ -145,5 +145,5 @@ python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundari
 
 ## 残余风险
 
-- 已接入过的项目不会自动重排目录。对 `task-manager-cp` 这类已有项目，需要另起迁移任务：先生成迁移计划，再把 `src/`、`prisma/`、`e2e/`、测试和配置逐步迁入 `stack/<project>/` 或在 adapter 中明确例外。
+- 已接入过的项目不会自动重排目录。对 `pilot-project` 这类已有项目，需要另起迁移任务：先生成迁移计划，再把 `src/`、`prisma/`、`e2e/`、测试和配置逐步迁入 `stack/<project>/` 或在 adapter 中明确例外。
 - 伙伴本机已经安装过旧版时，需要执行 `codex plugin marketplace upgrade kk-dev-skeleton-internal` 后重装插件，才能拿到本次 cachebuster 版本。

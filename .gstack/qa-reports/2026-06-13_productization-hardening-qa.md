@@ -12,7 +12,7 @@
 
 - 已运行 `bash .gstack/scripts/sync_repo_skills.sh --remove-tg-links`
   - 删除旧 `tg-*` symlink。
-  - 同步 `kk-*` skills 到 `/Users/edy/.codex/skills`，目标指向当前公共骨架仓库。
+  - 同步 `kk-*` skills 到 `<codex-home>/skills`，目标指向当前公共骨架仓库。
 - 已运行 `bash .gstack/scripts/install_git_hooks.sh`
   - `core.hooksPath=.githooks`
   - active hooks: `.githooks/pre-commit`, `.githooks/pre-push`
@@ -48,7 +48,7 @@ python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundari
   - `git-hooks`: pass.
   - `skills`: pass.
   - `context-isolation`: pass.
-  - 父目录 `tiangong` 仅作为命名提示保留，不再导致 warn。
+  - 父目录 `source-project` 仅作为命名提示保留，不再导致 warn。
 - `python3 .gstack/scripts/spec_sync_guard.py`
   - PASS: no implementation changes detected, spec sync guard is not blocking this diff.
 - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`

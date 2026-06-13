@@ -58,7 +58,7 @@
 ## 验证计划
 
 - 需要运行的测试 / 脚本 / 页面验证：
-  - `python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
+  - `python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
   - `python3 scripts/init_project.py --adapter default --verify --report`
   - `python3 .gstack/scripts/spec_sync_guard.py`
   - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`

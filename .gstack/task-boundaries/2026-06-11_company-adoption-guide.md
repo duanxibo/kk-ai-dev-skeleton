@@ -237,7 +237,7 @@ required_gates:
 - python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD
 - python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-11_company-adoption-guide.md
 - rg --hidden -n "lunhui|cohort|审批模块|review-service" COMPANY_ADOPTION_GUIDE.md README.md -S
-- rg --hidden -n "TianGong|tiangong" COMPANY_ADOPTION_GUIDE.md README.md -S
+- rg --hidden -n "源项目|source-project" COMPANY_ADOPTION_GUIDE.md README.md -S
 
 ## Lessons To Write Back
 

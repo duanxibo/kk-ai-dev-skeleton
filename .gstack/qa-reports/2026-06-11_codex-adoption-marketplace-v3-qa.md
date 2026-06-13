@@ -56,7 +56,7 @@ python3 -m json.tool .agents/plugins/marketplace.json
 命令：
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
+python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
 ```
 
 结果：
@@ -69,7 +69,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace
 命令：
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：
@@ -79,7 +79,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 命令：
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：
@@ -149,7 +149,7 @@ rg --hidden -n "用户.*执行.*python3|业务用户.*运行.*python3|在目标�
 命令：
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins .agents tests/test_plugin_marketplace.py -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" CODEX_ADOPTION_CONNECTOR.md COMPANY_ADOPTION_GUIDE.md README.md plugins .agents tests/test_plugin_marketplace.py -S
 ```
 
 结果：

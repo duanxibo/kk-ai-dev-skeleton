@@ -1,57 +1,47 @@
-# productization-review-followups Task Boundary
+# public-distribution-sanitization Task Boundary
 
-- Task: productization-review-followups
+- Task: public-distribution-sanitization
 - 负责人: Codex
 - 日期: 2026-06-13
-- 相关 issue / doc: `.gstack/requirements/2026-06-13_productization-review-followups-fast-lane-requirement.md`
+- 相关 issue / doc: `.gstack/requirements/2026-06-13_public-distribution-sanitization-fast-lane-requirement.md`
 
 ## Goal
 
-- 修复 review 提出的产品化分发可迁移性、自检覆盖面和 doctor 文案准确性问题。
+- 修复默认 setup 入口，并清理公开骨架 tracked tree 中的本机路径、源项目名和试点项目名残留。
 
 ## Allowed Files
 
-- `.gstack/requirements/2026-06-13_productization-review-followups-fast-lane-requirement.md`
-- `.gstack/reviews/2026-06-13_productization-review-followups-fast-lane-review.md`
-- `.gstack/task-boundaries/2026-06-13_productization-review-followups.md`
-- `.gstack/qa-reports/2026-06-13_productization-review-followups-qa.md`
-- `.gstack/scripts/gstack_doctor.py`
-- `.gstack/knowledge/CODEMAP.md`
+- `.gstack/requirements/2026-06-13_public-distribution-sanitization-fast-lane-requirement.md`
+- `.gstack/reviews/2026-06-13_public-distribution-sanitization-fast-lane-review.md`
+- `.gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md`
+- `.gstack/qa-reports/2026-06-13_public-distribution-sanitization-qa.md`
+- `.gstack/**`
 - `scripts/setup_local_codex.sh`
-- `plugins/ADMIN_INSTALL_CHECKLIST.md`
-- `plugins/MARKETPLACE_INSTALL.md`
 - `tests/test_productization_hardening.py`
 
 ## Forbidden Files
 
-- `<private-source-project>/**`
-- `<pilot-project>/**`
-- 当前机器 Codex plugin cache / personal marketplace
 - plugin manifest、marketplace name 或发布版本号
 - `.env*`、真实凭证、生产配置、真实客户数据
 - git workflow action，除非用户另行明确批准
 
 ## Functional Non-goals
 
-- 不重构插件安装器。
-- 不新增组织级版本登记系统。
+- 不删除历史 evidence。
+- 不重构 setup / doctor。
 - 不发布 / commit / push。
-- 不删除普通目录形式的外部 skills。
 
 ## User-visible Acceptance
 
-- 分发文档不再依赖某台机器路径。
-- 无 `.git` 的骨架包运行 setup 不会在 hooks 步骤中断。
-- doctor 能发现新增产品化入口缺失。
-- context-isolation 下一步说明能区分 symlink 和普通目录。
+- README 推荐的默认 setup 命令可以运行。
+- 公开发放的 tracked 文件不包含本机绝对路径或旧项目命名残留。
+- doctor 能检查完整发放入口。
 
 ## Generated Artifact Policy
 
 - User-visible Change: `yes`
-- Artifact Type: `markdown docs, shell helper, python doctor behavior, unit tests, QA report`
+- Artifact Type: `shell helper, python doctor behavior, historical evidence sanitization, unit tests, QA report`
 - Acceptance Surface:
-  - `plugins/ADMIN_INSTALL_CHECKLIST.md`
-  - `plugins/MARKETPLACE_INSTALL.md`
   - `scripts/setup_local_codex.sh`
   - `.gstack/scripts/gstack_doctor.py`
 - Browser QA: `not-required`
@@ -70,7 +60,7 @@
 
 - Lane: `fast-lane`
 - Reason:
-  小范围分发、文档、doctor 和测试修复，不涉及业务口径、真实数据、DB schema、生产操作或 UI。
+  小范围脚本、doctor、测试和历史文本清理，不涉及业务口径、真实数据、DB schema、生产操作或 UI。
 
 ## Autonomy Plan
 
@@ -78,7 +68,7 @@
   - 在 Allowed Files 内实现。
   - 运行本地测试、doctor 和 guards。
 - Codex Must Ask Before:
-  - 删除普通目录形式外部 skills。
+  - 删除历史 evidence。
   - 修改 plugin manifest、版本号或 marketplace name。
   - 执行 commit、push、PR、生产部署、DB schema 变更、破坏性命令或真实数据写入。
 - Gate Recovery:
@@ -92,33 +82,33 @@
 
 - Mode: `not-used`
 - Reason:
-  fast-lane review follow-up 由 main agent 直接完成。
+  fast-lane 分发净化由 main agent 直接完成。
 
 ## GStack Required Flow
 
 - requirement-brief:
   status: done
-  evidence: `.gstack/requirements/2026-06-13_productization-review-followups-fast-lane-requirement.md`
+  evidence: `.gstack/requirements/2026-06-13_public-distribution-sanitization-fast-lane-requirement.md`
 - plan-ceo-review:
   status: done
-  evidence: `.gstack/reviews/2026-06-13_productization-review-followups-fast-lane-review.md`
+  evidence: `.gstack/reviews/2026-06-13_public-distribution-sanitization-fast-lane-review.md`
 - requirement-freeze:
   status: done
-  evidence: `.gstack/requirements/2026-06-13_productization-review-followups-fast-lane-requirement.md`
+  evidence: `.gstack/requirements/2026-06-13_public-distribution-sanitization-fast-lane-requirement.md`
   note: fast-lane requirement 同时作为 requirement freeze。
 - plan-eng-review:
   status: done
-  evidence: `.gstack/reviews/2026-06-13_productization-review-followups-fast-lane-review.md`
+  evidence: `.gstack/reviews/2026-06-13_public-distribution-sanitization-fast-lane-review.md`
 - domain-spec-readiness:
   status: not-required
-  evidence: `.gstack/task-boundaries/2026-06-13_productization-review-followups.md`
+  evidence: `.gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md`
   note: 本次不改变具体应用 stack domain 产品或工程真源。
 - implement:
   status: done
-  evidence: `.gstack/task-boundaries/2026-06-13_productization-review-followups.md`
+  evidence: `.gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md`
 - qa:
   status: done
-  evidence: `.gstack/qa-reports/2026-06-13_productization-review-followups-qa.md`
+  evidence: `.gstack/qa-reports/2026-06-13_public-distribution-sanitization-qa.md`
 
 ## Required Gates
 
@@ -129,7 +119,7 @@ required_gates:
     owner: kk-data-kickoff
     required_before: plan-eng-review
     status: not-required
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Required Gates"
     blocking_reason: ""
     done_criteria: "已明确不涉及数据源 / 接口 / 查数"
@@ -138,7 +128,7 @@ required_gates:
     owner: kk-data-query
     required_before: plan-eng-review
     status: not-required
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Required Gates"
     blocking_reason: ""
     done_criteria: "已明确不需要 Query Brief、SQL 或查询 review"
@@ -147,7 +137,7 @@ required_gates:
     owner: kk-task-kickoff
     required_before: plan-eng-review
     status: not-required
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Required Gates"
     blocking_reason: ""
     done_criteria: "已明确不涉及前端 / 原型逻辑抽取"
@@ -156,25 +146,25 @@ required_gates:
     owner: kk-subagent-orchestrator
     required_before: implement
     status: done
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Subagent Plan"
     blocking_reason: ""
     done_criteria: "active boundary 中已有 Subagent Plan；本轮不使用 subagent"
   - gate_id: doc-backfill
-    trigger_reason: "本任务新增 / 修正文档，不是从已有代码反推文档"
+    trigger_reason: "本任务清理历史 evidence 文本，不是从已有代码反推文档"
     owner: kk-doc-backfill
     required_before: review
     status: not-required
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Required Gates"
     blocking_reason: ""
-    done_criteria: "新增文档同步创建，不需要从代码反推"
+    done_criteria: "文本净化同步完成，不需要从代码反推"
   - gate_id: data-knowledge-sync
     trigger_reason: "本任务不新增或调整后端 API / DTO / migration / 表 / 读模型 / 快照 / projection"
     owner: kk-doc-sync
     required_before: review
     status: not-required
-    evidence_path: ".gstack/task-boundaries/2026-06-13_productization-review-followups.md"
+    evidence_path: ".gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md"
     evidence_section: "Required Gates"
     blocking_reason: ""
     done_criteria: "已明确不涉及数据知识同步"
@@ -198,18 +188,18 @@ required_gates:
 - Expected Spec Targets:
   - 不适用
 - Allowed No-Spec-Change Reason:
-  本次修复公共骨架产品化分发、自检和文案，不改变具体应用 stack domain 产品或工程真源。
+  本次修复公共骨架分发脚本、自检覆盖和历史 evidence 文本净化，不改变具体应用 stack domain 产品或工程真源。
 
 ## Verification
 
-- `bash -n scripts/setup_local_codex.sh`
-- `python3 -m py_compile .gstack/scripts/gstack_doctor.py`
-- `python3 -m unittest discover -s tests -p 'test_*.py'`
+- `CODEX_HOME=$(mktemp -d) bash scripts/setup_local_codex.sh`
+- `python3 -m unittest discover -s tests -v`
 - `python3 .gstack/scripts/gstack_doctor.py check`
 - `python3 .gstack/scripts/natural_language_dev_smoke.py`
 - `python3 .gstack/scripts/spec_sync_guard.py`
 - `python3 .gstack/scripts/team_flow_guard.py --mode audit --base HEAD`
-- `python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-13_productization-review-followups.md`
+- `python3 .gstack/scripts/required_gates_audit.py --boundary .gstack/task-boundaries/2026-06-13_public-distribution-sanitization.md`
+- `python3 .gstack/scripts/runtime_artifact_guard.py`
 
 ## Lessons To Write Back
 

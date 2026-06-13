@@ -33,7 +33,7 @@
 - 明确不做：
   - 不做完整公司级 CLI 安装器。
   - 不做全部 guard adapter runtime 重构。
-  - 不引入 TianGong 业务真源。
+  - 不引入 源项目 业务真源。
 
 ## ENG 视角检查
 

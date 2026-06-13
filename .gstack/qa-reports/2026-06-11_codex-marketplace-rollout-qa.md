@@ -36,7 +36,7 @@ python3 -m unittest tests/test_plugin_marketplace.py
 ### Plugin validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/plugin-creator/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -44,7 +44,7 @@ python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/validate_plugin.
 ### Skill validator
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
+python3 <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption
 ```
 
 结果：通过。
@@ -52,7 +52,7 @@ python3 /Users/edy/.codex/skills/.system/skill-creator/scripts/quick_validate.py
 ### Marketplace name reader
 
 ```bash
-python3 /Users/edy/.codex/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
+python3 <codex-home>/skills/.system/plugin-creator/scripts/read_marketplace_name.py --marketplace-path .agents/plugins/marketplace.json
 ```
 
 结果：`kk-dev-skeleton-internal`。
@@ -94,7 +94,7 @@ rg --hidden -n "用户.*执行.*python3|业务用户.*运行.*python3|在目标�
 ### 旧项目上下文
 
 ```bash
-rg --hidden -n "lunhui|cohort|审批模块|review-service|TianGong|tiangong" plugins .agents tests/test_marketplace_rollout_docs.py COMPANY_ADOPTION_GUIDE.md README.md CODEX_ADOPTION_CONNECTOR.md -S
+rg --hidden -n "lunhui|cohort|审批模块|review-service|源项目|source-project" plugins .agents tests/test_marketplace_rollout_docs.py COMPANY_ADOPTION_GUIDE.md README.md CODEX_ADOPTION_CONNECTOR.md -S
 ```
 
 结果：无匹配。

@@ -9,7 +9,7 @@
 
 ## 用户目标
 
-公共骨架不应复制 TianGong 私有历史内容，但应保留可复用的工作区层能力：历史归档、前置蓝图、共享输入、设计记录和迁移记录。
+公共骨架不应复制 源项目 私有历史内容，但应保留可复用的工作区层能力：历史归档、前置蓝图、共享输入、设计记录和迁移记录。
 
 ## 最小交付范围
 
@@ -26,7 +26,7 @@
 
 ## 明确不做
 
-- 不复制 TianGong 的历史 archive、baseline、blueprint 或 shared 数据。
+- 不复制 源项目 的历史 archive、baseline、blueprint 或 shared 数据。
 - 不引入真实 Excel、CSV、SQL evidence、旧页面、旧业务脚本或私有设计内容。
 - 不发布、commit、push。
 - 不修改真实试点项目。
