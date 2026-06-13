@@ -232,6 +232,7 @@ class ProductizationHardeningTest(unittest.TestCase):
             "task-" + "manager-cp",
             "Tian" + "Gong",
             "tian" + "gong",
+            "天" + "宫",
         ]
         offenders = []
         for path in tracked_files():
