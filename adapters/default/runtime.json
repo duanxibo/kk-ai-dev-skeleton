@@ -1,8 +1,24 @@
 {
-  "version": 1,
+  "version": 6,
   "name": "default",
-  "description": "默认项目 adapter 的机器可读运行配置。真实项目应复制 adapters/default 后改写本文件；初始化 helper 会把 stack/default/ 模板路径替换成 stack/<project>/。",
+  "description": "默认项目 adapter 的机器可读运行配置，包含 portable core、Loop runtime V15 contract 和 explicit runtime bundle install。真实项目应复制 adapters/default 后改写本文件。",
   "paths": {
+    "collaboration_root": ".gstack/",
+    "boundary_prefix": ".gstack/task-boundaries/",
+    "requirement_prefix": ".gstack/requirements/",
+    "review_prefix": ".gstack/reviews/",
+    "ceo_review_prefix": ".gstack/reviews/",
+    "eng_review_prefix": ".gstack/reviews/",
+    "qa_prefix": ".gstack/qa-reports/",
+    "design_prefix": ".gstack/designs/",
+    "decision_prefix": ".gstack/decisions/",
+    "learning_prefix": ".gstack/learnings/",
+    "formal_stack_prefixes": [
+      "stack/default/"
+    ],
+    "domain_spec_prefixes": [
+      "stack/default/specs/"
+    ],
     "implementation_prefixes": [
       "stack/default/src/",
       "stack/default/scripts/",
@@ -30,13 +46,6 @@
     "deprecated_backend_spec_prefixes": [
       "docs/specs/archive/backend-legacy/"
     ],
-    "boundary_prefix": ".gstack/task-boundaries/",
-    "requirement_prefix": ".gstack/requirements/",
-    "review_prefix": ".gstack/reviews/",
-    "ceo_review_prefix": ".gstack/reviews/",
-    "eng_review_prefix": ".gstack/reviews/",
-    "qa_prefix": ".gstack/qa-reports/",
-    "design_prefix": ".gstack/designs/",
     "domain_spec_prefix": "stack/default/specs/",
     "data_access_trigger_prefixes": [
       "stack/default/src/",
@@ -61,6 +70,24 @@
       "archive/baseline/",
       "baseline/"
     ],
+    "demo_prefixes": [
+      "examples/"
+    ],
+    "archive_prefixes": [
+      "archive/",
+      "archive/baseline/"
+    ],
+    "forbidden_default_prefixes": [
+      ".env",
+      ".env.",
+      "secrets/",
+      "node_modules/",
+      "dist/",
+      "build/",
+      "target/",
+      ".venv/",
+      "__pycache__/"
+    ],
     "migration_candidate_prefixes": [
       "src/",
       "app/",
@@ -74,8 +101,271 @@
     ]
   },
   "commands": {
-    "dev_stack_entry": "scripts/dev_stack.sh",
-    "init_project": "scripts/init_project.py",
+    "detect": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--detect"
+    ],
+    "plan": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--plan"
+    ],
+    "verify": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--verify",
+      "--report"
+    ],
+    "target_apply_dry_run": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--apply",
+      "--dry-run"
+    ],
+    "target_apply": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--apply"
+    ],
+    "target_apply_core_dry_run": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--project-name",
+      "<project-name>",
+      "--adapter",
+      "default",
+      "--apply-core",
+      "--dry-run"
+    ],
+    "target_apply_core": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--project-name",
+      "<project-name>",
+      "--adapter",
+      "default",
+      "--apply-core"
+    ],
+    "target_apply_runtime_dry_run": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--apply-runtime",
+      "--dry-run",
+      "--report"
+    ],
+    "target_apply_runtime": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--apply-runtime",
+      "--report"
+    ],
+    "target_verify_runtime": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--verify-runtime",
+      "--report"
+    ],
+    "target_rewrite_adapter_dry_run": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--project-name",
+      "<project-name>",
+      "--adapter",
+      "default",
+      "--rewrite-adapter",
+      "--dry-run"
+    ],
+    "target_rewrite_adapter": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--project-name",
+      "<project-name>",
+      "--adapter",
+      "default",
+      "--rewrite-adapter"
+    ],
+    "validate": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--validate-adapter",
+      "--report"
+    ],
+    "target_validate_adapter": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--validate-adapter",
+      "--report"
+    ],
+    "target_verify_core": [
+      "python3",
+      "scripts/init_project.py",
+      "--repo-root",
+      "<repo-root>",
+      "--adapter",
+      "default",
+      "--verify",
+      "--verify-core",
+      "--report"
+    ],
+    "pilot": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--pilot",
+      "--report"
+    ],
+    "pilot_output": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--pilot",
+      "--pilot-output",
+      "<empty-dir>",
+      "--report"
+    ],
+    "loop_plan": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "plan",
+      "--format",
+      "user"
+    ],
+    "loop_plan_json": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "plan",
+      "--format",
+      "json"
+    ],
+    "loop_run_dry_run": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "run",
+      "--dry-run",
+      "--format",
+      "user"
+    ],
+    "loop_advance_dry_run": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "advance",
+      "--dry-run",
+      "--format",
+      "user"
+    ],
+    "loop_eng_review": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "eng-review",
+      "--format",
+      "user"
+    ],
+    "loop_subagents": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "subagents",
+      "--format",
+      "user"
+    ],
+    "loop_repair_dry_run": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "repair-loop",
+      "--dry-run",
+      "--format",
+      "user"
+    ],
+    "loop_write_back_dry_run": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "write-back",
+      "--dry-run",
+      "--format",
+      "user",
+      "--evidence",
+      ".gstack/scripts/gstack_loop.py"
+    ],
+    "loop_authorize_continue": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "authorize",
+      "--raw",
+      "继续做",
+      "--format",
+      "user"
+    ],
+    "loop_authorize_git": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "authorize",
+      "--raw",
+      "提交并推送",
+      "--format",
+      "json"
+    ],
+    "loop_chat_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "chat-smoke",
+      "--format",
+      "user"
+    ],
+    "loop_nl_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "nl-smoke",
+      "--format",
+      "user"
+    ],
+    "loop_contract_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop_contract_smoke.py",
+      "--format",
+      "user"
+    ],
     "doctor": [
       "python3",
       ".gstack/scripts/gstack_doctor.py",
@@ -85,6 +375,16 @@
       "python3",
       ".gstack/scripts/gstack_dashboard.py",
       "show"
+    ],
+    "natural_language_smoke": [
+      "python3",
+      ".gstack/scripts/natural_language_dev_smoke.py",
+      "--format",
+      "user"
+    ],
+    "spec_sync": [
+      "python3",
+      ".gstack/scripts/spec_sync_guard.py"
     ]
   },
   "gates": {
@@ -134,6 +434,255 @@
         ],
         "reason": "data-interface design changes require `data-access` done or planned"
       }
+    ],
+    "data-access": "Use when a task touches real data, source systems, API contracts, metrics, SQL, or data scope.",
+    "prototype-logic-extraction": "Use when backend/service code takes over existing frontend, fixture, mock, or prototype logic.",
+    "ui-interaction-qa": "Use when UI, HTML, dashboard, or visualization behavior changes."
+  },
+  "loop_runtime": {
+    "runtime_version": "loop-v15-natural-language-runtime",
+    "schema_version": "11",
+    "capabilities": [
+      "chat-first-protocol",
+      "stage-skill-routing",
+      "eng-review-decisioner",
+      "stage-write-back-closure",
+      "subagent-timeout-policy",
+      "subagent-orchestration",
+      "controlled-local-runner",
+      "test-repair-loop",
+      "chat-authorization-classifier",
+      "chat-first-smoke",
+      "natural-language-kickoff-smoke",
+      "loop-contract-smoke"
+    ],
+    "default_flow": [
+      "requirement-brief",
+      "plan-review",
+      "requirement-freeze",
+      "engineering-review",
+      "source-of-truth-readiness",
+      "implementation",
+      "qa"
+    ],
+    "codex_autonomous_actions": [
+      "requirement drafting after semantic review",
+      "engineering design and implementation choices inside active boundary",
+      "test command selection",
+      "subagent strategy selection",
+      "gate recovery for locally provable evidence",
+      "QA evidence drafting after real verification",
+      "documentation sync for changed behavior or contracts"
+    ],
+    "user_decision_boundary": {
+      "ask_user_for": [
+        "business scope",
+        "product or design multi-choice decisions",
+        "real data access",
+        "production operations",
+        "database schema or real-data writes",
+        "destructive commands",
+        "git workflow authorization"
+      ],
+      "do_not_ask_user_for": [
+        "code structure",
+        "test command selection",
+        "subagent role selection",
+        "gate recovery order",
+        "implementation strategy"
+      ]
+    }
+  },
+  "runtime_bundle": {
+    "bundle_version": 1,
+    "mode": "explicit-copy",
+    "source": "skeleton-source-repo",
+    "write_policy": "create-missing-preserve-existing",
+    "apply_command": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--apply-runtime"
+    ],
+    "verify_command": [
+      "python3",
+      "scripts/init_project.py",
+      "--adapter",
+      "default",
+      "--verify-runtime",
+      "--report"
+    ],
+    "files": [
+      ".gstack/scripts/autopilot_bootstrap.py",
+      ".gstack/scripts/codex_mode.py",
+      ".gstack/scripts/gstack_dashboard.py",
+      ".gstack/scripts/gstack_doctor.py",
+      ".gstack/scripts/gstack_loop.py",
+      ".gstack/scripts/gstack_loop_contract_smoke.py",
+      ".gstack/scripts/natural_language_dev_smoke.py",
+      ".gstack/scripts/nontechnical_acceptance_plan.py",
+      ".gstack/scripts/nontechnical_ci_failure.py",
+      ".gstack/scripts/nontechnical_confirmation_brief.py",
+      ".gstack/scripts/nontechnical_confirmation_response.py",
+      ".gstack/scripts/nontechnical_continue.py",
+      ".gstack/scripts/nontechnical_delivery_summary.py",
+      ".gstack/scripts/nontechnical_execution_plan.py",
+      ".gstack/scripts/nontechnical_first_use.py",
+      ".gstack/scripts/nontechnical_formal_kickoff.py",
+      ".gstack/scripts/nontechnical_guided_kickoff.py",
+      ".gstack/scripts/nontechnical_home.py",
+      ".gstack/scripts/nontechnical_implementation_readiness.py",
+      ".gstack/scripts/nontechnical_intake.py",
+      ".gstack/scripts/nontechnical_intent_router.py",
+      ".gstack/scripts/nontechnical_mode_control.py",
+      ".gstack/scripts/nontechnical_next_step.py",
+      ".gstack/scripts/nontechnical_page_change_brief.py",
+      ".gstack/scripts/nontechnical_pause.py",
+      ".gstack/scripts/nontechnical_recommendation.py",
+      ".gstack/scripts/nontechnical_requirement_brief.py",
+      ".gstack/scripts/nontechnical_requirement_readiness.py",
+      ".gstack/scripts/nontechnical_scope_change.py",
+      ".gstack/scripts/nontechnical_task_list.py",
+      ".gstack/scripts/nontechnical_task_starter.py",
+      ".gstack/scripts/nontechnical_team_sync.py",
+      ".gstack/scripts/nontechnical_undo_request.py",
+      ".gstack/scripts/nontechnical_visible_change.py",
+      ".gstack/scripts/required_gates_audit.py",
+      ".gstack/scripts/rule_manager.py",
+      ".gstack/scripts/spec_sync_guard.py",
+      ".gstack/scripts/team_flow_guard.py",
+      ".gstack/scripts/use_boundary.sh"
+    ],
+    "excluded_by_default": [
+      "stack/**",
+      "archive/**",
+      "blueprint/**",
+      "shared/**",
+      ".gstack/data-access/**",
+      "data source, SQL, ClickHouse, Metabase, production, database, and credential helpers"
+    ],
+    "required_smoke_commands": [
+      [
+        "python3",
+        ".gstack/scripts/gstack_loop_contract_smoke.py",
+        "--format",
+        "user"
+      ],
+      [
+        "python3",
+        ".gstack/scripts/gstack_loop.py",
+        "chat-smoke",
+        "--format",
+        "user"
+      ],
+      [
+        "python3",
+        ".gstack/scripts/gstack_loop.py",
+        "nl-smoke",
+        "--format",
+        "user"
+      ]
+    ],
+    "source_extended_smoke_commands": [
+      [
+        "python3",
+        ".gstack/scripts/natural_language_dev_smoke.py",
+        "--format",
+        "user"
+      ]
+    ],
+    "non_goals": [
+      "Does not install a background service, dashboard daemon, production connector, database tool, or git automation.",
+      "Does not overwrite existing target runtime scripts by default.",
+      "Does not copy project business stack, archive, blueprint, shared data, credentials, or data-access helpers."
     ]
-  }
+  },
+  "authorization": {
+    "classifier_version": "chat-authorization-v2",
+    "ambiguous_confirmation_does_not_authorize": [
+      "git workflow",
+      "production",
+      "database",
+      "real-data write",
+      "destructive command"
+    ],
+    "requires_explicit_authorization": [
+      "commit",
+      "amend",
+      "branch switch or creation",
+      "pull",
+      "push",
+      "merge",
+      "pull request",
+      "deploy",
+      "production restart or rollback",
+      "database schema change",
+      "real-data write",
+      "destructive command"
+    ],
+    "forbidden_scope_markers": [
+      "不要提交",
+      "不推送",
+      "不改数据库",
+      "别上线"
+    ]
+  },
+  "smoke_tests": {
+    "loop_contract_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop_contract_smoke.py",
+      "--format",
+      "user"
+    ],
+    "chat_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "chat-smoke",
+      "--format",
+      "user"
+    ],
+    "natural_language_loop_smoke": [
+      "python3",
+      ".gstack/scripts/gstack_loop.py",
+      "nl-smoke",
+      "--format",
+      "user"
+    ],
+    "natural_language_dev_smoke": [
+      "python3",
+      ".gstack/scripts/natural_language_dev_smoke.py",
+      "--format",
+      "user"
+    ]
+  },
+  "evidence_policy": {
+    "repo_native_dirs": [
+      ".gstack/requirements/",
+      ".gstack/reviews/",
+      ".gstack/task-boundaries/",
+      ".gstack/qa-reports/",
+      ".gstack/decisions/",
+      ".gstack/learnings/"
+    ],
+    "qa_requires_real_verification": true,
+    "eng_review_required_markers": [
+      "AI 语义复核: yes",
+      "## Codex 自主工程决策",
+      "## 用户决策边界",
+      "## 防技术甩锅检查",
+      "## 验证计划"
+    ],
+    "stage_write_back_requires_existing_evidence": true
+  },
+  "non_actions": [
+    "does not run as a background service",
+    "does not overwrite target project files by default",
+    "does not connect to production systems",
+    "does not connect to real databases",
+    "does not write real data",
+    "does not execute destructive commands",
+    "does not perform git workflow actions without explicit user authorization",
+    "does not mark QA passed without real verification"
+  ]
 }

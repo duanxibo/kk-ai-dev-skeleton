@@ -1,7 +1,7 @@
 {
   "name": "kk-dev-skeleton-adoption",
-  "version": "0.1.0+codex.20260612074242",
-  "description": "Codex workflow for adopting KK Dev Skeleton in internal repositories.",
+  "version": "0.1.0+codex.20260618051113",
+  "description": "Codex workflow for adopting and upgrading KK Dev Skeleton runtime bundles.",
   "author": {
     "name": "KK Dev Skeleton Team"
   },
@@ -15,8 +15,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "KK Dev Skeleton Adoption",
-    "shortDescription": "Guide Codex through KK Dev Skeleton project adoption.",
-    "longDescription": "Provides a natural-language Codex workflow for detecting, planning, applying, verifying, and reporting KK Dev Skeleton adoption in an internal repository.",
+    "shortDescription": "Guide Codex through KK Dev Skeleton adoption and runtime upgrades.",
+    "longDescription": "Provides a natural-language Codex workflow for detecting, planning, applying, validating, verifying, and reporting KK Dev Skeleton adapter, portable core, and explicit runtime bundle adoption.",
     "developerName": "KK Dev Skeleton Team",
     "category": "Productivity",
     "capabilities": [
@@ -26,7 +26,8 @@
     "defaultPrompt": [
       "\u63a5\u5165 KK Dev Skeleton",
       "\u68c0\u67e5\u9aa8\u67b6\u63a5\u5165\u72b6\u6001",
-      "\u751f\u6210\u63a5\u5165\u8ba1\u5212\u548c\u62a5\u544a"
+      "\u751f\u6210\u63a5\u5165\u8ba1\u5212\u548c\u62a5\u544a",
+      "\u540c\u6b65 KK Dev Skeleton runtime bundle"
     ]
   }
 }

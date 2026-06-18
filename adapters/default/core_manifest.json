@@ -1,0 +1,152 @@
+{
+  "version": 2,
+  "name": "portable-core",
+  "description": "Minimal portable collaboration core for target repositories with Loop runtime contract metadata.",
+  "write_policy": "create-missing-preserve-existing",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": "README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/knowledge/CODEMAP.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/knowledge/doc-placement.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/knowledge/ai-programming-framework.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/scripts/README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/task-boundaries/CURRENT.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/requirements/README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/reviews/README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/qa-reports/README.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": "scripts/init_project.py",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": "adapters/default/core_manifest.json",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": "adapters/default/runtime_schema.json",
+      "mode": "create-if-missing"
+    }
+  ],
+  "loop_runtime_contract": {
+    "version": "loop-v15-natural-language-runtime",
+    "capabilities": [
+      "chat-first-protocol",
+      "stage-skill-routing",
+      "eng-review-decisioner",
+      "stage-write-back-closure",
+      "subagent-timeout-policy",
+      "subagent-orchestration",
+      "controlled-local-runner",
+      "test-repair-loop",
+      "chat-authorization-classifier",
+      "chat-first-smoke",
+      "natural-language-kickoff-smoke",
+      "loop-contract-smoke"
+    ],
+    "required_command_keys": [
+      "loop_plan",
+      "loop_eng_review",
+      "loop_subagents",
+      "loop_repair_dry_run",
+      "loop_write_back_dry_run",
+      "loop_authorize_continue",
+      "loop_authorize_git",
+      "loop_chat_smoke",
+      "loop_nl_smoke",
+      "loop_contract_smoke"
+    ],
+    "metadata_sections": [
+      "loop_runtime",
+      "runtime_bundle",
+      "authorization",
+      "smoke_tests",
+      "evidence_policy",
+      "non_actions"
+    ]
+  },
+  "runtime_bundle_policy": {
+    "mode": "metadata-first-plus-explicit-runtime-copy",
+    "apply_command": "python3 scripts/init_project.py --adapter default --apply-runtime",
+    "verify_command": "python3 scripts/init_project.py --adapter default --verify-runtime --report",
+    "files": [
+      ".gstack/scripts/autopilot_bootstrap.py",
+      ".gstack/scripts/codex_mode.py",
+      ".gstack/scripts/gstack_dashboard.py",
+      ".gstack/scripts/gstack_doctor.py",
+      ".gstack/scripts/gstack_loop.py",
+      ".gstack/scripts/gstack_loop_contract_smoke.py",
+      ".gstack/scripts/natural_language_dev_smoke.py",
+      ".gstack/scripts/nontechnical_acceptance_plan.py",
+      ".gstack/scripts/nontechnical_ci_failure.py",
+      ".gstack/scripts/nontechnical_confirmation_brief.py",
+      ".gstack/scripts/nontechnical_confirmation_response.py",
+      ".gstack/scripts/nontechnical_continue.py",
+      ".gstack/scripts/nontechnical_delivery_summary.py",
+      ".gstack/scripts/nontechnical_execution_plan.py",
+      ".gstack/scripts/nontechnical_first_use.py",
+      ".gstack/scripts/nontechnical_formal_kickoff.py",
+      ".gstack/scripts/nontechnical_guided_kickoff.py",
+      ".gstack/scripts/nontechnical_home.py",
+      ".gstack/scripts/nontechnical_implementation_readiness.py",
+      ".gstack/scripts/nontechnical_intake.py",
+      ".gstack/scripts/nontechnical_intent_router.py",
+      ".gstack/scripts/nontechnical_mode_control.py",
+      ".gstack/scripts/nontechnical_next_step.py",
+      ".gstack/scripts/nontechnical_page_change_brief.py",
+      ".gstack/scripts/nontechnical_pause.py",
+      ".gstack/scripts/nontechnical_recommendation.py",
+      ".gstack/scripts/nontechnical_requirement_brief.py",
+      ".gstack/scripts/nontechnical_requirement_readiness.py",
+      ".gstack/scripts/nontechnical_scope_change.py",
+      ".gstack/scripts/nontechnical_task_list.py",
+      ".gstack/scripts/nontechnical_task_starter.py",
+      ".gstack/scripts/nontechnical_team_sync.py",
+      ".gstack/scripts/nontechnical_undo_request.py",
+      ".gstack/scripts/nontechnical_visible_change.py",
+      ".gstack/scripts/required_gates_audit.py",
+      ".gstack/scripts/rule_manager.py",
+      ".gstack/scripts/spec_sync_guard.py",
+      ".gstack/scripts/team_flow_guard.py",
+      ".gstack/scripts/use_boundary.sh"
+    ],
+    "note": "The portable core records the contract and safety boundary. Projects should explicitly copy the runtime bundle from a skeleton source checkout before treating loop commands as executable."
+  },
+  "non_goals": [
+    "Does not copy project business stack, archive, blueprint, real data configuration, or local secrets.",
+    "Does not perform production, database, external service, or git workflow actions."
+  ]
+}

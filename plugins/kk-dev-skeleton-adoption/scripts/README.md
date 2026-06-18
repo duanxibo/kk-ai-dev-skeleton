@@ -23,13 +23,17 @@ Network or remote errors do not block the current user task.
 
 Executable adoption behavior stays in the target repository.
 
-Codex should call the target repository's V1 helper:
+Codex should call the target repository's V9 helper:
 
 ```bash
 python3 scripts/init_project.py --adapter <adapter> --detect
 python3 scripts/init_project.py --adapter <adapter> --plan
 python3 scripts/init_project.py --adapter <adapter> --apply
-python3 scripts/init_project.py --adapter <adapter> --verify --report
+python3 scripts/init_project.py --adapter <adapter> --apply-core --dry-run --report
+python3 scripts/init_project.py --adapter <adapter> --apply-runtime --dry-run --report
+python3 scripts/init_project.py --adapter <adapter> --rewrite-adapter --dry-run --report
+python3 scripts/init_project.py --adapter <adapter> --validate-adapter --report
+python3 scripts/init_project.py --adapter <adapter> --verify --verify-core --verify-runtime --report
 ```
 
 Keeping the executable layer in the repository preserves adapter rules, task boundaries, guard checks, and repo-native QA evidence.

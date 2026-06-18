@@ -1,0 +1,87 @@
+{
+  "version": 2,
+  "name": "adapter-runtime-schema",
+  "description": "Deterministic schema guard for adapter runtime metadata and Loop runtime contract sections.",
+  "required_runtime_keys": [
+    "version",
+    "name",
+    "description",
+    "paths",
+    "commands",
+    "gates",
+    "loop_runtime",
+    "runtime_bundle",
+    "authorization",
+    "smoke_tests",
+    "evidence_policy",
+    "non_actions"
+  ],
+  "required_runtime_object_keys": [
+    "paths",
+    "commands",
+    "gates",
+    "loop_runtime",
+    "authorization",
+    "smoke_tests",
+    "evidence_policy"
+  ],
+  "required_runtime_list_keys": [
+    "non_actions"
+  ],
+  "required_command_keys": [
+    "loop_plan",
+    "loop_eng_review",
+    "loop_subagents",
+    "loop_repair_dry_run",
+    "loop_write_back_dry_run",
+    "loop_authorize_continue",
+    "loop_authorize_git",
+    "loop_chat_smoke",
+    "loop_nl_smoke",
+    "loop_contract_smoke"
+  ],
+  "required_loop_capabilities": [
+    "chat-first-protocol",
+    "stage-skill-routing",
+    "eng-review-decisioner",
+    "stage-write-back-closure",
+    "subagent-timeout-policy",
+    "subagent-orchestration",
+    "controlled-local-runner",
+    "test-repair-loop",
+    "chat-authorization-classifier",
+    "chat-first-smoke",
+    "natural-language-kickoff-smoke",
+    "loop-contract-smoke"
+  ],
+  "required_path_string_keys": [
+    "collaboration_root",
+    "boundary_prefix",
+    "requirement_prefix",
+    "review_prefix",
+    "qa_prefix",
+    "decision_prefix",
+    "learning_prefix"
+  ],
+  "required_path_list_keys": [
+    "formal_stack_prefixes",
+    "domain_spec_prefixes",
+    "implementation_prefixes",
+    "demo_prefixes",
+    "archive_prefixes",
+    "forbidden_default_prefixes"
+  ],
+  "structured_gate_keys": [
+    "data_access_status_requirements"
+  ],
+  "path_rules": {
+    "must_be_repo_relative": true,
+    "must_not_escape_repo": true,
+    "must_not_be_url": true
+  },
+  "non_goals": [
+    "Does not validate project business truth.",
+    "Does not connect to production, databases, external services, or git remotes.",
+    "Does not prove loop commands are executable unless --verify-runtime passes in the target repo."
+  ]
+}

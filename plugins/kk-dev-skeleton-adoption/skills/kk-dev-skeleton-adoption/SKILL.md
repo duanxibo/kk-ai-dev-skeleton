@@ -7,7 +7,7 @@ description: Use when a user asks Codex to adopt, install, check, upgrade, or re
 
 This skill is the Codex-facing adoption connector for KK Dev Skeleton.
 
-It does not replace the target repository's `AGENTS.md`, adapter, task boundary, or guard rules. It routes the user request into the repository-native adoption flow and calls the deterministic V1 helper when available.
+It does not replace the target repository's `AGENTS.md`, adapter, task boundary, or guard rules. It routes the user request into the repository-native adoption flow and calls the deterministic V9 helper when available.
 
 ## User Entry
 
@@ -41,14 +41,20 @@ Do not require business users to learn CLI flags. Commands are internal executio
    - `.gstack/knowledge/doc-placement.md`
    - `adapters/default/adapter.md`
    - `adapters/default/runtime.json`
-3. If the target repository already contains `scripts/init_project.py`, call the V1 helper:
+3. If the target repository already contains `scripts/init_project.py`, call the V9 helper:
    - detect: `python3 scripts/init_project.py --adapter <adapter> --detect`
    - plan: `python3 scripts/init_project.py --adapter <adapter> --plan`
    - apply: `python3 scripts/init_project.py --adapter <adapter> --apply`
-   - existing project upgrade plan: `python3 scripts/init_project.py --adapter <adapter> --upgrade-plan`
-   - existing project safe upgrade apply: `python3 scripts/init_project.py --adapter <adapter> --upgrade-apply`
-   - verify/report: `python3 scripts/init_project.py --adapter <adapter> --verify --report`
-   The helper must create or preserve `stack/<adapter>/` as the default application source-of-truth layout.
+   - portable core dry-run: `python3 scripts/init_project.py --adapter <adapter> --apply-core --dry-run --report`
+   - portable core apply: `python3 scripts/init_project.py --adapter <adapter> --apply-core --report`
+   - explicit runtime dry-run: `python3 scripts/init_project.py --adapter <adapter> --apply-runtime --dry-run --report`
+   - explicit runtime apply: `python3 scripts/init_project.py --adapter <adapter> --apply-runtime --report`
+   - adapter rewrite dry-run: `python3 scripts/init_project.py --adapter <adapter> --project-name <name> --rewrite-adapter --dry-run --report`
+   - adapter rewrite apply: `python3 scripts/init_project.py --adapter <adapter> --project-name <name> --rewrite-adapter --report`
+   - schema guard: `python3 scripts/init_project.py --adapter <adapter> --validate-adapter --report`
+   - verify/report: `python3 scripts/init_project.py --adapter <adapter> --verify --verify-core --verify-runtime --report`
+   - isolated pilot: `python3 scripts/init_project.py --adapter <adapter> --pilot --report`
+   The helper should create or preserve adapter metadata, portable core files, and the explicit runtime script bundle while keeping target project files intact by default.
    If it detects root-level application paths such as `src/`, `prisma/`, `e2e/`, `app/`,
    `packages/`, or root framework config files, do not silently treat that scattered layout as
    final. Report them as migration candidates and ask Codex to create a migration plan before
@@ -56,10 +62,11 @@ Do not require business users to learn CLI flags. Commands are internal executio
 4. Existing Project Upgrade:
    - Use this lane when the user asks to apply new plugin / skeleton capabilities to a repository that was already adopted.
    - Do not tell the user to create a new project or rerun first-time adoption.
-   - First run `--upgrade-plan` and summarize which items are already done, which safe items can be applied, and which items need a migration or merge plan.
-   - Only run `--upgrade-apply` for safe, idempotent changes such as creating missing `stack/<adapter>/` directories.
-   - Never overwrite adapter files, move root-level application code, or sync framework core files wholesale without a separate explicit plan and user approval.
-   - If `--upgrade-plan` is not supported because the target repository has an older helper, do not ask the user to create a new project. Explain that the project helper is stale, then generate a compatibility upgrade plan: preserve the current adapter, detect or create `stack/<adapter>/`, list root-level migration candidates, and propose syncing the latest helper as a separate reviewed change.
+   - First run `--detect`, `--plan`, and `--validate-adapter --report`.
+   - Run `--apply-core --dry-run --report`, `--apply-runtime --dry-run --report`, and `--rewrite-adapter --dry-run --report` to form an incremental plan.
+   - Only apply safe, idempotent create-missing changes within the active task boundary.
+   - Never overwrite adapter files, move root-level application code, sync runtime scripts over existing target files, or change marketplace/plugin installation state without a separate explicit plan and user approval.
+   - If the target helper is older and lacks these flags, do not ask the user to create a new project. Explain that the project helper is stale, then generate a compatibility upgrade plan: preserve the current adapter, list missing portable core/runtime files, list root-level migration candidates, and propose syncing the latest helper as a separate reviewed change.
 5. If the repository does not contain the helper, explain that the framework core or internal template must be added first. Ask for the approved skeleton source or template path only when it cannot be inferred from the current workspace.
 6. Create or update project adapter files only after the target repository's task boundary permits that scope.
 7. Summarize the result in user language:
@@ -88,7 +95,7 @@ When adoption succeeds, report:
 - plugin update check status
 - existing project upgrade plan status, when relevant
 - active boundary path
-- V1 helper report summary
+- V9 helper report summary
 - guard and smoke status
 - root-level migration candidates, if any
 - remaining missing information
