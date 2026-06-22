@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 5,
   "name": "portable-core",
   "description": "Minimal portable collaboration core for target repositories with Loop runtime contract metadata.",
   "write_policy": "create-missing-preserve-existing",
@@ -26,6 +26,34 @@
     },
     {
       "path": ".gstack/knowledge/ai-programming-framework.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/knowledge/ui-patterns.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/knowledge/visual-quality-bar.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/templates/task-boundary.template.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/templates/ui-design-brief.template.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/templates/ui-polish-review.template.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/skills/kk-ui-design-kickoff/SKILL.md",
+      "mode": "create-if-missing"
+    },
+    {
+      "path": ".gstack/skills/kk-ui-polish-review/SKILL.md",
       "mode": "create-if-missing"
     },
     {
@@ -91,6 +119,7 @@
     ],
     "metadata_sections": [
       "loop_runtime",
+      "online_flow_protocol",
       "runtime_bundle",
       "authorization",
       "smoke_tests",
@@ -103,6 +132,7 @@
     "apply_command": "python3 scripts/init_project.py --adapter default --apply-runtime",
     "verify_command": "python3 scripts/init_project.py --adapter default --verify-runtime --report",
     "files": [
+      ".gstack/scripts/adapter_runtime.py",
       ".gstack/scripts/autopilot_bootstrap.py",
       ".gstack/scripts/codex_mode.py",
       ".gstack/scripts/gstack_dashboard.py",

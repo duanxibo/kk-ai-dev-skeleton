@@ -188,10 +188,19 @@ required_gates:
     evidence_section: "Data Knowledge Sync"
     blocking_reason: ""
     done_criteria: "新增表已有 source doc + registry；新增接口已有 stack domain spec / interface doc；生命周期状态、证据等级和待确认项已标注"
+  - gate_id: ui-design-quality
+    trigger_reason: "本任务是否涉及页面、HTML、dashboard、可视化、交互控件或用户明确反馈 UI 不够好看；不涉及时写清排除原因"
+    owner: kk-ui-design-kickoff
+    required_before: implement
+    status: not-required
+    evidence_path: "待补"
+    evidence_section: "UI Design Brief"
+    blocking_reason: ""
+    done_criteria: "已完成 UI 风格路由、信息密度、主流程、组件结构、视觉质量标准和 polish review 计划"
 ```
 
 允许状态：`not-required / planned / done / blocked / deferred`。
-允许 owner：`kk-task-kickoff / kk-data-kickoff / kk-data-query / kk-subagent-orchestrator / kk-doc-sync / kk-doc-backfill / template-review`。
+允许 owner：`kk-task-kickoff / kk-data-kickoff / kk-data-query / kk-subagent-orchestrator / kk-doc-sync / kk-doc-backfill / kk-ui-design-kickoff / kk-ui-polish-review / template-review`。
 允许 `required_before`：`requirement-brief / plan-ceo-review / requirement-freeze / plan-eng-review / domain-spec-readiness / implement / review / qa`。
 
 `prototype-logic-extraction` 规则：

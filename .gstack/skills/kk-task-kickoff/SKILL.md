@@ -55,6 +55,7 @@ description: |
    `AGENTS.md`、`.gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md`、`.gstack/README.md`、`.gstack/knowledge/CODEMAP.md`、`.gstack/knowledge/doc-placement.md`、`.gstack/task-boundaries/CURRENT.md`
 2. 根据任务类型补读角色入口和相关知识：
    产品任务读 `.gstack/entrypoints/product-manager.md`；工程任务读 `.gstack/entrypoints/engineer.md`；实现前补读 `.gstack/knowledge/implementation-guide.md` 和相关 knowledge/specs/pitfalls。
+   前端、HTML、dashboard、可视化或用户反馈“界面难看 / 不专业 / 像模板”时，还必须补读 `.gstack/knowledge/ui-patterns.md`、`.gstack/knowledge/visual-quality-bar.md`，并调度 `kk-ui-design-kickoff`。
 3. 识别 Codex 协作模式：
    - 如果用户明确说“自主执行 / 全自动做完 / 关键确认 / 关键地方问我 / 手动控制 / 先别改代码”等，先按 `kk-codex-mode` 解释并记录本次模式。
    - 如果没有明确指定，运行或参考 `python3 .gstack/scripts/codex_mode.py show --format json`；没有本机默认时使用 `自主执行`。
@@ -76,6 +77,7 @@ description: |
    - active boundary 是否足够
    - 当前 Flow Lane 是什么以及为什么
    - 是否需要 `data-access`、`data-query`、`prototype-logic-extraction`、`data-knowledge-sync`、`doc-backfill` 等 Required Gates
+   - 是否需要 `ui-design-quality` gate；凡涉及前端 / HTML / dashboard / 可视化，或用户反馈 UI 质量问题，默认需要
    - 后续可能涉及哪些文档同步
 7. 如果任务进入正式实现或长期协作主线：
    必须创建或更新 `.gstack/task-boundaries/` 下的 boundary，并自动设置本地 active boundary
@@ -127,7 +129,13 @@ description: |
    - 必要时按 `.gstack/templates/gate-recovery-report.template.md` 落 gate recovery 报告。
    - 只有业务口径、真实数据权限、生产 / DB / git action 或无法本地证明时才提示用户。
 
-24. QA 对用户可见 UI / HTML / 可视化任务的硬要求：
+24. UI 质量门禁：
+   - 凡涉及前端页面、HTML、dashboard、可视化、可点击原型、导航、筛选、表格、表单、状态、空态，或用户反馈“界面难看 / 不够好看 / 不高级 / 不专业 / 像模板”，必须在 `Required Gates` 中声明 `ui-design-quality`。
+   - `ui-design-quality` 默认 owner 为 `kk-ui-design-kickoff`，required_before 为 `implement`；实现后、交互 QA 前使用 `kk-ui-polish-review`。
+   - 该 gate 的 evidence 默认使用 `.gstack/templates/ui-design-brief.template.md` 和 `.gstack/templates/ui-polish-review.template.md`，至少包括 UI archetype、信息架构、组件计划、视觉方向、状态覆盖、响应式策略、明确不采用的风格和 polish review 结论。
+   - 对 SaaS / dashboard / 工作台 / AI 工具类页面，默认采用克制、高密度、可扫描的产品界面，不做营销页式大 hero、装饰渐变、卡片套卡片或低信息密度布局。
+
+25. QA 对用户可见 UI / HTML / 可视化任务的硬要求：
    - 不得只用 `rg`、JSON、HTML 字符串或截图外观替代交互验收。
    - 必须用 Browser / Chrome / Playwright 操作页面；若 `file://` 或权限策略阻断，改用本地 HTTP server 打开同一页面继续验收。
    - 仍无法验收时只能把 QA 结论标成 `blocked` 或 `partial`，不能标 `done`。
@@ -146,6 +154,7 @@ description: |
 - 不要把 Flow Lane 只留在口头判断里，必须写进 boundary；fast-lane 必须有 fast-lane requirement 和 fast-lane review evidence
 - 不要把“这次是否使用 subagent”只留在口头判断里，必须写进 boundary 的 `Subagent Plan`
 - 不要把“这次是否需要 data-access / data-query / prototype-logic-extraction / data-knowledge-sync / doc-backfill”只留在口头判断里，必须写进 boundary 的 `Required Gates`
+- 不要把“这次是否需要 UI design gate / polish review”只留在口头判断里；涉及前端、HTML、dashboard 或可视化时，必须写进 boundary 的 `Required Gates`、`Generated Artifact Policy` 和 `Verification`
 - 如果 `prototype-logic-extraction` 被标记为 `planned / done / blocked / deferred`，必须填写 `evidence_path` 或阻塞 / 延期说明；如果标记为 `not-required`，必须填写明确排除原因
 - 如果用户显式点名 `kk-data-kickoff` 但还没有 active boundary，先回到本 skill 创建或补齐 boundary，再执行数据专项
 - 不要跳过 `requirement-brief`、`plan-ceo-review`、`requirement-freeze/prototype-freeze`、`plan-eng-review`、`domain-spec-readiness`、开发、`qa/qa-only` 这条固定链路；如果确实是非业务流程维护任务，必须在 boundary 里说明 `not-required` 原因

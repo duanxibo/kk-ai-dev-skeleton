@@ -29,6 +29,8 @@ ALLOWED_OWNERS = {
     "kk-subagent-orchestrator",
     "kk-doc-backfill",
     "kk-doc-sync",
+    "kk-ui-design-kickoff",
+    "kk-ui-polish-review",
     "template-review",
 }
 ALLOWED_REQUIRED_BEFORE = {

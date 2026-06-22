@@ -136,6 +136,8 @@ requirement-brief
 - `kk-data-kickoff`
 - `kk-data-query`
 - `kk-subagent-orchestrator`
+- `kk-ui-design-kickoff`
+- `kk-ui-polish-review`
 
 不要把项目专属前缀引入可复用框架核心。
 

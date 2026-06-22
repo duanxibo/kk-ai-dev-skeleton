@@ -117,6 +117,8 @@ remove_legacy_link "data-kickoff"
 remove_legacy_link "data-query"
 remove_legacy_link "subagent-orchestrator"
 remove_legacy_link "codex-mode"
+remove_legacy_link "ui-design-kickoff"
+remove_legacy_link "ui-polish-review"
 
 if [ "${REMOVE_TG_LINKS}" = true ]; then
   for target_path in "${SKILLS_HOME}"/tg-*; do
@@ -134,6 +136,8 @@ link_skill "${REPO_ROOT}/.gstack/skills/kk-data-kickoff" "kk-data-kickoff"
 link_skill "${REPO_ROOT}/.gstack/skills/kk-data-query" "kk-data-query"
 link_skill "${REPO_ROOT}/.gstack/skills/kk-subagent-orchestrator" "kk-subagent-orchestrator"
 link_skill "${REPO_ROOT}/.gstack/skills/kk-codex-mode" "kk-codex-mode"
+link_skill "${REPO_ROOT}/.gstack/skills/kk-ui-design-kickoff" "kk-ui-design-kickoff"
+link_skill "${REPO_ROOT}/.gstack/skills/kk-ui-polish-review" "kk-ui-polish-review"
 
 if [ "${REMOVE_TG_LINKS}" != true ]; then
   warn_tg_symlinks

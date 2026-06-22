@@ -38,6 +38,8 @@ REQUIRED_SKILLS = (
     "kk-data-kickoff",
     "kk-data-query",
     "kk-subagent-orchestrator",
+    "kk-ui-design-kickoff",
+    "kk-ui-polish-review",
 )
 REQUIRED_SCRIPTS = (
     "adapter_runtime.py",
@@ -59,6 +61,13 @@ PORTABLE_CORE_DOCS = (
     ".gstack/knowledge/CODEMAP.md",
     ".gstack/knowledge/doc-placement.md",
     ".gstack/knowledge/ai-programming-framework.md",
+    ".gstack/knowledge/ui-patterns.md",
+    ".gstack/knowledge/visual-quality-bar.md",
+    ".gstack/templates/task-boundary.template.md",
+    ".gstack/templates/ui-design-brief.template.md",
+    ".gstack/templates/ui-polish-review.template.md",
+    ".gstack/skills/kk-ui-design-kickoff/SKILL.md",
+    ".gstack/skills/kk-ui-polish-review/SKILL.md",
     ".gstack/scripts/README.md",
     ".gstack/task-boundaries/CURRENT.md",
     ".gstack/requirements/README.md",
@@ -405,6 +414,22 @@ def check_skills() -> CheckResult:
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     skills_home = codex_home / "skills"
     details = [f"skills 目录: {skills_home}"]
+
+    if not is_skeleton_source_repo():
+        portable_skill_docs = [
+            path
+            for path in PORTABLE_CORE_DOCS
+            if path.startswith(".gstack/skills/") and path.endswith("/SKILL.md")
+        ]
+        missing_docs = [path for path in portable_skill_docs if not (REPO_ROOT / path).exists()]
+        details.append("检查模式: target-repo")
+        if missing_docs:
+            details.append("缺失 portable skill 文件: " + ", ".join(missing_docs))
+            return CheckResult("skills", "warn", "portable skills 不完整。", details)
+        details.append("source repo 的全局 symlink 不要求指向 target repo。")
+        return CheckResult("skills", "ok", "portable skill 文件已安装。", details)
+
+    details.append("检查模式: skeleton-source")
     missing: list[str] = []
     stale: list[str] = []
     for skill in REQUIRED_SKILLS:

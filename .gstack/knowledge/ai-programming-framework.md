@@ -21,6 +21,7 @@ KK Dev Skeleton 把可复用 AI 开发能力和项目专属规则分开。
 - dashboard
 - doctor
 - QA evidence
+- UI style routing and visual quality gate
 - delivery summary
 - guard checks
 - knowledge feedback
@@ -71,6 +72,17 @@ KK Dev Skeleton 把可复用 AI 开发能力和项目专属规则分开。
 主协议见 `../designs/2026-06-22_online-software-factory-platform-protocol.md`。
 
 高风险规则保持不变：Git workflow、生产、数据库、真实数据写入、破坏性动作和外部付费调用必须单独明确授权；平台 claim 不能隐式授权这些动作。
+
+### UI Quality Gate（UI 质量门禁）
+
+当前端、HTML、dashboard、可视化或用户可见交互进入实现前，骨架必须先做 UI style routing，而不是直接写页面。
+
+默认能力：
+
+- `kk-ui-design-kickoff`：识别页面 archetype、用户第一眼目标、信息架构、组件计划、视觉方向、状态覆盖和响应式策略。
+- `kk-ui-polish-review`：实现后检查 archetype fit、信息层级、布局密度、组件匹配、状态完整、视觉一致性、响应式安全、基础可访问性和 anti-AI-slop。
+
+AI 软件工厂、开发者平台、业务工作台和内部工具默认采用成熟 SaaS / workflow console / AI command center 方向。除非 requirement 明确要求营销官网，不要默认做大 hero、装饰渐变、卡片套卡片或低信息密度海报页。
 
 ### Explicit Runtime Bundle（显式运行包）
 

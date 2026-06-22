@@ -149,6 +149,8 @@ Codex / 维护者背后的确定性本机准备入口：
 - `.gstack/skills/kk-data-kickoff/SKILL.md`
 - `.gstack/skills/kk-data-query/SKILL.md`
 - `.gstack/skills/kk-subagent-orchestrator/SKILL.md`
+- `.gstack/skills/kk-ui-design-kickoff/SKILL.md`
+- `.gstack/skills/kk-ui-polish-review/SKILL.md`
 
 ## 实现路由
 

@@ -1380,6 +1380,13 @@ PORTABLE_CORE_FILES = (
     ".gstack/knowledge/CODEMAP.md",
     ".gstack/knowledge/doc-placement.md",
     ".gstack/knowledge/ai-programming-framework.md",
+    ".gstack/knowledge/ui-patterns.md",
+    ".gstack/knowledge/visual-quality-bar.md",
+    ".gstack/templates/task-boundary.template.md",
+    ".gstack/templates/ui-design-brief.template.md",
+    ".gstack/templates/ui-polish-review.template.md",
+    ".gstack/skills/kk-ui-design-kickoff/SKILL.md",
+    ".gstack/skills/kk-ui-polish-review/SKILL.md",
     ".gstack/scripts/README.md",
     ".gstack/task-boundaries/CURRENT.md",
     ".gstack/requirements/README.md",
@@ -1399,7 +1406,7 @@ PORTABLE_CORE_REQUIRED_PATHS = (
 
 def core_manifest_payload() -> dict[str, Any]:
     return {
-        "version": 3,
+        "version": 5,
         "name": "portable-core",
         "description": "Minimal portable collaboration core for target repositories with Loop runtime contract metadata.",
         "write_policy": "create-missing-preserve-existing",
@@ -1809,11 +1816,50 @@ def runtime_payload(
     return payload
 
 
+def source_template_text(relative_path: str, fallback: str) -> str:
+    source = SOURCE_REPO_ROOT / relative_path
+    if source.exists():
+        return source.read_text(encoding="utf-8")
+    return fallback
+
+
 def portable_core_templates(*, project_name: str | None, adapter: str) -> dict[str, str]:
     display_name = project_display_name(project_name, adapter)
     manifest_text = json.dumps(core_manifest_payload(), ensure_ascii=False, indent=2) + "\n"
     runtime_schema_text = json.dumps(runtime_schema_payload(), ensure_ascii=False, indent=2) + "\n"
     script_text = SCRIPT_PATH.read_text(encoding="utf-8")
+    task_boundary_template = source_template_text(
+        ".gstack/templates/task-boundary.template.md",
+        """# Task Boundary Template
+
+## Goal
+
+- What this task will complete.
+
+## Allowed Files
+
+- Allowed paths.
+
+## Forbidden Files
+
+- Forbidden paths.
+
+## Required Gates
+
+```yaml
+required_gates:
+  - gate_id: ui-design-quality
+    trigger_reason: "Set to planned/done when the task touches frontend pages, HTML, dashboards, visualizations, interaction controls, or the user asks for a better-looking UI."
+    owner: kk-ui-design-kickoff
+    required_before: implement
+    status: not-required
+    evidence_path: "TBD"
+    evidence_section: "UI Design Brief"
+    blocking_reason: ""
+    done_criteria: "UI archetype, information density, primary workflow, component structure, visual direction, and polish review plan are recorded."
+```
+""",
+    )
     return {
         "AGENTS.md": f"""# {display_name}
 
@@ -1943,6 +1989,366 @@ python3 .gstack/scripts/gstack_loop_contract_smoke.py --format user
 ```
 
 These checks must not write evidence, activate tasks, run git workflow actions, connect to production, modify databases, or write real data.
+""",
+        ".gstack/knowledge/ui-patterns.md": """# UI Patterns
+
+This file records portable UI work rules. Project-specific design systems, brand colors, business terms, and page paths belong in the adapter or project specs.
+
+## UI-001 - Route UI Style Before Implementation
+
+- tags: `frontend`, `ui-quality`, `design-gate`
+- rule:
+  When a task touches frontend pages, HTML, dashboards, visualizations, interaction controls, or a user says the UI looks ugly / unprofessional / template-like, run `kk-ui-design-kickoff` before implementation. Codex should identify the page archetype, use frequency, information density, primary workflow, component structure, visual direction, and unsuitable styles before writing UI code.
+
+## UI-002 - SaaS And Tools Default To Restrained Density
+
+- tags: `frontend`, `saas`, `dashboard`, `workbench`
+- rule:
+  SaaS workbenches, admin tools, AI tools, CRM, internal systems, and developer platforms should default to mature product UI: restrained color, clear navigation, compact but readable information hierarchy, complete tables / tabs / filters / segmented controls / status badges / empty states. Do not default to marketing-style hero sections, decorative gradients, nested cards, or low-density poster layouts.
+
+## UI-003 - Visual Quality Is Not Decoration
+
+- tags: `frontend`, `visual-review`, `qa`
+- rule:
+  UI polish review checks product fit, layout, hierarchy, component states, responsiveness, readability, accessibility, and consistency. It is not a last-minute pass for shadows, radius, or gradients. If a page works but is rough, crowded, template-like, overflowing, missing states, or mismatched to the user context, the UI task is not done.
+
+## UI-004 - User-visible Capability Means Page Capability
+
+- tags: `frontend`, `nontechnical`, `interaction`, `acceptance`
+- rule:
+  When nontechnical users mention filtering, sorting, search, action entry points, not seeing page changes, or making a feature easier to use, default to page-visible capability. If the task only changes CLI flags, generation commands, backend APIs, or static output, record that in the requirement and explain how to verify it.
+
+## UI-005 - Generated HTML Must Declare Refresh Path
+
+- tags: `frontend`, `html`, `generated-artifact`, `dashboard`
+- rule:
+  Static generated HTML is not auto-refreshing. The boundary must record the latest file path, acceptance URL, regeneration command, and troubleshooting path for "I do not see the change".
+
+## UI-006 - UI Polish Review Requires Evidence
+
+- tags: `frontend`, `ui-quality`, `review`, `qa`
+- rule:
+  UI tasks must record visual polish review in review, QA, or boundary evidence. At minimum include the selected UI archetype, design direction, main components, state coverage, desktop / mobile behavior, residual visual risks, and whether another iteration is needed.
+""",
+        ".gstack/knowledge/visual-quality-bar.md": """# Visual Quality Bar
+
+This file defines the portable UI quality bar for frontend, HTML, dashboard, visualization, and visible interaction tasks.
+
+The goal is not to make every page decorative. The goal is to make Codex choose a suitable product type and visual language before writing UI, avoiding rough, template-like first drafts.
+
+## UI Quality Gate
+
+Trigger this gate when:
+
+- Creating or reworking a frontend page, HTML output, dashboard, visualization, or clickable prototype.
+- Changing page structure, navigation, filters, tables, forms, workflow, state, or empty states.
+- A user says the UI looks ugly, unpolished, unprofessional, demo-like, template-like, cluttered, or hard to understand.
+- A new MVP needs first-glance product trust.
+
+Default order:
+
+1. `ui-style-routing`
+2. `ui-design-brief`
+3. implementation
+4. `ui-polish-review`
+5. interaction QA
+
+## UI Archetype Router
+
+Codex must classify the page before choosing the visual language.
+
+| Archetype | Use case | Default direction | Avoid |
+| --- | --- | --- | --- |
+| `saas-workbench` | Frequent business tools, admin consoles, AI development platforms, CRM, internal systems | Restrained, clear, dense, scannable | Large hero, decorative gradients, low-density card walls |
+| `analytics-dashboard` | Metrics, business analysis, data tracking | Clear metric hierarchy, restrained charts, strong filters | Chart clutter, too many colors, unexplained metrics |
+| `workflow-console` | Task queues, approval flows, automation chains | State machine, timeline, queue, detail split | One-page info dump, unclear status |
+| `ai-command-center` | AI chat, task claiming, runner status, confirmation queues | Chat + workbench hybrid, transparent state | Chat box only, missing task context |
+| `marketing-site` | Website, product intro, conversion page | Strong first-viewport product signal, real product imagery, clear CTA | Dense admin-table layout |
+| `content-product` | Docs, knowledge base, course, editorial product | Reading rhythm, table of contents, content cards | Dashboard treatment |
+| `game-or-playful` | Games, toys, playful products | Expressive visuals, richer motion and graphics | Enterprise SaaS tone |
+
+AI software factories, developer platforms, business workbenches, and internal tools default to `saas-workbench`, `workflow-console`, or `ai-command-center` unless the requirement explicitly asks for a marketing site.
+
+## Required Design Brief
+
+Before implementation, a UI design brief should cover:
+
+- Target user and use frequency.
+- Page archetype.
+- What the user must understand at first glance.
+- Information architecture: navigation, main area, supporting area, details, status area.
+- Primary workflow: how the user starts, acts, confirms, and completes.
+- Component choices: tabs, segmented controls, filters, tables, forms, timeline, kanban, chat, empty states, drawers, modals.
+- Visual direction: type hierarchy, spacing density, color roles, icon strategy, border / shadow usage.
+- State coverage: loading, empty, error, disabled, selected, success, warning, permission.
+- Responsive strategy: desktop, narrow, and mobile layout changes.
+- Styles explicitly not chosen.
+
+## Visual Quality Checklist
+
+UI polish review checks:
+
+- `archetype-fit`: visual language matches product type.
+- `information-hierarchy`: titles, metrics, tables, details, and actions have clear priority.
+- `layout-density`: density fits use frequency.
+- `component-fit`: behavior uses appropriate controls, not generic cards for everything.
+- `state-completeness`: loading, empty, error, disabled, selected, success, warning.
+- `visual-consistency`: colors, type, spacing, borders, radius, shadows.
+- `responsive-safety`: small screens do not overflow, overlap, or hide key actions.
+- `accessibility-basics`: contrast, hit size, focus, labels, icon meaning.
+- `anti-ai-slop`: avoid purple-blue gradient dominance, decorative orbs, nested cards, fake data piles, empty marketing claims, and mixed visual styles.
+
+## Default Constraints
+
+- Keep card radius restrained unless the project design system says otherwise.
+- Tool buttons should prefer icons with tooltips for familiar actions.
+- Tables, filters, tabs, segmented controls, empty states, and errors should be complete.
+- Avoid one-hue pages; separate primary, semantic, and neutral roles.
+- Do not use SVG / gradient illustrations as fake product imagery.
+- Do not write self-describing copy like "modern, beautiful, polished UI" inside the app.
+
+## Done Definition
+
+A UI task is not done until the team can answer:
+
+- Why this archetype?
+- What does the user understand first?
+- Is the primary action path clear?
+- Which states are covered?
+- Do desktop and mobile avoid overflow and overlap?
+- What visual risk remains?
+- Does QA evidence record actual page interaction, or a clear blocked / partial reason?
+""",
+        ".gstack/templates/task-boundary.template.md": task_boundary_template,
+        ".gstack/templates/ui-design-brief.template.md": """# UI Design Brief Template
+
+- Task:
+- Date:
+- Owner: Codex
+- Related requirement:
+- Related boundary:
+- UI Gate: `planned / done / blocked`
+
+## Context
+
+- Target user:
+- Use frequency:
+- Business goal:
+- First-glance understanding:
+- Non-goals:
+
+## UI Archetype
+
+- Archetype:
+  `saas-workbench / analytics-dashboard / workflow-console / ai-command-center / marketing-site / content-product / game-or-playful / other`
+- Rationale:
+- Styles not chosen:
+
+## Information Architecture
+
+- Global navigation:
+- Main area:
+- Supporting area:
+- Detail / drawer / modal:
+- Status / notifications / queue:
+
+## Primary Workflow
+
+1. Entry point:
+2. Main action:
+3. System feedback:
+4. Confirmation or completion:
+5. Error / empty handling:
+
+## Component Plan
+
+- Layout:
+- Navigation:
+- Filters / Search:
+- Tables / Lists:
+- Forms / Inputs:
+- Actions:
+- Feedback:
+- Empty / Loading / Error:
+- Icons / Tooltips:
+
+## Visual Direction
+
+- Typography:
+- Spacing / Density:
+- Color Roles:
+- Borders / Radius / Shadow:
+- Imagery / Preview:
+- Motion:
+
+## Responsive Strategy
+
+- Desktop:
+- Tablet / narrow:
+- Mobile:
+- Overflow / long text handling:
+
+## Quality Bar
+
+- Must look like:
+- Must not look like:
+- Visual risks:
+- Required polish review evidence:
+
+## Implementation Notes
+
+- Design system / component library:
+- New components:
+- Reused components:
+- Acceptance URL / run command:
+- Refresh / regeneration:
+""",
+        ".gstack/templates/ui-polish-review.template.md": """# UI Polish Review Template
+
+- Task:
+- Date:
+- Reviewer: Codex
+- Related UI design brief:
+- Related boundary:
+- Decision: `pass / pass-with-notes / blocked`
+
+## Review Scope
+
+- Page / URL / artifact:
+- Viewports:
+- Opened with:
+- Interaction verified:
+
+## Archetype Fit
+
+- Target archetype:
+- Actual fit:
+- Drift:
+
+## Visual Quality Checklist
+
+| Dimension | Result | Evidence / issue |
+| --- | --- | --- |
+| information-hierarchy | `pass / warn / fail` |  |
+| layout-density | `pass / warn / fail` |  |
+| component-fit | `pass / warn / fail` |  |
+| state-completeness | `pass / warn / fail` |  |
+| visual-consistency | `pass / warn / fail` |  |
+| responsive-safety | `pass / warn / fail` |  |
+| accessibility-basics | `pass / warn / fail` |  |
+| anti-ai-slop | `pass / warn / fail` |  |
+
+## Required Fixes
+
+- P0 / must fix before done:
+- P1 / should fix:
+- P2 / follow-up:
+
+## Residual Risks
+
+- Unchecked viewport:
+- Unchecked state:
+- Remaining roughness:
+
+## Final Decision
+
+- Can mark UI done:
+- Next step if not:
+""",
+        ".gstack/skills/kk-ui-design-kickoff/SKILL.md": """---
+name: kk-ui-design-kickoff
+description: |
+  KK Dev Skeleton UI design kickoff. Use for frontend pages, HTML, dashboards, visualizations, AI tool UIs, user feedback that UI is ugly / unprofessional / template-like, or any task that needs style routing before implementation.
+---
+
+# UI Design Kickoff
+
+## Purpose
+
+Make Codex choose product type and visual language before writing frontend code, so first drafts are usable and credible.
+
+This skill does not replace product requirements. It turns UI intent into an implementable and verifiable design brief.
+
+## When To Use
+
+Use when:
+
+- Creating or reworking a page, HTML output, dashboard, visualization, or clickable prototype.
+- Changing page structure, navigation, filters, tables, forms, task flow, state, or empty states.
+- A user says the UI looks ugly, unpolished, unprofessional, demo-like, template-like, cluttered, or hard to understand.
+- A new MVP needs first-glance trust.
+
+Usually skip for pure backend, scripts, data queries, or invisible bug fixes.
+
+## Required Reading
+
+1. `.gstack/knowledge/ui-patterns.md`
+2. `.gstack/knowledge/visual-quality-bar.md`
+3. `.gstack/templates/ui-design-brief.template.md`
+4. active task boundary
+5. adapter-provided product / frontend specs when present
+
+## Workflow
+
+1. Confirm an active boundary exists; otherwise return to `kk-task-kickoff`.
+2. Classify the UI archetype.
+3. Generate or complete a UI design brief in `.gstack/designs/` or as a UI section in current requirement / review evidence.
+4. Cover first-glance goal, information architecture, primary workflow, component plan, visual direction, state coverage, responsive strategy, and styles not chosen.
+5. Update active boundary with `ui-design-quality`, generated artifact policy, UI polish review, and interaction QA.
+6. For SaaS / dashboard / workbench / AI tools, default to restrained, dense, scannable product UI rather than marketing-page visuals.
+7. If multiple reasonable visual directions exist, offer 2-3 product / visual choices; Codex owns engineering details inside the boundary.
+
+## Output Rules
+
+- Do not just say "I will beautify the UI"; record design judgment.
+- Do not implement complex UI without a design brief.
+- Do not leave page type decisions only in chat; write repo-native evidence for long-lived tasks.
+- UI polish review is not a QA replacement; it is a quality gate before interaction QA.
+""",
+        ".gstack/skills/kk-ui-polish-review/SKILL.md": """---
+name: kk-ui-polish-review
+description: |
+  KK Dev Skeleton UI polish review. Use after implementing frontend, HTML, dashboard, visualization, or clickable prototype work to check design brief alignment, archetype fit, hierarchy, component states, responsiveness, and visual quality.
+---
+
+# UI Polish Review
+
+## Purpose
+
+Check UI quality before functional acceptance so pages that technically work but look rough, template-like, or visually incoherent do not get marked done.
+
+## When To Use
+
+- A visible page or HTML artifact was implemented.
+- Layout, navigation, filters, tables, forms, state, or empty states changed.
+- The user raised UI quality concerns.
+- Before QA needs to decide if the page is ready for interaction testing.
+
+## Required Reading
+
+1. `.gstack/knowledge/ui-patterns.md`
+2. `.gstack/knowledge/visual-quality-bar.md`
+3. `.gstack/templates/ui-polish-review.template.md`
+4. current UI design brief
+5. active task boundary
+6. related frontend spec / requirement
+
+## Workflow
+
+1. Find the UI design brief; if missing, go back to `kk-ui-design-kickoff`.
+2. Actually open the page or artifact; if it cannot be opened, mark review `blocked` or `partial`.
+3. Check archetype-fit, information-hierarchy, layout-density, component-fit, state-completeness, visual-consistency, responsive-safety, accessibility-basics, and anti-ai-slop.
+4. Record must-fix and follow-up issues.
+5. If P0 issues exist, do not mark the UI task complete.
+6. Store review evidence in `.gstack/reviews/` or a `UI Polish Review` section in existing review evidence.
+7. Still run Browser / Chrome / Playwright interaction QA afterwards and write `.gstack/qa-reports/` evidence.
+
+## Output Rules
+
+- Lead with concrete issues.
+- Tie evaluation to specific viewport, region, component, or state.
+- Do not treat "looks okay" as pass; check the list.
+- Do not use screenshots as a replacement for interaction QA.
 """,
         ".gstack/scripts/README.md": """# Collaboration Scripts
 
