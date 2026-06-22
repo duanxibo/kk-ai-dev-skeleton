@@ -233,6 +233,18 @@ def requirement_readiness_args(args: argparse.Namespace) -> list[str]:
     ]
 
 
+def ui_optimization_args(args: argparse.Namespace) -> list[str]:
+    return [
+        "--raw",
+        args.raw,
+        *optional_arg("--audience", args.audience),
+        *optional_arg("--success", args.success),
+        *optional_arg("--non-goal", args.non_goal),
+        "--format",
+        "user",
+    ]
+
+
 def task_list_args(args: argparse.Namespace) -> list[str]:
     return [
         "--raw",
@@ -405,6 +417,11 @@ def helper_for_route(route: IntentRoute, args: argparse.Namespace) -> tuple[str,
             python_command(".gstack/scripts/nontechnical_requirement_readiness.py", *requirement_readiness_args(args))
         )
         return "nontechnical_requirement_readiness.user", status, output
+    if route.intent == "ui_optimization_kickoff":
+        status, output = run_command(
+            python_command(".gstack/scripts/nontechnical_ui_optimization.py", *ui_optimization_args(args))
+        )
+        return "nontechnical_ui_optimization.user", status, output
     if route.intent == "progress_status":
         status, output = run_command(python_command(".gstack/scripts/gstack_dashboard.py", "explain"))
         return "gstack_dashboard.explain", status, output

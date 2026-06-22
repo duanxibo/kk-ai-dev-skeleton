@@ -63,6 +63,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "requirement-readiness-user-format": "需求完整度检查能直接给用户看",
     "page-change-brief-json": "改已有页面前会得到信息收集卡",
     "page-change-brief-user-format": "页面改动信息卡能直接给用户看",
+    "ui-optimization-autoguard": "UI 优化短句会自动进入 UI 质量链路",
     "acceptance-plan-json": "复杂需求能生成需求级验收计划",
     "acceptance-plan-user-format": "需求级验收计划能直接给用户看",
     "visible-change-json": "刷新后看不到变化会进入可见变化排查",
@@ -124,6 +125,7 @@ USER_COVERAGE_LINES = [
     "用户不知道怎么描述复杂需求或询问开工前需要哪些信息时，会看到可照填的通用需求信息卡。",
     "用户填完需求后问还缺什么或够不够开工时，会看到需求完整度检查和优先补充项。",
     "用户问改已有页面该给什么信息时，会看到页面位置、当前问题、期望变化、验收方式和不碰范围的照填清单。",
+    "用户只说进行 UI 优化时，会自动进入 UI 设计梳理、实现、视觉复核和浏览器验收链路。",
     "用户调整需求范围时，会看到保留、排除和后续范围，而不是重新追问。",
     "用户要求先做原型、能点的 demo、静态页面或不接接口版本时，会按原型优先范围处理。",
     "用户提出团队状态同步但不要数据库时，会看到无数据库路线的能力边界和确认问题。",
@@ -1079,6 +1081,12 @@ def check_intent_router_json() -> SmokeResult:
             True,
         ),
         (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化"],
+            "ui_optimization_kickoff",
+            True,
+        ),
+        (
             "requirement-brief",
             ["--raw", "给我一个需求模板，我照着填"],
             "requirement_brief",
@@ -1345,6 +1353,11 @@ def check_intent_router_user_format() -> SmokeResult:
             ["我会这样处理", "信息清单", "照填模板", "需要你确认"],
         ),
         (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化", "--format", "user"],
+            ["我会这样处理", "用户可见界面优化", "UI 设计梳理", "视觉复核", "浏览器验收", "需要你确认：暂时不需要"],
+        ),
+        (
             "requirement-brief",
             ["--raw", "给我一个需求模板，我照着填", "--format", "user"],
             ["我会这样处理", "需求信息", "照填模板", "需要你确认"],
@@ -1513,6 +1526,12 @@ def check_next_step_json() -> SmokeResult:
             ["--raw", "我想改一个已有页面，但是不知道该先给你什么信息"],
             "page_change_brief",
             "nontechnical_page_change_brief.user",
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化"],
+            "ui_optimization_kickoff",
+            "nontechnical_ui_optimization.user",
         ),
         (
             "requirement-brief",
@@ -1753,6 +1772,11 @@ def check_next_step_user_format() -> SmokeResult:
             "page-change-brief",
             ["--raw", "改页面要怎么描述，才能让你直接开工", "--format", "user"],
             ["你不用懂技术", "页面位置", "现在看到的问题", "我希望改成", "我会这样验收", "本次不要碰", "Codex 的下一步", "需要你确认"],
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化", "--format", "user"],
+            ["UI 优化开工说明", "用户可见界面", "UI 设计梳理", "视觉复核", "浏览器验收", "不改 API 合同", "不改数据合同", "不改 runner 逻辑", "需要你确认"],
         ),
         (
             "requirement-brief",

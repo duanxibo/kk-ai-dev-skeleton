@@ -79,6 +79,7 @@ KK Dev Skeleton 把可复用 AI 开发能力和项目专属规则分开。
 
 默认能力：
 
+- 用户只说“进行 UI 优化 / 优化界面 / 美化页面 / 页面不好看”时，骨架应通过 natural-language router 自动进入 UI 设计梳理、实现、视觉复核和浏览器验收链路；用户不需要记住技能名或门禁名。
 - `kk-ui-design-kickoff`：识别页面 archetype、用户第一眼目标、信息架构、组件计划、视觉方向、状态覆盖和响应式策略。
 - `kk-ui-polish-review`：实现后检查 archetype fit、信息层级、布局密度、组件匹配、状态完整、视觉一致性、响应式安全、基础可访问性和 anti-AI-slop。
 

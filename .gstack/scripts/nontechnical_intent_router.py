@@ -565,6 +565,40 @@ REQUIREMENT_READINESS_KEYWORDS = (
     "这样写可以",
 )
 
+UI_OPTIMIZATION_KEYWORDS = (
+    "进行 ui 优化",
+    "进行ui优化",
+    "ui 优化",
+    "ui优化",
+    "优化 ui",
+    "优化ui",
+    "优化界面",
+    "界面优化",
+    "优化页面",
+    "页面优化",
+    "美化页面",
+    "美化界面",
+    "页面美化",
+    "界面美化",
+    "提升视觉",
+    "视觉优化",
+    "视觉美化",
+    "优化视觉",
+    "提升审美",
+    "提升界面质感",
+    "提升页面质感",
+    "界面太丑",
+    "页面太丑",
+    "界面不好看",
+    "页面不好看",
+    "不够好看",
+    "不够专业",
+    "不高级",
+    "像模板",
+    "像 demo",
+    "像demo",
+)
+
 
 @dataclass(frozen=True)
 class IntentRoute:
@@ -790,6 +824,16 @@ def is_requirement_brief_request(text: str) -> bool:
     return has_any(text, *REQUIREMENT_BRIEF_KEYWORDS)
 
 
+def is_ui_optimization_request(text: str) -> bool:
+    if is_mode_control_request(text):
+        return False
+    if is_visible_change_request(text) or is_page_change_brief_request(text):
+        return False
+    if has_any(text, "继续"):
+        return False
+    return has_any(text, *UI_OPTIMIZATION_KEYWORDS)
+
+
 def build_summary_for_text(text: str) -> IntakeSummary:
     return build_summary(
         argparse.Namespace(raw=text, audience="", success="", non_goal="", risk_confirmation="")
@@ -851,6 +895,12 @@ def acceptance_focus_for(summary: IntakeSummary, intent: str) -> list[str]:
         return ["读取当前任务 evidence，生成可给团队看的交付总结、验收方式、风险和未做事项"]
     if intent == "task_list_explain":
         return ["读取 repo-native task evidence，生成未完成任务、卡住任务和下一步建议的用户可读概览"]
+    if intent == "ui_optimization_kickoff":
+        return [
+            "先识别页面、目标用户、第一眼理解目标和主流程",
+            "实现前完成 UI 设计梳理，覆盖页面类型、信息架构、组件计划、视觉方向、状态和响应式策略",
+            "实现后进行视觉复核和浏览器验收，确认 API、数据合同、runner 逻辑和真实服务接入不被改变",
+        ]
     if intent == "error_recovery":
         return ["说明当前是否能继续、Codex 可修复项、需要用户确认项和下一步"]
     if intent == "natural_language_smoke":
@@ -1074,6 +1124,23 @@ def route_meta_intent(raw: str, summary: IntakeSummary) -> IntentRoute | None:
             complexity=summary.complexity,
             likely_surface=summary.likely_surface,
             acceptance_focus=acceptance_focus_for(summary, "requirement_readiness"),
+        )
+
+    if is_ui_optimization_request(raw):
+        return IntentRoute(
+            raw_request=summary.raw_request,
+            intent="ui_optimization_kickoff",
+            confidence="high",
+            route_reason="用户在用短句要求 UI 优化，需要自动进入 UI 设计梳理、实现、视觉复核和浏览器验收链路，而不是要求用户手动说内部流程",
+            internal_entry="kk-task-kickoff.ui-optimization -> kk-ui-design-kickoff -> kk-ui-polish-review -> browser-qa",
+            can_continue=True,
+            needs_user_confirmation=False,
+            user_next_step="Codex 会把它当成用户可见界面优化任务：先识别页面和目标用户，做 UI 设计梳理，再实现视觉、布局、信息层级、状态和响应式优化，最后做视觉复核和浏览器验收。",
+            user_question="",
+            risk_status=summary.risk_confirmation_status,
+            complexity=summary.complexity,
+            likely_surface="用户可见页面能力",
+            acceptance_focus=acceptance_focus_for(summary, "ui_optimization_kickoff"),
         )
 
     if is_requirement_brief_request(raw):

@@ -55,7 +55,7 @@ description: |
    `AGENTS.md`、`.gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md`、`.gstack/README.md`、`.gstack/knowledge/CODEMAP.md`、`.gstack/knowledge/doc-placement.md`、`.gstack/task-boundaries/CURRENT.md`
 2. 根据任务类型补读角色入口和相关知识：
    产品任务读 `.gstack/entrypoints/product-manager.md`；工程任务读 `.gstack/entrypoints/engineer.md`；实现前补读 `.gstack/knowledge/implementation-guide.md` 和相关 knowledge/specs/pitfalls。
-   前端、HTML、dashboard、可视化或用户反馈“界面难看 / 不专业 / 像模板”时，还必须补读 `.gstack/knowledge/ui-patterns.md`、`.gstack/knowledge/visual-quality-bar.md`，并调度 `kk-ui-design-kickoff`。
+   前端、HTML、dashboard、可视化，或用户反馈“进行 UI 优化 / 优化界面 / 美化页面 / 提升视觉 / 界面难看 / 不专业 / 像模板”时，还必须补读 `.gstack/knowledge/ui-patterns.md`、`.gstack/knowledge/visual-quality-bar.md`，并调度 `kk-ui-design-kickoff`。
 3. 识别 Codex 协作模式：
    - 如果用户明确说“自主执行 / 全自动做完 / 关键确认 / 关键地方问我 / 手动控制 / 先别改代码”等，先按 `kk-codex-mode` 解释并记录本次模式。
    - 如果没有明确指定，运行或参考 `python3 .gstack/scripts/codex_mode.py show --format json`；没有本机默认时使用 `自主执行`。

@@ -631,6 +631,7 @@
       ".gstack/scripts/nontechnical_task_starter.py",
       ".gstack/scripts/nontechnical_team_sync.py",
       ".gstack/scripts/nontechnical_undo_request.py",
+      ".gstack/scripts/nontechnical_ui_optimization.py",
       ".gstack/scripts/nontechnical_visible_change.py",
       ".gstack/scripts/required_gates_audit.py",
       ".gstack/scripts/rule_manager.py",

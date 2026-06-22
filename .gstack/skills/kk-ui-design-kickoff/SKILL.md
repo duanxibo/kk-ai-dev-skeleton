@@ -1,8 +1,8 @@
 ---
 name: kk-ui-design-kickoff
 description: |
-  KK Dev Skeleton UI 设计开工技能。适用于前端页面、HTML、dashboard、可视化、AI 工具界面、用户反馈“界面难看 / 不专业 / 像模板”，
-  或任何需要在实现前判断 UI 风格、信息架构和视觉质量门槛的任务。
+  KK Dev Skeleton UI 设计开工技能。适用于前端页面、HTML、dashboard、可视化、AI 工具界面、用户反馈“进行 UI 优化 / 优化界面 / 美化页面 /
+  提升视觉 / 界面难看 / 不专业 / 像模板”，或任何需要在实现前判断 UI 风格、信息架构和视觉质量门槛的任务。
 ---
 
 # UI Design Kickoff
@@ -19,6 +19,7 @@ description: |
 
 - 新增或重做页面、HTML、dashboard、可视化、可点击原型。
 - 修改页面主结构、导航、筛选、表格、表单、任务流、状态或空态。
+- 用户只说“进行 UI 优化 / 优化界面 / 美化页面 / 提升视觉 / 页面不好看”。
 - 用户说“界面难看 / 不够好看 / 不高级 / 不专业 / 像 demo / 像模板 / 页面乱 / 看不懂”。
 - 新项目 MVP 需要建立第一眼信任感。
 
@@ -67,6 +68,7 @@ description: |
 ## Output Rules
 
 - 不要只说“我会美化 UI”，必须产出设计判断。
+- 不要要求用户手动说出本技能名；短句 UI 优化请求也应自动进入设计、实现、复核和浏览器验收链路。
 - 不要在没有 UI design brief 的情况下直接实现复杂页面。
 - 不要把页面类型判断留在聊天里；长期任务要写入 repo-native evidence。
 - 不要把 visual polish review 当成 QA 的替代；它是 QA 前的视觉质量门禁。
