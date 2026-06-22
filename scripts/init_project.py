@@ -400,6 +400,92 @@ def loop_runtime_section() -> dict[str, Any]:
     }
 
 
+def online_flow_protocol_section() -> dict[str, Any]:
+    return {
+        "protocol_version": "online-flow-v1",
+        "status": "supported",
+        "design_doc": ".gstack/designs/2026-06-22_online-software-factory-platform-protocol.md",
+        "platform_role": [
+            "collect demand, attachments, acceptance method, non-goals, and risk flags",
+            "manage PRD, architecture, acceptance, status display, and authorization events",
+            "generate revisioned ClaimPackage objects for a controlled Codex runner",
+            "display StatusEvent summaries without replacing repo-native evidence",
+        ],
+        "runner_role": [
+            "validate claim revision, checksum, adapter, and authorization boundary",
+            "create or update requirement, review, task boundary, Required Gates, and QA evidence",
+            "implement and verify only inside the active boundary",
+            "write StatusEvent updates for progress, blockers, QA, and delivery summaries",
+        ],
+        "repo_role": [
+            "preserve requirement, review, boundary, QA, decision, and learning evidence",
+            "provide adapter paths, verification commands, forbidden scopes, and Required Gates",
+            "provide explicit runtime bundle smoke and guard checks",
+        ],
+        "objects": [
+            "OnlineDemand",
+            "MvpConfirmation",
+            "ClaimPackage",
+            "StatusEvent",
+            "QaResult",
+            "DeliverySummary",
+            "PostLaunchFeedback",
+        ],
+        "status_machine": [
+            "draft",
+            "needs-triage",
+            "mvp-confirming",
+            "ready-for-codex",
+            "claimed",
+            "kickoff-prepared",
+            "in-development",
+            "qa",
+            "ready-for-acceptance",
+            "accepted",
+            "done",
+        ],
+        "side_states": [
+            "needs-user-confirmation",
+            "blocked",
+            "deferred",
+            "cancelled",
+            "reopened",
+        ],
+        "evidence_mapping": {
+            "OnlineDemand": ".gstack/requirements/",
+            "MvpConfirmation": ".gstack/requirements/ and .gstack/reviews/",
+            "ClaimPackage": ".gstack/task-boundaries/",
+            "StatusEvent": "boundary stage, review, or QA summary",
+            "QaResult": ".gstack/qa-reports/",
+            "DeliverySummary": ".gstack/qa-reports/ plus platform delivery note",
+            "PostLaunchFeedback": "new OnlineDemand or reopened demand",
+        },
+        "default_authorization": [
+            "repo evidence preparation",
+            "active-boundary local implementation",
+            "local verification",
+            "QA and delivery summary generation",
+        ],
+        "requires_separate_authorization": [
+            "git workflow action",
+            "branch create or switch",
+            "commit, amend, squash, rebase, merge, pull, push, or pull request",
+            "staging or production deployment",
+            "production operation or rollback",
+            "database schema change or real-data write",
+            "destructive command",
+            "external paid service call",
+        ],
+        "non_actions": [
+            "does not implement the web platform",
+            "does not run a cloud runner by itself",
+            "does not store secrets or production credentials",
+            "does not replace repo-native evidence with platform state",
+            "does not grant high-risk authorization from ambiguous confirmation",
+        ],
+    }
+
+
 def authorization_section() -> dict[str, Any]:
     return {
         "classifier_version": "chat-authorization-v2",
@@ -457,7 +543,7 @@ def runtime_bundle_section() -> dict[str, Any]:
             "blueprint/**",
             "shared/**",
             ".gstack/data-access/**",
-            "data source, SQL, ClickHouse, Metabase, production, database, and credential helpers",
+            "data source, SQL, production, database, and credential helpers",
         ],
         "required_smoke_commands": [
             ["python3", ".gstack/scripts/gstack_loop_contract_smoke.py", "--format", "user"],
@@ -513,7 +599,7 @@ def loop_non_actions() -> list[str]:
 DEFAULT_RUNTIME: dict[str, Any] = json.loads(
     r'''
 {
-  "version": 6,
+  "version": 7,
   "name": "default",
   "description": "默认项目 adapter 的机器可读运行配置，包含 portable core、Loop runtime V15 contract 和 explicit runtime bundle install。真实项目应复制 adapters/default 后改写本文件。",
   "paths": {
@@ -1007,6 +1093,89 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
       ]
     }
   },
+  "online_flow_protocol": {
+    "protocol_version": "online-flow-v1",
+    "status": "supported",
+    "design_doc": ".gstack/designs/2026-06-22_online-software-factory-platform-protocol.md",
+    "platform_role": [
+      "collect demand, attachments, acceptance method, non-goals, and risk flags",
+      "manage PRD, architecture, acceptance, status display, and authorization events",
+      "generate revisioned ClaimPackage objects for a controlled Codex runner",
+      "display StatusEvent summaries without replacing repo-native evidence"
+    ],
+    "runner_role": [
+      "validate claim revision, checksum, adapter, and authorization boundary",
+      "create or update requirement, review, task boundary, Required Gates, and QA evidence",
+      "implement and verify only inside the active boundary",
+      "write StatusEvent updates for progress, blockers, QA, and delivery summaries"
+    ],
+    "repo_role": [
+      "preserve requirement, review, boundary, QA, decision, and learning evidence",
+      "provide adapter paths, verification commands, forbidden scopes, and Required Gates",
+      "provide explicit runtime bundle smoke and guard checks"
+    ],
+    "objects": [
+      "OnlineDemand",
+      "MvpConfirmation",
+      "ClaimPackage",
+      "StatusEvent",
+      "QaResult",
+      "DeliverySummary",
+      "PostLaunchFeedback"
+    ],
+    "status_machine": [
+      "draft",
+      "needs-triage",
+      "mvp-confirming",
+      "ready-for-codex",
+      "claimed",
+      "kickoff-prepared",
+      "in-development",
+      "qa",
+      "ready-for-acceptance",
+      "accepted",
+      "done"
+    ],
+    "side_states": [
+      "needs-user-confirmation",
+      "blocked",
+      "deferred",
+      "cancelled",
+      "reopened"
+    ],
+    "evidence_mapping": {
+      "OnlineDemand": ".gstack/requirements/",
+      "MvpConfirmation": ".gstack/requirements/ and .gstack/reviews/",
+      "ClaimPackage": ".gstack/task-boundaries/",
+      "StatusEvent": "boundary stage, review, or QA summary",
+      "QaResult": ".gstack/qa-reports/",
+      "DeliverySummary": ".gstack/qa-reports/ plus platform delivery note",
+      "PostLaunchFeedback": "new OnlineDemand or reopened demand"
+    },
+    "default_authorization": [
+      "repo evidence preparation",
+      "active-boundary local implementation",
+      "local verification",
+      "QA and delivery summary generation"
+    ],
+    "requires_separate_authorization": [
+      "git workflow action",
+      "branch create or switch",
+      "commit, amend, squash, rebase, merge, pull, push, or pull request",
+      "staging or production deployment",
+      "production operation or rollback",
+      "database schema change or real-data write",
+      "destructive command",
+      "external paid service call"
+    ],
+    "non_actions": [
+      "does not implement the web platform",
+      "does not run a cloud runner by itself",
+      "does not store secrets or production credentials",
+      "does not replace repo-native evidence with platform state",
+      "does not grant high-risk authorization from ambiguous confirmation"
+    ]
+  },
   "runtime_bundle": {
     "bundle_version": 1,
     "mode": "explicit-copy",
@@ -1074,7 +1243,7 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
       "blueprint/**",
       "shared/**",
       ".gstack/data-access/**",
-      "data source, SQL, ClickHouse, Metabase, production, database, and credential helpers"
+      "data source, SQL, production, database, and credential helpers"
     ],
     "required_smoke_commands": [
       [
@@ -1229,7 +1398,7 @@ PORTABLE_CORE_REQUIRED_PATHS = (
 
 def core_manifest_payload() -> dict[str, Any]:
     return {
-        "version": 2,
+        "version": 3,
         "name": "portable-core",
         "description": "Minimal portable collaboration core for target repositories with Loop runtime contract metadata.",
         "write_policy": "create-missing-preserve-existing",
@@ -1246,6 +1415,7 @@ def core_manifest_payload() -> dict[str, Any]:
             "required_command_keys": list(LOOP_REQUIRED_COMMAND_KEYS),
             "metadata_sections": [
                 "loop_runtime",
+                "online_flow_protocol",
                 "runtime_bundle",
                 "authorization",
                 "smoke_tests",
@@ -1269,7 +1439,7 @@ def core_manifest_payload() -> dict[str, Any]:
 
 def runtime_schema_payload() -> dict[str, Any]:
     return {
-        "version": 2,
+        "version": 3,
         "name": "adapter-runtime-schema",
         "description": "Deterministic schema guard for adapter runtime metadata and Loop runtime contract sections.",
         "required_runtime_keys": [
@@ -1280,6 +1450,7 @@ def runtime_schema_payload() -> dict[str, Any]:
             "commands",
             "gates",
             "loop_runtime",
+            "online_flow_protocol",
             "runtime_bundle",
             "authorization",
             "smoke_tests",
@@ -1291,6 +1462,7 @@ def runtime_schema_payload() -> dict[str, Any]:
             "commands",
             "gates",
             "loop_runtime",
+            "online_flow_protocol",
             "authorization",
             "smoke_tests",
             "evidence_policy",
@@ -1583,7 +1755,7 @@ def runtime_payload(
             "forbidden_default_prefixes": list(GENERIC_FORBIDDEN_PREFIXES),
         }
         payload = {
-            "version": 6,
+            "version": 7,
             "name": adapter,
             "description": f"{display_name} adapter metadata for repo-native AI development helpers with Loop runtime contract metadata and explicit runtime bundle install.",
             "project": {
@@ -1623,6 +1795,7 @@ def runtime_payload(
                 "ui-interaction-qa": "Use when UI, HTML, dashboard, or visualization behavior changes.",
             },
             "loop_runtime": loop_runtime_section(),
+            "online_flow_protocol": online_flow_protocol_section(),
             "runtime_bundle": runtime_bundle_section(),
             "authorization": authorization_section(),
             "smoke_tests": smoke_tests_section(),
@@ -2414,6 +2587,39 @@ def runtime_schema_errors(adapter: str, runtime: dict[str, Any]) -> tuple[list[s
                 value = boundary.get(key)
                 if not isinstance(value, list) or not value:
                     errors.append(f"runtime.loop_runtime.user_decision_boundary.{key} must be a non-empty list")
+
+    online_flow = runtime.get("online_flow_protocol")
+    if isinstance(online_flow, dict):
+        protocol_version = online_flow.get("protocol_version")
+        if not isinstance(protocol_version, str) or not protocol_version.strip():
+            errors.append("runtime.online_flow_protocol.protocol_version must be a non-empty string")
+        if online_flow.get("status") != "supported":
+            errors.append("runtime.online_flow_protocol.status must be supported")
+        design_doc = online_flow.get("design_doc")
+        if not isinstance(design_doc, str) or not design_doc.strip() or path_is_unsafe(design_doc):
+            errors.append("runtime.online_flow_protocol.design_doc must be a safe repo-relative path")
+        for key in (
+            "objects",
+            "status_machine",
+            "side_states",
+            "default_authorization",
+            "requires_separate_authorization",
+            "non_actions",
+        ):
+            value = online_flow.get(key)
+            if not isinstance(value, list) or not value or not all(isinstance(item, str) and item for item in value):
+                errors.append(f"runtime.online_flow_protocol.{key} must be a non-empty string list")
+        for key in ("platform_role", "runner_role", "repo_role"):
+            value = online_flow.get(key)
+            if not isinstance(value, list) or not value:
+                errors.append(f"runtime.online_flow_protocol.{key} must be a non-empty list")
+        mapping = online_flow.get("evidence_mapping")
+        if not isinstance(mapping, dict) or not mapping:
+            errors.append("runtime.online_flow_protocol.evidence_mapping must be a non-empty object")
+        else:
+            for required_object in ("OnlineDemand", "ClaimPackage", "StatusEvent", "QaResult"):
+                if required_object not in mapping:
+                    errors.append(f"runtime.online_flow_protocol.evidence_mapping missing {required_object}")
 
     runtime_bundle = runtime.get("runtime_bundle")
     if isinstance(runtime_bundle, dict):

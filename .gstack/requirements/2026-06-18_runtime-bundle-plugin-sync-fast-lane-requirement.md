@@ -1,6 +1,6 @@
 # Runtime Bundle Plugin Sync Fast-lane Requirement
 
-- 需求名称：同步 TianGong 增强后的公共骨架与 Codex 插件
+- 需求名称：同步上游 dogfood 增强后的公共骨架与 Codex 插件
 - 提出人：用户
 - 日期：2026-06-18
 - 当前状态：`ready-for-implementation`
@@ -13,7 +13,7 @@
 ## 需求一句话
 
 - 用户要完成什么：
-  将 TianGong 中已经增强的 AI 开发骨架能力同步回 KK Dev Skeleton 抽离仓库，并同步更新 Codex Adoption 插件，使插件引导用户使用最新的 adapter installer、runtime bundle 安装和验证能力。
+  将上游 dogfood 项目中已经增强的 AI 开发骨架能力同步回 KK Dev Skeleton 抽离仓库，并同步更新 Codex Adoption 插件，使插件引导用户使用最新的 adapter installer、runtime bundle 安装和验证能力。
 
 ## 为什么可以走 fast-lane
 
@@ -56,7 +56,7 @@
 
 ## 本次明确不做
 
-- 不复制 TianGong 业务 `stack/`、`archive/`、`blueprint/`、真实数据配置、数据访问工具、凭证或本机路径到公共骨架。
+- 不复制上游 dogfood 业务 `stack/`、`archive/`、`blueprint/`、真实数据配置、数据访问工具、凭证或本机路径到公共骨架。
 - 不把 `tg-*` 项目专属 skill 前缀写入公共框架核心；公共骨架继续使用 `kk-*`。
 - 不执行 commit、push、pull、PR、发布、生产、DB、真实数据或破坏性操作。
 - 不创建新的 marketplace 条目；只更新已有仓库插件源和个人本地插件源。

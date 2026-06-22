@@ -1,7 +1,7 @@
 # Runtime Bundle Plugin Sync QA
 
 - 日期：2026-06-18
-- 任务：同步 TianGong 增强后的公共骨架与 Codex 插件
+- 任务：同步上游 dogfood 增强后的公共骨架与 Codex 插件
 - 关联 requirement：`.gstack/requirements/2026-06-18_runtime-bundle-plugin-sync-fast-lane-requirement.md`
 - 关联 review：`.gstack/reviews/2026-06-18_runtime-bundle-plugin-sync-fast-lane-review.md`
 - 关联 boundary：`.gstack/task-boundaries/2026-06-18_runtime-bundle-plugin-sync.md`
@@ -30,7 +30,7 @@
 | `python3 .gstack/scripts/gstack_loop.py nl-smoke --format json` | pass | 真实自然语言入口 dry-run smoke 通过 |
 | `python3 .gstack/scripts/natural_language_dev_smoke.py --format user` | pass | 非技术开发关键路径检查通过 |
 | `python3 .gstack/scripts/spec_sync_guard.py` | pass | 本轮无应用 implementation / backend 变更，spec sync guard 不阻塞 |
-| `python3 ../TianGong/.gstack/scripts/spec_sync_guard.py` | pass | TianGong 源仓已有增强 diff 的 guard 不阻塞 |
+| `python3 ../source-dogfood/.gstack/scripts/spec_sync_guard.py` | pass | 上游 dogfood 源仓已有增强 diff 的 guard 不阻塞 |
 | `python3 <plugin-creator>/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption` | pass | 仓库插件源结构校验通过 |
 | `python3 <plugin-creator>/scripts/validate_plugin.py ~/plugins/kk-dev-skeleton-adoption` | pass | 个人本地插件源结构校验通过 |
 | `python3 -m py_compile plugins/kk-dev-skeleton-adoption/scripts/check_update.py ~/plugins/kk-dev-skeleton-adoption/scripts/check_update.py` | pass | 插件更新提醒脚本可编译 |

@@ -104,6 +104,20 @@ Codex 负责判断是否需要复制骨架文件、创建 adapter、运行自检
 
 接入器不应该绕过仓库规则。所有长期约束仍以目标项目的 `AGENTS.md`、adapter、active boundary 和 repo-native evidence 为准。
 
+### 平台化：Online Software Factory Protocol
+
+如果团队继续建设纯线上 AI Software Factory，线上平台应消费 KK Dev Skeleton 的协议和 runtime，而不是把平台状态当成工程真源。
+
+推荐交接方式：
+
+- 平台保存 `OnlineDemand` 和 `MvpConfirmation`。
+- 平台生成 revisioned、checksummed 的 `ClaimPackage`。
+- 受控 Codex runner 校验 claim、adapter、授权和 active boundary 后执行。
+- runner 把 requirement、review、boundary、QA 和 learning 落回 repo-native evidence。
+- runner 用 `StatusEvent` 回写平台展示进度、阻塞、确认点和交付摘要。
+
+协议真源见 `.gstack/designs/2026-06-22_online-software-factory-platform-protocol.md`。默认 adapter 的机器可读支持位于 `adapters/default/runtime.json` 的 `online_flow_protocol`。
+
 ## Codex 接入器职责边界
 
 ### 必须负责

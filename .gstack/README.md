@@ -21,7 +21,7 @@
 - `requirements/`
   需求 brief 和 freeze。
 - `designs/`
-  设计过程产物、架构调整计划和原型逻辑抽取设计。
+  设计过程产物、架构调整计划、原型逻辑抽取设计和线上平台协议。
 - `reviews/`
   评审证据。
 - `qa-reports/`
@@ -42,8 +42,9 @@
 3. `.gstack/knowledge/doc-placement.md`
 4. `.gstack/knowledge/context-isolation.md`
 5. `.gstack/knowledge/ai-programming-framework.md`
-6. `.gstack/task-boundaries/CURRENT.md`
-7. `adapters/default/adapter.md`
+6. `.gstack/designs/2026-06-22_online-software-factory-platform-protocol.md`
+7. `.gstack/task-boundaries/CURRENT.md`
+8. `adapters/default/adapter.md`
 
 ## 核心检查
 

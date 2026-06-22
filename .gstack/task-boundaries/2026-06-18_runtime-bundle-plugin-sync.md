@@ -1,13 +1,13 @@
 # Runtime Bundle Plugin Sync Task Boundary
 
-- Task: 同步 TianGong 增强后的公共骨架与 Codex 插件
+- Task: 同步上游 dogfood 增强后的公共骨架与 Codex 插件
 - 负责人: Codex
 - 日期: 2026-06-18
 - 相关 issue / doc: `.gstack/requirements/2026-06-18_runtime-bundle-plugin-sync-fast-lane-requirement.md`
 
 ## Goal
 
-- 将 TianGong 中已验证的 runtime bundle installer 增强同步到 KK Dev Skeleton，并同步 Codex Adoption 插件，使插件能引导新版 `--apply-runtime` / `--verify-runtime` / pilot / runtime smoke 工作流。
+- 将上游 dogfood 项目中已验证的 runtime bundle installer 增强同步到 KK Dev Skeleton，并同步 Codex Adoption 插件，使插件能引导新版 `--apply-runtime` / `--verify-runtime` / pilot / runtime smoke 工作流。
 
 ## Allowed Files
 
@@ -44,7 +44,7 @@
 ## Functional Non-goals
 
 - 不做业务功能、不改应用源码、不新增后端接口或数据库。
-- 不把 TianGong 业务路径、业务模块、真实数据工具或 `tg-*` skill 前缀写入公共框架核心。
+- 不把上游 dogfood 业务路径、业务模块、真实数据工具或项目专属 skill 前缀写入公共框架核心。
 - 不自动执行插件安装、marketplace upgrade、commit、push、PR 或发布。
 - 不覆盖目标项目已有 runtime scripts；installer 仍保持 create-missing / preserve-existing。
 
@@ -213,10 +213,10 @@ required_gates:
 - `adapters/default/adapter.md`
 - `adapters/default/runtime.json`
 - `plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption/SKILL.md`
-- TianGong source evidence: `.gstack/requirements/2026-06-17_runtime-script-bundle-install-fast-lane-requirement.md`
-- TianGong source evidence: `.gstack/reviews/2026-06-17_runtime-script-bundle-install-fast-lane-review.md`
-- TianGong source evidence: `.gstack/task-boundaries/2026-06-17_runtime-script-bundle-install.md`
-- TianGong source evidence: `.gstack/qa-reports/2026-06-17_runtime-script-bundle-install-qa.md`
+- Upstream dogfood source evidence: `.gstack/requirements/2026-06-17_runtime-script-bundle-install-fast-lane-requirement.md`
+- Upstream dogfood source evidence: `.gstack/reviews/2026-06-17_runtime-script-bundle-install-fast-lane-review.md`
+- Upstream dogfood source evidence: `.gstack/task-boundaries/2026-06-17_runtime-script-bundle-install.md`
+- Upstream dogfood source evidence: `.gstack/qa-reports/2026-06-17_runtime-script-bundle-install-qa.md`
 
 ## Spec Sync Plan
 

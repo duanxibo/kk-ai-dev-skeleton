@@ -1,6 +1,6 @@
 # Runtime Bundle Plugin Sync Fast-lane Review
 
-- 主题：同步 TianGong 增强后的公共骨架与 Codex 插件
+- 主题：同步上游 dogfood 增强后的公共骨架与 Codex 插件
 - 日期：2026-06-18
 - Reviewer：Codex
 - Flow Lane：`fast-lane`
@@ -32,7 +32,7 @@
   `通过`
 - 明确不做：
   - 不发布 marketplace，不执行 plugin marketplace upgrade / reinstall 命令。
-  - 不复制 TianGong 业务资料或数据访问工具。
+  - 不复制上游 dogfood 业务资料或数据访问工具。
   - 不改生产、DB、真实数据、外部服务或 git workflow。
 
 ## ENG 视角检查
@@ -80,7 +80,7 @@
   - `python3 .gstack/scripts/gstack_loop.py nl-smoke --format json`
   - `python3 .gstack/scripts/natural_language_dev_smoke.py --format user`
   - `python3 .gstack/scripts/spec_sync_guard.py`
-  - `python3 ../TianGong/.gstack/scripts/spec_sync_guard.py`
+  - `python3 ../source-dogfood/.gstack/scripts/spec_sync_guard.py`
   - `python3 <plugin-creator>/scripts/validate_plugin.py plugins/kk-dev-skeleton-adoption`
   - `python3 <plugin-creator>/scripts/validate_plugin.py ~/plugins/kk-dev-skeleton-adoption`
   - `git diff --check`
@@ -90,4 +90,4 @@
 ## 风险与退出条件
 
 - 如果同步过程中发现需要真实数据、生产、DB、对外发布、marketplace 管理或 git workflow，立即停止并询问用户。
-- 如果脚本去项目化后 contract smoke 无法在公共骨架通过，先修公共脚本和 adapter metadata，不把 TianGong 专属 fixture 复制进公共骨架。
+- 如果脚本去项目化后 contract smoke 无法在公共骨架通过，先修公共脚本和 adapter metadata，不把上游 dogfood 专属 fixture 复制进公共骨架。

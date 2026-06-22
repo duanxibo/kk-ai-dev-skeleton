@@ -55,6 +55,7 @@ Do not require business users to learn CLI flags. Commands are internal executio
    - verify/report: `python3 scripts/init_project.py --adapter <adapter> --verify --verify-core --verify-runtime --report`
    - isolated pilot: `python3 scripts/init_project.py --adapter <adapter> --pilot --report`
    The helper should create or preserve adapter metadata, portable core files, and the explicit runtime script bundle while keeping target project files intact by default.
+   The target adapter should also expose `online_flow_protocol` when the project is upgraded to the latest Software Factory-ready skeleton. If that section is missing, include it in the incremental upgrade plan; do not create a new project or overwrite the existing adapter by default.
    If it detects root-level application paths such as `src/`, `prisma/`, `e2e/`, `app/`,
    `packages/`, or root framework config files, do not silently treat that scattered layout as
    final. Report them as migration candidates and ask Codex to create a migration plan before
@@ -64,9 +65,11 @@ Do not require business users to learn CLI flags. Commands are internal executio
    - Do not tell the user to create a new project or rerun first-time adoption.
    - First run `--detect`, `--plan`, and `--validate-adapter --report`.
    - Run `--apply-core --dry-run --report`, `--apply-runtime --dry-run --report`, and `--rewrite-adapter --dry-run --report` to form an incremental plan.
+   - Check whether `adapters/<adapter>/runtime.json` includes `online_flow_protocol` with `OnlineDemand`, `ClaimPackage`, `StatusEvent`, evidence mapping, and high-risk authorization boundaries.
    - Only apply safe, idempotent create-missing changes within the active task boundary.
    - Never overwrite adapter files, move root-level application code, sync runtime scripts over existing target files, or change marketplace/plugin installation state without a separate explicit plan and user approval.
    - If the target helper is older and lacks these flags, do not ask the user to create a new project. Explain that the project helper is stale, then generate a compatibility upgrade plan: preserve the current adapter, list missing portable core/runtime files, list root-level migration candidates, and propose syncing the latest helper as a separate reviewed change.
+   - If the target helper lacks online flow metadata support, explain that this only blocks pure online platform readiness; local Codex development can still continue with the older runtime until the user approves a skeleton upgrade.
 5. If the repository does not contain the helper, explain that the framework core or internal template must be added first. Ask for the approved skeleton source or template path only when it cannot be inferred from the current workspace.
 6. Create or update project adapter files only after the target repository's task boundary permits that scope.
 7. Summarize the result in user language:
@@ -94,6 +97,7 @@ When adoption succeeds, report:
 - stack path
 - plugin update check status
 - existing project upgrade plan status, when relevant
+- online flow protocol readiness, when relevant
 - active boundary path
 - V9 helper report summary
 - guard and smoke status

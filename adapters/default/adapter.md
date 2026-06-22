@@ -78,6 +78,21 @@ python3 .gstack/scripts/spec_sync_guard.py
 - Chat authorization classifier for continue / confirmation / git / production / database / destructive scopes.
 - `chat-smoke`, `nl-smoke`, and `gstack_loop_contract_smoke.py` for deterministic regression evidence.
 
+## Online Flow Protocol
+
+This default adapter is online-flow-ready for a future AI Software Factory product surface.
+
+The platform should treat KK Dev Skeleton as the repo-native engineering truth layer:
+
+- `OnlineDemand` stores the user's demand, acceptance method, non-goals, and risk flags.
+- `MvpConfirmation` freezes the minimum deliverable slice before runner work.
+- `ClaimPackage` hands a scoped, revisioned, checksummed task to a Codex runner.
+- `StatusEvent` returns progress, blockers, confirmation requests, QA, and delivery summaries.
+
+The runner must still create or update repo-native requirement, review, task boundary, Required Gates, and QA evidence. Platform state is not a substitute for repo evidence.
+
+Machine-readable support lives in `adapters/default/runtime.json` under `online_flow_protocol`.
+
 ## Forbidden Paths（禁止路径）
 
 - `.env`
@@ -95,7 +110,7 @@ python3 .gstack/scripts/spec_sync_guard.py
 - `apply-core` 只创建缺失的 portable core 文件，保留目标项目已有文件。
 - `apply-runtime` 是显式 opt-in：先确保 adapter metadata 和 portable core，再从 skeleton source checkout 复制 allowlisted runtime scripts。
 - `verify-runtime` 检查 runtime script 文件、Python compile、Loop contract smoke、chat-smoke 和 nl-smoke。
-- runtime bundle 不包含 data-access、SQL、ClickHouse、Metabase、生产、DB、凭证工具或具体项目业务 `stack/`。
+- runtime bundle 不包含 data-access、SQL、生产、DB、凭证工具或具体项目业务 `stack/`。
 
 ## 数据和 API 规则
 

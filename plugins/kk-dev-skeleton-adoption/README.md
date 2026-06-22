@@ -24,6 +24,19 @@ The current helper flow separates adapter metadata, portable collaboration core,
 
 Existing-project upgrades should use these dry-run and verification commands instead of the retired `--upgrade-plan` / `--upgrade-apply` vocabulary.
 
+## Online Flow Readiness
+
+Current KK Dev Skeleton also carries an online Software Factory protocol for products that want a fully web-based experience:
+
+- `OnlineDemand`: user demand, acceptance method, non-goals, and risk flags.
+- `MvpConfirmation`: frozen minimum deliverable slice.
+- `ClaimPackage`: revisioned, checksummed handoff from platform to Codex runner.
+- `StatusEvent`: progress, blockers, confirmations, QA, and delivery summaries back to the platform.
+
+Adoption and upgrade reports should check whether the target adapter runtime contains `online_flow_protocol`. If it is missing, Codex should propose an incremental skeleton upgrade rather than telling the user to create a new project or re-adopt from scratch.
+
+The plugin does not implement the web platform, remote runner, GitHub integration, deployment, or production approval UI. It only helps the target repository adopt the protocol, runtime bundle, adapter metadata, and safety boundary.
+
 ## Scope
 
 This source directory is not an installed marketplace by itself. It is intended to be used later by an internal marketplace, install package, or team distribution process.

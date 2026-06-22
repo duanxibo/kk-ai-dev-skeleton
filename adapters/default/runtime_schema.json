@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "name": "adapter-runtime-schema",
   "description": "Deterministic schema guard for adapter runtime metadata and Loop runtime contract sections.",
   "required_runtime_keys": [
@@ -10,6 +10,7 @@
     "commands",
     "gates",
     "loop_runtime",
+    "online_flow_protocol",
     "runtime_bundle",
     "authorization",
     "smoke_tests",
@@ -21,6 +22,7 @@
     "commands",
     "gates",
     "loop_runtime",
+    "online_flow_protocol",
     "authorization",
     "smoke_tests",
     "evidence_policy"
