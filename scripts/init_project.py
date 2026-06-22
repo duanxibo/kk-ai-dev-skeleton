@@ -283,6 +283,7 @@ LOOP_REQUIRED_COMMAND_KEYS = (
 )
 
 RUNTIME_BUNDLE_FILES = (
+    ".gstack/scripts/adapter_runtime.py",
     ".gstack/scripts/autopilot_bootstrap.py",
     ".gstack/scripts/codex_mode.py",
     ".gstack/scripts/gstack_dashboard.py",

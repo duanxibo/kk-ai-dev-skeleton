@@ -239,7 +239,9 @@ class InitProjectTest(unittest.TestCase):
 
         self.assertTrue(result["ok"])
         self.assertFalse(result["created"])
+        self.assertIn(".gstack/scripts/adapter_runtime.py", result["would_create"])
         self.assertIn(".gstack/scripts/gstack_loop.py", result["would_create"])
+        self.assertFalse((self.root / ".gstack" / "scripts" / "adapter_runtime.py").exists())
         self.assertFalse((self.root / ".gstack" / "scripts" / "gstack_loop.py").exists())
 
     def test_cli_apply_core_rewrite_and_validate_json(self):

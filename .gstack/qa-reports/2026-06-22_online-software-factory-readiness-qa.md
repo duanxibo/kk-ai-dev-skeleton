@@ -13,7 +13,7 @@
 - 公共线上化协议已落到 `.gstack/designs/2026-06-22_online-software-factory-platform-protocol.md`。
 - Framework 文档、default adapter、runtime schema、installer helper 和 plugin adoption 说明已同步 online flow protocol。
 - Focused unittest 覆盖协议存在性、default runtime metadata、installer 生成 runtime metadata 和项目专属内容泄漏检查。
-- `tests.test_init_project` 已更新到当前 installer V9 API，覆盖 `apply-core`、`rewrite-adapter`、CLI JSON、schema version 和 runtime bundle dry-run。
+- `tests.test_init_project` 已更新到当前 installer V9 API，覆盖 `apply-core`、`rewrite-adapter`、CLI JSON、schema version、runtime bundle dry-run 和 runtime helper dependency。
 - 本轮没有 Web UI、API、远程 runner、真实数据、生产、DB 或 git workflow 动作。
 
 ## 验证命令
@@ -58,6 +58,7 @@
   - `scripts/init_project.py` 生成的 target runtime 也包含 `online_flow_protocol`。
   - `adapters/default/runtime_schema.json` 将 `online_flow_protocol` 纳入 required runtime object。
   - `scripts/init_project.py` 生成的 target runtime schema version 与磁盘 schema 保持 `3`。
+  - runtime bundle 包含 `adapter_runtime.py`，保证 `gstack_doctor.py`、`spec_sync_guard.py`、`required_gates_audit.py` 和 `team_flow_guard.py` 的 shared runtime import 可用。
 
 ## Required Gates
 

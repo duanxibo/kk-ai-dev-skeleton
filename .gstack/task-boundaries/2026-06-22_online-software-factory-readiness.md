@@ -27,6 +27,7 @@
 - `adapters/default/adapter.md`
 - `adapters/default/runtime.json`
 - `adapters/default/runtime_schema.json`
+- `.gstack/scripts/adapter_runtime.py`
 - `scripts/init_project.py`
 - `plugins/kk-dev-skeleton-adoption/README.md`
 - `plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption/SKILL.md`
@@ -228,6 +229,7 @@ required_gates:
   - `.gstack/knowledge/ai-programming-framework.md`
   - `adapters/default/adapter.md`
   - `adapters/default/runtime.json`
+  - `.gstack/scripts/adapter_runtime.py`
   - `scripts/init_project.py`
   - `plugins/kk-dev-skeleton-adoption/README.md`
   - `plugins/kk-dev-skeleton-adoption/skills/kk-dev-skeleton-adoption/SKILL.md`

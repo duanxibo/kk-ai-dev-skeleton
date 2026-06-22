@@ -597,6 +597,7 @@
       "--report"
     ],
     "files": [
+      ".gstack/scripts/adapter_runtime.py",
       ".gstack/scripts/autopilot_bootstrap.py",
       ".gstack/scripts/codex_mode.py",
       ".gstack/scripts/gstack_dashboard.py",
