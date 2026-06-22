@@ -116,6 +116,7 @@ class ProductizationHardeningTest(unittest.TestCase):
     def test_core_docs_cover_productization_entrypoints(self):
         module = load_doctor_module()
         required = set(module.REQUIRED_CORE_DOCS)
+        portable = set(module.PORTABLE_CORE_DOCS)
 
         expected = {
             "QUICK_START_FOR_PARTNERS.md",
@@ -136,6 +137,7 @@ class ProductizationHardeningTest(unittest.TestCase):
         }
 
         self.assertTrue(expected.issubset(required))
+        self.assertTrue(expected.isdisjoint(portable))
         for entry in expected:
             self.assertTrue((REPO_ROOT / entry).exists(), entry)
 

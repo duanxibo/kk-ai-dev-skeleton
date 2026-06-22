@@ -26,6 +26,7 @@ SHARED_POINTER = BOUNDARY_DIR / "CURRENT.md"
 ACTIVE_BOUNDARY_ENV = "KK_ACTIVE_BOUNDARY"
 CODEX_MODE_FILE = REPO_ROOT / ".gstack" / "codex-mode.local.md"
 GIT_HOOKS_DIR = REPO_ROOT / ".githooks"
+SKELETON_MARKER = ".gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md"
 REQUIRED_HOOKS = ("pre-commit", "pre-push")
 REQUIRED_SKILLS = (
     "kk-task-kickoff",
@@ -51,18 +52,30 @@ REQUIRED_SCRIPTS = (
     "nontechnical_task_starter.py",
     "natural_language_dev_smoke.py",
 )
-REQUIRED_CORE_DOCS = (
+PORTABLE_CORE_DOCS = (
     "AGENTS.md",
     "README.md",
+    ".gstack/README.md",
+    ".gstack/knowledge/CODEMAP.md",
+    ".gstack/knowledge/doc-placement.md",
+    ".gstack/knowledge/ai-programming-framework.md",
+    ".gstack/scripts/README.md",
+    ".gstack/task-boundaries/CURRENT.md",
+    ".gstack/requirements/README.md",
+    ".gstack/reviews/README.md",
+    ".gstack/qa-reports/README.md",
+    "scripts/init_project.py",
+    "adapters/default/adapter.md",
+    "adapters/default/runtime.json",
+    "adapters/default/core_manifest.json",
+    "adapters/default/runtime_schema.json",
+)
+SOURCE_ONLY_CORE_DOCS = (
     "QUICK_START_FOR_PARTNERS.md",
     "COMPANY_ADOPTION_GUIDE.md",
     "CODEX_ADOPTION_CONNECTOR.md",
     ".gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md",
-    ".gstack/README.md",
-    ".gstack/knowledge/CODEMAP.md",
-    ".gstack/knowledge/doc-placement.md",
     ".gstack/knowledge/context-isolation.md",
-    ".gstack/knowledge/ai-programming-framework.md",
     ".gstack/knowledge/implementation-guide.md",
     ".gstack/knowledge/qa-dimensions.md",
     ".gstack/knowledge/data-access/README.md",
@@ -70,9 +83,6 @@ REQUIRED_CORE_DOCS = (
     ".gstack/knowledge/data-access/query-access-guide.md",
     ".gstack/entrypoints/product-manager.md",
     ".gstack/entrypoints/engineer.md",
-    ".gstack/task-boundaries/CURRENT.md",
-    "adapters/default/adapter.md",
-    "adapters/default/runtime.json",
     ".agents/plugins/README.md",
     ".agents/plugins/marketplace.json",
     "plugins/PARTNER_INSTALL.md",
@@ -86,6 +96,7 @@ REQUIRED_CORE_DOCS = (
     "archive/baseline/README.md",
     "shared/README.md",
 )
+REQUIRED_CORE_DOCS = (*PORTABLE_CORE_DOCS, *SOURCE_ONLY_CORE_DOCS)
 CONTEXT_RISK_PARENT_PATTERNS = ("tian" + "gong",)
 EXTERNAL_SKILL_PREFIXES = ("tg-",)
 
@@ -118,6 +129,16 @@ def display_path(path: Path) -> str:
         return repo_relative(path)
     except ValueError:
         return path.as_posix()
+
+
+def is_skeleton_source_repo() -> bool:
+    return (REPO_ROOT / SKELETON_MARKER).exists()
+
+
+def required_core_docs_for_repo() -> tuple[str, ...]:
+    if is_skeleton_source_repo():
+        return REQUIRED_CORE_DOCS
+    return PORTABLE_CORE_DOCS
 
 
 def run(command: list[str]) -> subprocess.CompletedProcess[str]:
@@ -497,22 +518,31 @@ def check_scripts() -> CheckResult:
 
 
 def check_core_docs() -> CheckResult:
+    required_docs = required_core_docs_for_repo()
+    mode = "skeleton-source" if is_skeleton_source_repo() else "target-repo"
     missing: list[str] = []
-    for doc in REQUIRED_CORE_DOCS:
+    for doc in required_docs:
         if not (REPO_ROOT / doc).exists():
             missing.append(doc)
     if missing:
+        details = [f"检查模式: {mode}", f"已检查 {len(required_docs)} 个入口文档"]
+        if mode == "target-repo":
+            details.append("目标仓库不要求骨架源仓库的 partner / plugin / marketplace 发布文档")
+        details.extend(f"缺失: {doc}" for doc in missing)
         return CheckResult(
             "core-docs",
             "fail",
             "核心协作文档存在断链。",
-            [f"缺失: {doc}" for doc in missing],
+            details,
         )
+    details = [f"检查模式: {mode}", f"已检查 {len(required_docs)} 个入口文档"]
+    if mode == "target-repo":
+        details.append("已按 portable target core 检查；source-only 发布资料不要求随业务目标仓库安装。")
     return CheckResult(
         "core-docs",
         "ok",
         "核心协作文档已存在。",
-        [f"已检查 {len(REQUIRED_CORE_DOCS)} 个入口文档"],
+        details,
     )
 
 
