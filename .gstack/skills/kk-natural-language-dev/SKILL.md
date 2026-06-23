@@ -52,7 +52,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - If the user asks to open the development home after opening the project, such as "打开开发首页", "现在能做什么", "我刚打开项目", "打开项目怎么开始", or equivalent wording, this helper may route to `nontechnical_home.py` and explain the current task, available actions, complex-request template, acceptance path, and recovery path in plain language.
   - If the user asks whether the current task can start implementation, such as "现在能开始实现了吗", "还差什么才能开始开发", "可以开始写代码了吗", or equivalent wording, this helper may route to `nontechnical_implementation_readiness.py` and explain completed preparation, missing preparation, Codex's next step, and whether user confirmation is needed.
   - If the user asks what they need to confirm right now, such as "现在需要我确认什么", "我该回复什么", "卡在我这里吗", or equivalent wording, this helper may route to `nontechnical_confirmation_brief.py` and explain whether Codex is waiting for the user, what needs confirmation, suggested replies, and Codex's next step.
-  - If the user only replies "我确认", "可以", "同意", "按这个做", or equivalent terse confirmation, this helper may route to `nontechnical_confirmation_response.py` and explain what this confirms, what still needs explicit scope, safe next actions, suggested replies, and high-risk non-actions.
+  - If the user only replies "我确认", "可以", "同意", "按这个做", or equivalent terse confirmation, this helper may route to `nontechnical_confirmation_response.py` and explain what this confirms, what still needs explicit scope, safe next actions, suggested replies, and high-risk non-actions. If the helper reports `safe-to-continue`, Codex can continue low-risk local work inside the active boundary without asking the user to say "continue" again.
   - If the user asks "怎么推进", "你会怎么做", "执行计划", "拆任务", "排优先级", "里程碑", "每个阶段怎么验收", "什么时候需要我确认", or equivalent wording, this helper may route to `nontechnical_execution_plan.py` and explain phases, confirmation points, and acceptance in plain language.
   - If the user asks how to accept or verify a specific desired change, such as "我想做 X，怎么验收" or "X 的验收标准是什么", this helper may route to `nontechnical_acceptance_plan.py` and explain acceptance checks, user actions, expected results, confirmation points, and risks in plain language.
   - If the user asks a generic completion question such as "做完以后我怎么知道它真的好了" without a concrete new requirement, keep it as current active-task verification through `gstack_dashboard.py verify`.
@@ -64,7 +64,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - If the user asks how to start as a first-time nontechnical user, such as "我第一次用这个项目，不懂技术，应该怎么开始", "这个骨架怎么用来开发一个复杂需求", "我完全不会写代码，能不能带我从想法开始", or equivalent wording, this helper may route to `nontechnical_first_use.py` and explain the from-idea-to-kickoff path, what to send now, Codex's next actions, confirmation needs, and non-actions.
   - If Codex needs one deterministic entry to guide a complex request from blank template to readiness, execution plan, or read-only formal kickoff preview, use `python3 .gstack/scripts/nontechnical_guided_kickoff.py --raw "..." --format user` internally. This helper composes requirement readiness, execution plan, and formal kickoff preview; it remains read-only and treats explicit "do not touch production/database/real data" non-goals as safety constraints.
   - If the user says a GitHub / CI / PR check failed, such as "GitHub 检查失败了", "CI 没过", or "PR 检查挂了", this helper may route to `nontechnical_ci_failure.py` and explain the failed check type, Codex's next investigation area, whether the user needs to provide the failed check name or first log lines, and which risky actions Codex will not take.
-  - If the user says "继续做", "按你刚才的计划继续推进", "那就先做第一步", or equivalent wording, this helper may route to `nontechnical_continue.py` and explain the current task, current stage, Codex's next step, whether confirmation is needed, and which risky actions Codex will not take.
+  - If the user says "继续做", "按你刚才的计划继续推进", "那就先做第一步", or equivalent wording, this helper may route to `nontechnical_continue.py` and explain the current task, current stage, Codex's next step, whether confirmation is needed, and which risky actions Codex will not take. Low-risk continuation means Codex owns implementation order, tests, gate recovery, doc sync, and subagent strategy.
   - If the user says "先停一下", "暂停这个任务", "不要继续做了", "先到这里", or equivalent wording, this helper may route to `nontechnical_pause.py` and explain the current task, pause understanding, stopped actions, preserved context, resume options, and high-risk non-actions.
   - If the user says "撤销刚才的改动", "不要这个改动了", "回到之前", "回滚刚才那步", or equivalent wording, this helper may route to `nontechnical_undo_request.py` and explain the current task, undo understanding, required undo scope, safe inspection actions, suggested replies, and high-risk non-actions.
   - If the user says "先别改代码", "只给方案", "关键地方问我", "全自动做完", "协作模式怎么选", or equivalent wording, this helper may route to `nontechnical_mode_control.py` and explain the collaboration mode, how this request will be handled, what needs confirmation, and which risky actions Codex will not take.
@@ -104,8 +104,8 @@ Progress, ambiguity, and team-state requests have special handling.
 - When the user only replies "我确认", "可以", "同意", "按这个做", "没问题", or equivalent terse confirmation, do not treat it as high-risk authorization, generic continuation, formal kickoff, collaboration mode control, or ordinary product clarification.
   - Internally prefer `python3 .gstack/scripts/nontechnical_confirmation_response.py --raw "..." --format user` or route through `python3 .gstack/scripts/nontechnical_next_step.py --raw "..." --format user`.
   - Explain current task, how Codex understands the confirmation, what it can confirm, what still needs explicit scope, safe next actions, suggested replies, and high-risk non-actions.
-  - Keep it read-only. Do not update boundary status, advance gates, modify code, connect real data, write databases, run production actions, execute code workflow actions, delete, revert, reset, roll back, or clean files.
-  - If the next step involves real data, production, databases, publishing, deletion, rollback, or code workflow, ask for precise scope and explicit authorization.
+  - The helper itself remains read-only. If it reports `safe-to-continue`, Codex may continue local repo-bounded implementation, verification, docs, gate recovery, and subagent orchestration inside the current active boundary without asking for another generic "继续".
+  - If it reports `needs-confirmation-scope` or the next step involves real data, production, databases, publishing, deletion, rollback, or code workflow, ask for precise scope and explicit authorization before that action.
   - Do not expose commands, paths, lane, boundary, gate, spec, raw JSON, or internal check ids to the user.
 - When the user explicitly asks to list unfinished tasks, historical requirements, open work, or task inventory, do not treat it as a new feature-intake clarification.
   - Internally prefer `python3 .gstack/scripts/nontechnical_task_list.py --raw "..." --format user`.
@@ -128,6 +128,8 @@ Progress, ambiguity, and team-state requests have special handling.
   - Explain the current task, current stage, Codex's next step, whether confirmation is needed, and what risky actions will not be taken.
   - If there is no active task, ask only to recover or identify the task to continue; do not invent task state.
   - Do not ask unrelated new-intake questions such as target user or first-eye success criteria when active context exists.
+  - When active context exists and no high-risk action is requested, continue through local implementation / verification / docs / gate recovery without asking the user to say "继续" after every internal step.
+  - Do not ask the user to choose tests, code structure, skill order, gate recovery order, or subagent roles; those are Codex engineering decisions and should be recorded in boundary / review / QA evidence as needed.
 - When the user says "先停一下", "暂停这个任务", "不要继续做了", "先到这里", or equivalent wording, do not treat it as collaboration mode control, continuation, scope change, or a fresh product-intake clarification.
   - Internally prefer `python3 .gstack/scripts/nontechnical_pause.py --raw "..." --format user` or route through `python3 .gstack/scripts/nontechnical_next_step.py --raw "..." --format user`.
   - Explain the current task, that Codex will pause current progress, what will not continue, what remains preserved, how to resume, whether user confirmation is needed, and what risky actions will not be taken.
@@ -271,7 +273,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - User-facing output should include `不引入数据库`, `不能承诺实时多人同步`, `只读状态视图`, `需要你确认`, and the forbidden business scope when present.
   - Do not route no-database team task-state sync to generic `risk_confirmation` merely because the utterance contains `数据库`.
 - When using `nontechnical_delivery_summary.py`, preserve delivery-summary semantics.
-  - User-facing output should include `可以直接这样发给团队`, `本次交付`, `这次改了什么`, `怎么验收`, `风险和未做`, and `需要你确认`.
+  - User-facing output should include `可以直接这样发给团队`, `本次交付`, `这次改了什么`, `怎么验收`, `风险和未做`, `下一步建议`, and `需要你确认`.
   - Do not route a team-facing completion note to `acceptance_plan` merely because the utterance contains `怎么验收`.
   - Do not invent QA completion if the current task is not complete or the QA stage is not done.
 - When using `nontechnical_task_starter.py`, preserve risk confirmation controls.
@@ -306,7 +308,8 @@ Progress, ambiguity, and team-state requests have special handling.
    - what changed,
    - where the user can inspect or try it,
    - whether validation passed,
-   - any real risk or unresolved user decision.
+   - any real risk or unresolved user decision,
+   - the recommended next step after this delivery.
 
 ## User-Facing Language
 

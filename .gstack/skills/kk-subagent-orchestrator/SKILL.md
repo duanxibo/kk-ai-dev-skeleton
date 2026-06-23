@@ -45,6 +45,7 @@ description: |
 2. 更新 active boundary 的 `## Subagent Plan`：
    - 小任务写 `Mode: not-used` 和原因
    - 复杂任务写 `explore / review / execute / governance / mixed`
+   - 用户反馈“没看到使用 subagent / 需要用户说继续太频繁 / 没有为用户做好决策”时，默认把这视为协作体验缺口；除非任务确实是单文件小改或没有独立 review surface，至少规划一个 read-only explorer / reviewer。
 3. 为每个 subagent 写清：
    - role: `explorer / reviewer / worker`
    - task
@@ -52,7 +53,7 @@ description: |
    - forbidden paths
    - required inputs
    - output evidence
-4. 只有在用户请求或当前任务确实需要时才启动 subagent。
+4. 只有在用户请求、当前任务确实需要，或协作体验反馈显示需要独立探索 / 评审时才启动 subagent。
 5. worker 必须是互不重叠的写范围，并明确告诉它：
    - 不是独自在仓库里工作
    - 不要回滚别人改动
@@ -76,11 +77,13 @@ description: |
   diff 已经较大，需要反查文档、QA、learning、pitfall 缺口时使用。
 - 不用 subagent：
   任务小、写范围强耦合、下一步结果会阻塞主线、同步成本大于收益。
+  不能把“用户没指定 subagent 角色 / 没要求并行 / 没给 checkpoint”当作不用的理由；这些由 Codex 决定。
 
 ## Output Rules
 
 - 每次正式任务的 boundary 都必须有 `Subagent Plan`
 - 不使用 subagent 也要写 `Mode: not-used` 和原因
+- 用户已经反馈“没看到使用 subagent”时，如果仍不使用，必须写清具体工程原因，例如单文件小改、无独立评审面、或当前阶段结果会阻塞所有子任务
 - 使用 subagent 时，main agent 仍然负责最终判断、集成、验证和用户答复
 - subagent 产物必须回收到 repo-native evidence 或最终集成说明
 - 不允许把 subagent 的猜测直接写成 QA 通过、接口真源或业务结论

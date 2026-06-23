@@ -71,6 +71,7 @@ description: |
    - 用户出现“筛选、排序、搜索、操作入口、看不到页面变化”等词时，默认按页面内可见能力理解；如果只做 CLI、生成器参数、后端接口或静态输出，必须在 requirement 中写明原因并在用户侧解释。
    - Codex 自行推断 stack domain、Expected Spec Targets、Required Gates 和验证计划。
    - 若可本地证明，直接生成 repo-native evidence；若涉及业务口径多解、真实数据、生产、DB 或 git action，再提示用户确认。
+   - 用户已对低风险范围回复“同意 / 可以 / 我确认 / 继续做”时，继续在 active boundary 内推进本地可证明的实现、验证、文档同步、门禁恢复和 subagent 分工；不要把每个内部阶段都交回用户说“继续”。
 6. 用自己的话确认：
    - 当前任务属于哪一层
    - 当前主要真源文档是什么
@@ -98,7 +99,7 @@ description: |
 12. `requirement-freeze` 或 `prototype-freeze` 是 CEO review 后、工程 review 前的冻结证据；`domain-spec-readiness` 必须引用它，而不是临时重写需求。
 13. 如果任务涉及 adapter 标记为 prototype / baseline / archive 的旧原型路径，boundary 必须写清目标真源、采纳 / 放弃项和为什么需要触碰历史原型路径；不要新增 handoff 文档作为默认门禁。
 14. 如果任务涉及 adapter 标记为 backend implementation 的路径，`Spec Sync Plan` 必须指向 adapter 定义的项目真源文档，`Verification` 必须列出后端测试或等价契约测试；不要把新后端规范写入 adapter 标记为 deprecated 的旧目录。
-15. 每个正式任务都必须填写 `Subagent Plan`；小任务写 `Mode: not-used` 和原因，复杂任务先用 `kk-subagent-orchestrator` 拆分探索、评审、执行或治理 agent。
+15. 每个正式任务都必须填写 `Subagent Plan`；小任务写 `Mode: not-used` 和原因，复杂任务先用 `kk-subagent-orchestrator` 拆分探索、评审、执行或治理 agent。是否使用 subagent、使用什么 role、读哪些文件、checkpoint / deadline 和回收方式由 Codex 判断，不让用户替 Codex 做工程分工。用户反馈“没看到使用 subagent / 需要用户说继续太频繁”时，默认把这视为协作体验缺口，至少规划 read-only reviewer / explorer，除非 active boundary 证明不适合。
 16. 每个正式任务都必须在 `Autonomy Plan` 中填写 `Goal Mode: enabled / not-used / ask-first`；中大型 `自主执行` 任务可自动启用，`手动控制` 默认不启用。
 17. 如果任务出现以下任一信号，必须在 `Required Gates` 中声明 `data-access`，并调度 `kk-data-kickoff` 产出 gate evidence：
    - 页面、原型、看板接真实数据
@@ -153,6 +154,7 @@ description: |
 - 不要把“这次采用什么协作模式、Codex 可以自动做什么、哪些点必须问用户”只留在口头总结里，必须写进 boundary 的 `Decision Mode` 和 `Autonomy Plan`
 - 不要把 Flow Lane 只留在口头判断里，必须写进 boundary；fast-lane 必须有 fast-lane requirement 和 fast-lane review evidence
 - 不要把“这次是否使用 subagent”只留在口头判断里，必须写进 boundary 的 `Subagent Plan`
+- 不要把“是否继续下一步、测试怎么跑、门禁怎么恢复、subagent 怎么分工”作为低风险任务的反复确认点；这些属于 Codex 在 boundary 内的自主推进事项
 - 不要把“这次是否需要 data-access / data-query / prototype-logic-extraction / data-knowledge-sync / doc-backfill”只留在口头判断里，必须写进 boundary 的 `Required Gates`
 - 不要把“这次是否需要 UI design gate / polish review”只留在口头判断里；涉及前端、HTML、dashboard 或可视化时，必须写进 boundary 的 `Required Gates`、`Generated Artifact Policy` 和 `Verification`
 - 如果 `prototype-logic-extraction` 被标记为 `planned / done / blocked / deferred`，必须填写 `evidence_path` 或阻塞 / 延期说明；如果标记为 `not-required`，必须填写明确排除原因

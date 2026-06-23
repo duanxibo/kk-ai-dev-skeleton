@@ -57,7 +57,7 @@ def confirmation_for(status: str, blocked: bool) -> list[str]:
         return ["需要你告诉我这次要继续哪件事，或让我先恢复当前任务记录。"]
     if blocked:
         return ["当前任务记录显示有卡住项；Codex 会先修本地能证明的问题，涉及业务口径、真实数据、生产、数据库或代码提交流程时再问你。"]
-    return ["暂时不需要；Codex 可以先在当前任务范围内继续推进。"]
+    return ["暂时不需要；Codex 可以先在当前任务范围内继续推进本地可证明步骤，不会每一步都等你再说“继续”。"]
 
 
 def non_actions() -> list[str]:
@@ -73,6 +73,7 @@ def actions_for_stage(stage: str, task_done: bool, blocked: bool) -> list[str]:
     if blocked:
         actions.append("先看当前任务为什么卡住，并优先修复本地可以证明的问题。")
     actions.append(STAGE_ACTIONS.get(stage, "继续完成当前任务的下一步。"))
+    actions.append("工程实现顺序、测试组合、文档同步、门禁恢复和 subagent 分工由 Codex 在任务范围内自主决定。")
     if not task_done:
         actions.append("继续时会保持原有任务范围，不把它当成一个全新需求重新追问。")
         actions.append("完成后会重新运行验证，并把结果写入验收记录。")

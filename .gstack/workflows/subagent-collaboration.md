@@ -8,6 +8,7 @@
 - main agent 始终负责流程、边界、集成、验证和最终答复。
 - 每次正式任务都要在 active boundary 写 `Subagent Plan`；不使用也要写 `Mode: not-used` 和原因。
 - subagent 的重要结论必须回收到 repo-native evidence，不只留在聊天里。
+- 用户反馈“没看到使用 subagent / 需要用户说继续太频繁 / 没有为用户做好决策”时，默认视为协作体验缺口；main agent 应主动评估并优先安排 read-only explorer / reviewer，而不是等待用户指定角色或继续口令。
 
 ## 适用阶段
 
@@ -51,6 +52,8 @@
 - 下一个动作被某个结果强阻塞，等待 subagent 会拖慢主线
 - 写范围高度耦合，拆分会制造冲突
 - 没有明确 evidence 落点
+
+不能因为“用户没有点名 subagent、没有选择 role、没有指定 checkpoint / deadline”而跳过 subagent；这些属于 Codex 的工程调度职责。
 
 ## Boundary 写法
 

@@ -39,6 +39,7 @@ class DeliverySummary:
     risks_and_non_actions: list[str]
     needs_user_confirmation: list[str]
     non_actions: list[str]
+    next_step_suggestions: list[str]
     next_user_message: str
 
 
@@ -104,6 +105,10 @@ def looks_internal_path(text: str) -> bool:
 
 
 def humanize_internal_detail(text: str) -> str:
+    if "helper" in text or "smoke 命令" in text or "smoke" in text or "本地检查" in text:
+        return "重新运行交付总结和自然语言关键路径检查，确认输出包含下一步建议。"
+    if "任务状态机" in text and "dashboard" in text:
+        return "不改变当前任务状态记录、任务范围解析逻辑或任务状态视图。"
     if any(token in text for token in ("python3", "bash ", "scripts/", ".py", ".sh", "--")):
         return "按项目说明运行初始化和自检命令。"
     if any(
@@ -169,6 +174,23 @@ def standard_non_actions() -> list[str]:
     ]
 
 
+def next_step_suggestions_for(*, task_done: bool, no_task: bool = False) -> list[str]:
+    if no_task:
+        return [
+            "先指定或恢复要总结的任务记录，再生成可靠的交付总结。",
+            "恢复任务记录后，再补齐改动内容、验收方式、风险和下一步建议。",
+        ]
+    if task_done:
+        return [
+            "先把这份交付总结发给团队或负责人验收，确认本轮结果是否接受。",
+            "验收后再选择下一轮修改：处理反馈、补缺口，或进入下一个优先任务。",
+        ]
+    return [
+        "先完成当前未收口阶段和验收记录，再把这份说明升级为最终完成说明。",
+        "如果要提前同步团队，请明确标注这是进展总结，并把剩余工作作为下一轮修改建议。",
+    ]
+
+
 def dashboard_for(args: argparse.Namespace) -> dict[str, object]:
     if args.query:
         return dashboard_payload(
@@ -217,6 +239,7 @@ def build_no_task_summary(raw: str, query: str) -> DeliverySummary:
         risks_and_non_actions=["在没有任务记录前，不会编造已完成内容或验收结论。"],
         needs_user_confirmation=["需要先确认要总结哪一项任务，或让 Codex 恢复当前任务记录。"],
         non_actions=standard_non_actions(),
+        next_step_suggestions=next_step_suggestions_for(task_done=False, no_task=True),
         next_user_message="我需要先找到当前任务记录，才能生成可靠的团队完成说明。",
     )
 
@@ -268,6 +291,7 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
         ),
         needs_user_confirmation=confirmations,
         non_actions=standard_non_actions(),
+        next_step_suggestions=next_step_suggestions_for(task_done=task_done),
         next_user_message="我会把当前任务记录转成一段可以给团队看的完成说明。",
     )
 
@@ -285,6 +309,9 @@ def render_user(summary: DeliverySummary) -> str:
                 "",
                 "Codex 的下一步：",
                 *[f"- {item}" for item in summary.acceptance_actions],
+                "",
+                "下一步建议：",
+                *[f"- {item}" for item in summary.next_step_suggestions],
                 "",
                 "需要你确认：",
                 *[f"- {item}" for item in summary.needs_user_confirmation],
@@ -315,6 +342,9 @@ def render_user(summary: DeliverySummary) -> str:
             "风险和未做：",
             *[f"- {item}" for item in summary.risks_and_non_actions],
             "",
+            "下一步建议：",
+            *[f"- {item}" for item in summary.next_step_suggestions],
+            "",
             "需要你确认：",
             *[f"- {item}" for item in summary.needs_user_confirmation],
         ]
@@ -341,6 +371,8 @@ def render_markdown(summary: DeliverySummary) -> str:
         f"- 验收记录：{summary.verification_status}",
         "- 风险和未做：",
         *[f"  - {item}" for item in summary.risks_and_non_actions],
+        "- 下一步建议：",
+        *[f"  - {item}" for item in summary.next_step_suggestions],
         "- 需要用户确认：",
         *[f"  - {item}" for item in summary.needs_user_confirmation],
         "- 不执行动作：",

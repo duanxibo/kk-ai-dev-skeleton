@@ -52,6 +52,7 @@ class ExecutionPlan:
     summary: IntakeSummary
     phases: list[PlanPhase]
     codex_can_do: list[str]
+    subagent_strategy: list[str]
     needs_user_confirmation: list[str]
     acceptance_checks: list[str]
     risk_notes: list[str]
@@ -194,6 +195,7 @@ def codex_can_do(summary: IntakeSummary) -> list[str]:
     actions = [
         "把目标、使用者、成功样子和不做范围整理成任务起点。",
         "把复杂需求拆成几个可以分别验收的阶段。",
+        "自主选择工程实现顺序、测试组合、文档同步和本地门禁恢复路径。",
         "在本地运行能证明结果的检查，并把通过 / 未通过说清楚。",
     ]
     if "用户可见页面能力" in summary.likely_surface:
@@ -205,6 +207,25 @@ def codex_can_do(summary: IntakeSummary) -> list[str]:
     if summary.risks and summary.risk_confirmation_status == "safe-to-draft":
         actions.append("只在你确认的安全范围内整理计划，不执行高风险动作。")
     return actions
+
+
+def subagent_strategy(summary: IntakeSummary) -> list[str]:
+    complex_task = summary.complexity in {"中等需求", "复杂需求", "高风险复杂需求"}
+    multi_surface = any(
+        marker in summary.likely_surface
+        for marker in ("页面", "数据", "接口", "服务", "可视化", "UI")
+    )
+    if complex_task or multi_surface:
+        return [
+            "默认规划只读 explorer / reviewer 做需求、工程方案、QA 或文档复核。",
+            "只有写范围能明确切开时才启动 worker；写范围耦合时由主 agent 实现，subagent 做独立复核。",
+            "是否启动 subagent、分配什么角色、检查哪些文件属于 Codex 工程决策，不需要用户选择。",
+        ]
+    return [
+        "小范围任务默认由主 agent 连续处理。",
+        "如果出现独立探索、review、QA 或文档治理面，Codex 会自动补只读 reviewer。",
+        "不需要用户说出 subagent、角色名或内部流程名。",
+    ]
 
 
 def confirmation_points(summary: IntakeSummary, *, plan_only: bool = False) -> list[str]:
@@ -277,6 +298,7 @@ def build_execution_plan(args: argparse.Namespace) -> ExecutionPlan:
         summary=summary,
         phases=build_phases(summary),
         codex_can_do=codex_can_do(summary),
+        subagent_strategy=subagent_strategy(summary),
         needs_user_confirmation=confirmation_points(summary, plan_only=plan_only),
         acceptance_checks=acceptance_checks,
         risk_notes=risk_notes(summary),
@@ -318,6 +340,8 @@ def render_user(plan: ExecutionPlan) -> str:
         )
     lines.extend(["", "Codex 可以自动处理："])
     lines.extend(f"- {user_text(item)}" for item in plan.codex_can_do)
+    lines.extend(["", "Codex 的分工策略："])
+    lines.extend(f"- {user_text(item)}" for item in plan.subagent_strategy)
     lines.extend(["", "需要你确认："])
     lines.extend(f"- {user_text(item)}" for item in plan.needs_user_confirmation)
     lines.extend(["", "完成后可以这样验收："])
@@ -358,6 +382,8 @@ def render_markdown(plan: ExecutionPlan) -> str:
         [
             "- Codex 可以自动处理：",
             *[f"  - {item}" for item in plan.codex_can_do],
+            "- Codex 的分工策略：",
+            *[f"  - {item}" for item in plan.subagent_strategy],
             "- 需要用户确认：",
             *[f"  - {item}" for item in plan.needs_user_confirmation],
             "- 完成后可以这样验收：",

@@ -21,9 +21,16 @@ HIGH_RISK_WORDS = (
     "线上",
     "数据库",
     "外部服务",
+    "上线",
     "发布",
     "代码提交流程",
     "git",
+    "commit",
+    "push",
+    "merge",
+    "pr",
+    "提交",
+    "推送",
     "删除",
     "撤销",
     "reset",
@@ -60,35 +67,36 @@ def default_non_actions() -> list[str]:
         "不会把一句“我确认 / 可以 / 同意”当成真实数据、生产环境、数据库或外部服务授权。",
         "不会把模糊确认当成删除、撤销、强制回退、回滚或清理改动的授权。",
         "不会执行代码提交流程。",
-        "不会推进当前任务状态、修改文件或进入实现。",
         "不会清理敏感配置或改写以后默认协作模式。",
     ]
 
 
-def default_safe_actions() -> list[str]:
+def safe_actions_for(high_risk: bool) -> list[str]:
+    if high_risk:
+        return [
+            "先复述我理解的确认范围，让你检查是否正确。",
+            "只继续做不触碰高风险动作的只读整理和影响分析。",
+            "如果下一步涉及高风险动作，先停下来问你更明确的范围和授权。",
+        ]
     return [
-        "先复述我理解的确认范围，让你检查是否正确。",
-        "继续做只读整理：确认当前任务、列出下一步、补齐需要你判断的问题。",
-        "如果下一步涉及高风险动作，先停下来问你更明确的范围和授权。",
+        "在当前任务范围内继续低风险本地推进，不需要你再说一次“继续”。",
+        "由 Codex 自主选择实现顺序、测试组合、文档同步、门禁恢复和 subagent 分工。",
+        "如果后续触及真实数据、生产、数据库、破坏性命令或代码提交流程，再单独向你确认。",
     ]
 
 
 def suggested_replies_for(high_risk: bool) -> list[str]:
-    replies = [
-        "确认，按当前低风险整理范围继续，不操作真实数据、不写数据库、不发布、不提交。",
-        "确认，只先给计划和影响说明，不改文件。",
-        "我还没确认高风险动作，只是确认你理解的方向。",
-    ]
     if high_risk:
-        replies.extend(
-            [
-                "允许查看影响范围，但不允许执行删除、回滚或清理。",
-                "允许继续到下一步，但禁止真实数据、生产、数据库和代码提交流程。",
-            ]
-        )
-    else:
-        replies.append("确认，继续做下一步；如果遇到高风险动作再问我。")
-    return replies
+        return [
+            "允许查看影响范围，但不允许执行删除、回滚或清理。",
+            "允许继续到下一步，但禁止真实数据、生产、数据库和代码提交流程。",
+            "我还没确认高风险动作，只是确认你理解的方向。",
+        ]
+    return [
+        "无需再回复“继续”；Codex 可以按当前任务范围推进低风险本地步骤。",
+        "如果你要限制范围，可以补一句：这次只做某一部分，其他先不动。",
+        "如果遇到真实数据、生产、数据库、破坏性命令或代码提交流程，再单独问我。",
+    ]
 
 
 def build_confirmation_response(args: argparse.Namespace) -> ConfirmationResponseBrief:
@@ -110,36 +118,45 @@ def build_confirmation_response(args: argparse.Namespace) -> ConfirmationRespons
             non_actions=default_non_actions(),
         )
 
-    text = read_text(active)
     summary = summarize_boundary(active, active)
     task = summary.task.strip() or "当前任务"
-    high_risk = contains_high_risk(text)
+    high_risk = contains_high_risk(raw)
     stage = summary.current_step_label
     can_confirm = [
-        "可以确认你看到了上一条说明，并愿意让 Codex 继续处理低风险的整理、复述或检查。",
+        "可以确认你看到了上一条说明，并同意 Codex 在当前任务范围内继续低风险本地推进。",
         "可以确认 Codex 对当前方向的理解大体正确。",
     ]
-    still_needs = [
-        "如果你确认的是具体范围，请直接说清楚：确认哪一部分、哪些不碰。",
-        "如果你只是想继续低风险整理，可以明确说“不操作真实数据、不写数据库、不发布、不提交”。",
-        f"当前记录显示阶段在：{stage}；如果要进入下一步，需要确认这一阶段对应的范围是否正确。",
-    ]
     if high_risk:
-        still_needs.append(
-            "当前任务记录包含高风险词或禁止动作；一句“我确认”不能自动授权真实数据、生产、数据库、删除、回滚或代码提交流程。"
+        still_needs = [
+            "这句话里包含高风险动作或授权语义，需要明确允许范围和禁止范围。",
+            f"当前记录显示阶段在：{stage}；Codex 只能先做不触碰高风险动作的整理和影响分析。",
+            "一句“我确认”不能自动授权真实数据、生产、数据库、删除、回滚或代码提交流程。",
+        ]
+        status = "needs-confirmation-scope"
+        understanding = (
+            "我会把这句话理解为：你可能同意继续，但确认范围还不够具体；"
+            "它不能自动代表高风险授权。"
+        )
+    else:
+        still_needs = [
+            "暂时不需要你再说“继续”；Codex 可以先推进当前任务范围内的低风险本地步骤。",
+            f"当前记录显示阶段在：{stage}；如果下一步改变业务口径、产品范围或设计取舍，Codex 会再问你。",
+            "如果你确认的是扩大范围、接真实数据、上线、改数据库、删除或提交代码，需要另行明确说出。",
+        ]
+        status = "safe-to-continue"
+        understanding = (
+            "我会把这句话理解为：你确认当前低风险方向，"
+            "Codex 可以在任务边界内继续本地推进，不需要你再说一次“继续”。"
         )
 
     return ConfirmationResponseBrief(
         raw_request=raw,
-        status="needs-confirmation-scope",
+        status=status,
         current_task=task,
-        response_understanding=(
-            "我会把这句话理解为：你可能同意继续，但确认范围还不够具体；"
-            "它不能自动代表高风险授权。"
-        ),
+        response_understanding=understanding,
         can_confirm=can_confirm,
         still_needs_clarity=still_needs,
-        safe_next_actions=default_safe_actions(),
+        safe_next_actions=safe_actions_for(high_risk),
         suggested_replies=suggested_replies_for(high_risk=high_risk),
         non_actions=default_non_actions(),
     )

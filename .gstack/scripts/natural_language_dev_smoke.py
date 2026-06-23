@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -17,6 +18,44 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+ACTIVE_BOUNDARY_ENV = "KK_ACTIVE_BOUNDARY"
+
+ACTIVE_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Active Task
+
+- Task: natural-language-smoke-active-task
+- Owner: smoke
+
+## Decision Mode
+
+- Mode: autonomous
+
+## Flow Lane
+
+- Lane: fast-lane
+
+## Subagent Plan
+
+- Mode: review
+- Reason:
+  Smoke fixture includes an independent review surface.
+
+## GStack Required Flow
+
+- requirement-brief:
+  status: done
+- plan-ceo-review:
+  status: done
+- requirement-freeze:
+  status: done
+- plan-eng-review:
+  status: done
+- domain-spec-readiness:
+  status: not-required
+- implement:
+  status: planned
+- qa:
+  status: planned
+"""
 
 
 @dataclass(frozen=True)
@@ -51,8 +90,8 @@ USER_CHECK_LABELS: dict[str, str] = {
     "intent-router-user-format": "路由结果能用人话输出",
     "next-step-json": "非技术用户原话能生成正确下一步",
     "next-step-user-format": "下一步说明能直接给用户看",
-    "execution-plan-json": "复杂需求能生成用户可读执行计划",
-    "execution-plan-user-format": "执行计划说明能直接给用户看",
+    "execution-plan-json": "复杂需求能生成用户可读执行计划并包含 subagent 策略",
+    "execution-plan-user-format": "执行计划说明能直接给用户看，并说明 Codex 分工策略",
     "task-breakdown-json": "拆任务 / 里程碑请求会生成阶段计划",
     "task-breakdown-user-format": "任务拆解说明能直接给用户看",
     "first-use-json": "第一次使用项目骨架会得到新手路径",
@@ -70,8 +109,8 @@ USER_CHECK_LABELS: dict[str, str] = {
     "visible-change-user-format": "可见变化排查说明能直接给用户看",
     "ci-failure-json": "CI / GitHub 检查失败会进入 CI 失败解释",
     "ci-failure-user-format": "CI 失败解释能直接给用户看",
-    "continue-runner-json": "继续推进会读取当前任务而不是重新追问需求",
-    "continue-runner-user-format": "继续推进说明能直接给用户看",
+    "continue-runner-json": "继续推进会读取当前任务并连续推进低风险本地步骤",
+    "continue-runner-user-format": "继续推进说明能直接给用户看，且不要求用户每步说继续",
     "mode-control-json": "协作模式表达会进入模式控制",
     "mode-control-user-format": "协作模式说明能直接给用户看",
     "recommendation-json": "用户不懂技术时会得到推荐方案",
@@ -90,7 +129,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "implementation-readiness-user-format": "实现就绪说明能直接给用户看",
     "confirmation-brief-json": "当前确认事项能生成可读说明",
     "confirmation-brief-user-format": "确认事项说明能直接给用户看",
-    "confirmation-response-json": "模糊确认会先说明确认范围",
+    "confirmation-response-json": "模糊确认会允许低风险继续，同时不授权高风险动作",
     "confirmation-response-user-format": "确认回复说明能直接给用户看",
     "pause-control-json": "暂停当前推进能生成可读说明",
     "pause-control-user-format": "暂停说明能直接给用户看",
@@ -117,7 +156,7 @@ USER_COVERAGE_LINES = [
     "用户询问某个具体需求怎么验收时，会看到验收清单、实际操作和预期结果。",
     "用户刷新页面但看不到变化时，会得到查看位置、刷新方式和排查步骤。",
     "用户说 CI 或 GitHub 检查失败时，会得到失败检查类型和下一步排查说明。",
-    "用户只说继续做、按计划推进或先做第一步时，会继续当前任务而不是重新追问。",
+    "用户只说继续做、按计划推进或先做第一步时，会继续当前任务而不是重新追问，并且不会每一步都等用户再说继续。",
     "用户说先别改代码、关键地方问我或全自动做完时，会先解释协作模式。",
     "用户不懂技术或不想选技术方案时，会看到推荐方案和第一安全步。",
     "用户要求拆任务、排优先级、里程碑或每阶段验收时，会看到阶段计划和阶段验收方式。",
@@ -129,12 +168,13 @@ USER_COVERAGE_LINES = [
     "用户调整需求范围时，会看到保留、排除和后续范围，而不是重新追问。",
     "用户要求先做原型、能点的 demo、静态页面或不接接口版本时，会按原型优先范围处理。",
     "用户提出团队状态同步但不要数据库时，会看到无数据库路线的能力边界和确认问题。",
-    "用户要给团队看的完成说明时，会看到交付总结、验收方式、风险和未做事项。",
+    "用户要给团队看的完成说明时，会看到交付总结、验收方式、风险、未做事项和下一步建议。",
     "用户要求查看未完成任务、历史需求或任务清单时，会看到只读任务概览。",
     "用户通过 Codex 打开项目后，可以看到当前任务、可选动作、复杂需求模板、验收方式和恢复方式。",
     "用户问能否开始实现时，会看到已完成准备、缺失准备、Codex 下一步和是否需要确认。",
     "用户问现在需要确认什么时，会看到确认事项、可直接回复的话和 Codex 下一步。",
-    "用户只回复我确认、可以或同意时，会看到确认范围说明，不会被当成高风险授权。",
+    "用户只回复我确认、可以或同意时，会看到确认范围说明，不会被当成高风险授权；低风险方向确认后 Codex 会在任务范围内继续本地推进。",
+    "工程顺序、测试组合、门禁恢复和 subagent 调度由 Codex 决策，不要求用户选择内部角色或反复说继续。",
     "用户说先停一下或暂停当前任务时，会看到暂停说明、保留内容和恢复方式。",
     "用户说撤销刚才改动时，会看到需要确认的撤销范围、安全查看方式和不会直接回滚的说明。",
     "用户明确说正式开工时，会进入正式开工包预览。",
@@ -143,13 +183,14 @@ USER_COVERAGE_LINES = [
 ]
 
 
-def run(command: list[str]) -> subprocess.CompletedProcess[str]:
+def run(command: list[str], *, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         command,
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=False,
+        env={**os.environ, **(env or {})},
     )
 
 
@@ -165,8 +206,13 @@ def ok(check_id: str, message: str, details: list[str]) -> SmokeResult:
     return SmokeResult(check_id, "ok", message, details)
 
 
-def load_json_command(check_id: str, command: list[str]) -> tuple[dict[str, Any] | None, list[str]]:
-    result = run(command)
+def load_json_command(
+    check_id: str,
+    command: list[str],
+    *,
+    env: dict[str, str] | None = None,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    result = run(command, env=env)
     details = [f"command: {' '.join(command)}"]
     if result.returncode != 0:
         details.append(result.stderr.strip() or result.stdout.strip())
@@ -176,6 +222,22 @@ def load_json_command(check_id: str, command: list[str]) -> tuple[dict[str, Any]
     except json.JSONDecodeError:
         details.append(result.stdout.strip())
         return None, details
+
+
+def load_json_command_with_active_fixture(
+    check_id: str,
+    command: list[str],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    fixture_path = REPO_ROOT / ".gstack" / "task-boundaries" / f".natural-language-smoke-active-{os.getpid()}.md"
+    fixture_path.write_text(ACTIVE_TASK_FIXTURE, encoding="utf-8")
+    try:
+        relative = fixture_path.relative_to(REPO_ROOT).as_posix()
+        return load_json_command(check_id, command, env={ACTIVE_BOUNDARY_ENV: relative})
+    finally:
+        try:
+            fixture_path.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def check_conditions(
@@ -219,11 +281,11 @@ def check_broad_intake() -> SmokeResult:
 def check_complex_intake() -> SmokeResult:
     payload, details = intake_json(
         "--raw",
-        "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+        "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
         "--audience",
         "运营同事",
         "--success",
-        "能看到按月份和 条目 过滤后的结果",
+        "能看到按月份和 SKU 过滤后的结果",
         "--non-goal",
         "不改生产数据库",
     )
@@ -563,25 +625,30 @@ def check_confirmation_brief_user_format() -> SmokeResult:
 
 
 def check_confirmation_response_json() -> SmokeResult:
-    payload, details = load_json_command(
+    payload, details = load_json_command_with_active_fixture(
         "confirmation-response-json",
         python_command(".gstack/scripts/nontechnical_confirmation_response.py", "--raw", "我确认", "--format", "json"),
     )
+    conditions = [
+        ((payload or {}).get("status") in {"safe-to-continue", "needs-confirmation-scope", "no-active-task"}, "expected known confirmation response status"),
+        (bool((payload or {}).get("current_task")), "expected current_task"),
+        (bool((payload or {}).get("response_understanding")), "expected response_understanding"),
+        (isinstance((payload or {}).get("can_confirm"), list) and len((payload or {}).get("can_confirm", [])) >= 1, "expected can_confirm"),
+        (isinstance((payload or {}).get("still_needs_clarity"), list) and len((payload or {}).get("still_needs_clarity", [])) >= 1, "expected still_needs_clarity"),
+        (isinstance((payload or {}).get("safe_next_actions"), list) and len((payload or {}).get("safe_next_actions", [])) >= 1, "expected safe_next_actions"),
+        (isinstance((payload or {}).get("suggested_replies"), list) and len((payload or {}).get("suggested_replies", [])) >= 1, "expected suggested_replies"),
+        (isinstance((payload or {}).get("non_actions"), list) and len((payload or {}).get("non_actions", [])) >= 1, "expected non_actions"),
+    ]
+    safe_actions = (payload or {}).get("safe_next_actions", [])
+    conditions.append(((payload or {}).get("status") == "safe-to-continue", "expected active fixture to be safe-to-continue"))
+    conditions.append((any("不需要你再说" in item for item in safe_actions), "expected safe continuation without another continue prompt"))
+    conditions.append((any("subagent" in item for item in safe_actions), "expected Codex-owned subagent decision"))
     return check_conditions(
         "confirmation-response-json",
         "Confirmation response exposes current task, confirmation scope, safe actions, and non-actions.",
         payload,
         details,
-        [
-            ((payload or {}).get("status") in {"needs-confirmation-scope", "no-active-task"}, "expected known confirmation response status"),
-            (bool((payload or {}).get("current_task")), "expected current_task"),
-            (bool((payload or {}).get("response_understanding")), "expected response_understanding"),
-            (isinstance((payload or {}).get("can_confirm"), list) and len((payload or {}).get("can_confirm", [])) >= 1, "expected can_confirm"),
-            (isinstance((payload or {}).get("still_needs_clarity"), list) and len((payload or {}).get("still_needs_clarity", [])) >= 1, "expected still_needs_clarity"),
-            (isinstance((payload or {}).get("safe_next_actions"), list) and len((payload or {}).get("safe_next_actions", [])) >= 1, "expected safe_next_actions"),
-            (isinstance((payload or {}).get("suggested_replies"), list) and len((payload or {}).get("suggested_replies", [])) >= 1, "expected suggested_replies"),
-            (isinstance((payload or {}).get("non_actions"), list) and len((payload or {}).get("non_actions", [])) >= 1, "expected non_actions"),
-        ],
+        conditions,
     )
 
 
@@ -734,18 +801,18 @@ def check_complex_task_starter() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_task_starter.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能看到按月份和 条目 过滤后的结果",
+            "能看到按月份和 SKU 过滤后的结果",
             "--non-goal",
             "不改生产数据库",
             "--topic",
             "complex-dashboard",
             "--dry-run",
         ),
-        ["状态：ready-to-draft", "建议 lane：standard", "草稿文件", "验收清单", "按月份和 条目"],
+        ["状态：ready-to-draft", "建议 lane：standard", "草稿文件", "验收清单", "按月份和 SKU"],
         "Complex task starter previews a standard draft package with acceptance checks.",
     )
 
@@ -770,11 +837,11 @@ def check_complex_task_starter_user_format() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_task_starter.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能看到按月份和 条目 过滤后的结果",
+            "能看到按月份和 SKU 过滤后的结果",
             "--non-goal",
             "不改生产数据库",
             "--topic",
@@ -795,11 +862,11 @@ def check_complex_task_starter_acceptance_json() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_task_starter.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能看到按月份和 条目 过滤后的结果",
+            "能看到按月份和 SKU 过滤后的结果",
             "--non-goal",
             "不改生产数据库",
             "--topic",
@@ -818,7 +885,7 @@ def check_complex_task_starter_acceptance_json() -> SmokeResult:
         [
             ((payload or {}).get("status") == "ready-to-draft", "expected ready-to-draft status"),
             (isinstance(checks, list) and len(checks) >= 4, "expected at least four acceptance checks"),
-            (any("按月份和 条目" in item for item in checks), "expected success criteria in acceptance checks"),
+            (any("按月份和 SKU" in item for item in checks), "expected success criteria in acceptance checks"),
             (any("搜索" in item or "筛选" in item for item in checks), "expected search/filter acceptance check"),
             (any("导出" in item for item in checks), "expected export acceptance check"),
             (any("多人" in item for item in checks), "expected multi-person acceptance check"),
@@ -918,7 +985,7 @@ def check_forbidden_scope_mapping() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_task_starter.py",
             "--raw",
-            "帮我做一个项目看板",
+            "帮我做一个经营看板",
             "--audience",
             "运营同事",
             "--success",
@@ -940,7 +1007,7 @@ def check_forbidden_scope_user_format() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_task_starter.py",
             "--raw",
-            "帮我做一个项目看板",
+            "帮我做一个经营看板",
             "--audience",
             "运营同事",
             "--success",
@@ -1057,11 +1124,11 @@ def check_intent_router_json() -> SmokeResult:
             "acceptance-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，怎么验收",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，怎么验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1081,12 +1148,6 @@ def check_intent_router_json() -> SmokeResult:
             True,
         ),
         (
-            "ui-optimization",
-            ["--raw", "进行 UI 优化"],
-            "ui_optimization_kickoff",
-            True,
-        ),
-        (
             "requirement-brief",
             ["--raw", "给我一个需求模板，我照着填"],
             "requirement_brief",
@@ -1102,6 +1163,12 @@ def check_intent_router_json() -> SmokeResult:
             "first-use",
             ["--raw", "我第一次用这个项目，不懂技术，应该怎么开始"],
             "first_use_guide",
+            True,
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化"],
+            "ui_optimization_kickoff",
             True,
         ),
         (
@@ -1198,11 +1265,11 @@ def check_intent_router_json() -> SmokeResult:
             "complex",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1213,11 +1280,11 @@ def check_intent_router_json() -> SmokeResult:
             "formal-kickoff",
             [
                 "--raw",
-                "我已经说清楚了，正式开工做一个项目看板，支持筛选、导出和多人验收",
+                "我已经说清楚了，正式开工做一个经营看板，支持筛选、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1228,11 +1295,11 @@ def check_intent_router_json() -> SmokeResult:
             "execution-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，你会怎么推进",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，你会怎么推进",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1248,6 +1315,12 @@ def check_intent_router_json() -> SmokeResult:
         (
             "risk",
             ["--raw", "帮我把线上数据同步一下"],
+            "risk_confirmation",
+            False,
+        ),
+        (
+            "high-risk-continue",
+            ["--raw", "继续同步线上数据"],
             "risk_confirmation",
             False,
         ),
@@ -1330,11 +1403,11 @@ def check_intent_router_user_format() -> SmokeResult:
             "acceptance-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，怎么验收",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，怎么验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--format",
@@ -1353,11 +1426,6 @@ def check_intent_router_user_format() -> SmokeResult:
             ["我会这样处理", "信息清单", "照填模板", "需要你确认"],
         ),
         (
-            "ui-optimization",
-            ["--raw", "进行 UI 优化", "--format", "user"],
-            ["我会这样处理", "用户可见界面优化", "UI 设计梳理", "视觉复核", "浏览器验收", "需要你确认：暂时不需要"],
-        ),
-        (
             "requirement-brief",
             ["--raw", "给我一个需求模板，我照着填", "--format", "user"],
             ["我会这样处理", "需求信息", "照填模板", "需要你确认"],
@@ -1371,6 +1439,11 @@ def check_intent_router_user_format() -> SmokeResult:
             "first-use",
             ["--raw", "这个骨架怎么用来开发一个复杂需求", "--format", "user"],
             ["我会这样处理", "新手", "从想法到开工", "需要你确认"],
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化", "--format", "user"],
+            ["我会这样处理", "用户可见界面优化", "UI 设计梳理", "视觉复核", "浏览器验收", "需要你确认：暂时不需要"],
         ),
         (
             "ci-failure",
@@ -1405,7 +1478,7 @@ def check_intent_router_user_format() -> SmokeResult:
         (
             "delivery-summary",
             ["--raw", "帮我写一段给团队看的完成说明，说明这次改了什么、怎么验收、还有什么风险", "--format", "user"],
-            ["我会这样处理", "交付总结", "需要你确认：暂时不需要"],
+            ["我会这样处理", "交付总结", "下一步建议", "需要你确认：暂时不需要"],
         ),
         (
             "risk",
@@ -1416,11 +1489,11 @@ def check_intent_router_user_format() -> SmokeResult:
             "formal-kickoff",
             [
                 "--raw",
-                "我已经说清楚了，正式开工做一个项目看板，支持筛选、导出和多人验收",
+                "我已经说清楚了，正式开工做一个经营看板，支持筛选、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--format",
@@ -1504,11 +1577,11 @@ def check_next_step_json() -> SmokeResult:
             "acceptance-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，怎么验收",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，怎么验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1528,12 +1601,6 @@ def check_next_step_json() -> SmokeResult:
             "nontechnical_page_change_brief.user",
         ),
         (
-            "ui-optimization",
-            ["--raw", "进行 UI 优化"],
-            "ui_optimization_kickoff",
-            "nontechnical_ui_optimization.user",
-        ),
-        (
             "requirement-brief",
             ["--raw", "开工前我需要给你哪些信息"],
             "requirement_brief",
@@ -1550,6 +1617,12 @@ def check_next_step_json() -> SmokeResult:
             ["--raw", "这个骨架怎么用来开发一个复杂需求"],
             "first_use_guide",
             "nontechnical_first_use.user",
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化"],
+            "ui_optimization_kickoff",
+            "nontechnical_ui_optimization.user",
         ),
         (
             "ci-failure",
@@ -1639,11 +1712,11 @@ def check_next_step_json() -> SmokeResult:
             "complex",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1654,11 +1727,11 @@ def check_next_step_json() -> SmokeResult:
             "formal-kickoff",
             [
                 "--raw",
-                "我已经说清楚了，正式开工做一个项目看板，支持筛选、导出和多人验收",
+                "我已经说清楚了，正式开工做一个经营看板，支持筛选、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--ai-reviewed",
@@ -1670,11 +1743,11 @@ def check_next_step_json() -> SmokeResult:
             "execution-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，你会怎么推进",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，你会怎么推进",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
             ],
@@ -1751,11 +1824,11 @@ def check_next_step_user_format() -> SmokeResult:
             "acceptance-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，怎么验收",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，怎么验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--format",
@@ -1774,11 +1847,6 @@ def check_next_step_user_format() -> SmokeResult:
             ["你不用懂技术", "页面位置", "现在看到的问题", "我希望改成", "我会这样验收", "本次不要碰", "Codex 的下一步", "需要你确认"],
         ),
         (
-            "ui-optimization",
-            ["--raw", "进行 UI 优化", "--format", "user"],
-            ["UI 优化开工说明", "用户可见界面", "UI 设计梳理", "视觉复核", "浏览器验收", "不改 API 合同", "不改数据合同", "不改 runner 逻辑", "需要你确认"],
-        ),
-        (
             "requirement-brief",
             ["--raw", "我有个复杂需求，但不知道该怎么描述给你", "--format", "user"],
             ["你可以这样描述需求", "照填模板", "谁会用", "成功后第一眼", "这次不做", "Codex 的下一步", "需要你确认"],
@@ -1792,6 +1860,11 @@ def check_next_step_user_format() -> SmokeResult:
             "first-use",
             ["--raw", "我完全不会写代码，能不能带我从想法开始", "--format", "user"],
             ["新手开始路径", "你可以这样开始", "现在只要这样发", "Codex 的下一步", "这次不会做什么"],
+        ),
+        (
+            "ui-optimization",
+            ["--raw", "进行 UI 优化", "--format", "user"],
+            ["UI 优化开工说明", "用户可见界面", "UI 设计梳理", "视觉复核", "浏览器验收", "不改 API 合同", "不改数据合同", "不改 runner 逻辑", "需要你确认"],
         ),
         (
             "ci-failure",
@@ -1841,7 +1914,7 @@ def check_next_step_user_format() -> SmokeResult:
         (
             "delivery-summary",
             ["--raw", "帮我写一段给团队看的完成说明，说明这次改了什么、怎么验收、还有什么风险", "--format", "user"],
-            ["可以直接这样发给团队", "本次交付", "这次改了什么", "怎么验收", "风险和未做", "需要你确认"],
+            ["可以直接这样发给团队", "本次交付", "这次改了什么", "怎么验收", "风险和未做", "下一步建议", "需要你确认"],
         ),
         (
             "recovery",
@@ -1852,11 +1925,11 @@ def check_next_step_user_format() -> SmokeResult:
             "complex",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
                 "--format",
@@ -1868,11 +1941,11 @@ def check_next_step_user_format() -> SmokeResult:
             "formal-kickoff",
             [
                 "--raw",
-                "我已经说清楚了，正式开工做一个项目看板，支持筛选、导出和多人验收",
+                "我已经说清楚了，正式开工做一个经营看板，支持筛选、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--ai-reviewed",
@@ -1885,11 +1958,11 @@ def check_next_step_user_format() -> SmokeResult:
             "execution-plan",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持筛选、导出和多人验收，你会怎么推进",
+                "我想做一个完整的经营看板，支持筛选、导出和多人验收，你会怎么推进",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能按月份和 条目 筛选并导出",
+                "能按月份和 SKU 筛选并导出",
                 "--non-goal",
                 "不改生产数据库",
                 "--format",
@@ -1949,11 +2022,11 @@ def check_execution_plan_json() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_execution_plan.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--format",
@@ -1963,6 +2036,7 @@ def check_execution_plan_json() -> SmokeResult:
     phases = (payload or {}).get("phases", [])
     confirmations = (payload or {}).get("needs_user_confirmation", [])
     checks = (payload or {}).get("acceptance_checks", [])
+    subagents = (payload or {}).get("subagent_strategy", [])
     return check_conditions(
         "execution-plan-json",
         "Execution plan exposes phases, confirmation points, and acceptance checks.",
@@ -1972,6 +2046,7 @@ def check_execution_plan_json() -> SmokeResult:
             ((payload or {}).get("status") == "ready-to-plan", "expected ready-to-plan status"),
             (isinstance(phases, list) and len(phases) >= 3, "expected at least three phases"),
             (any("最小可见" in str(phase) for phase in phases), "expected visible-slice phase"),
+            (isinstance(subagents, list) and any("subagent" in item for item in subagents), "expected subagent strategy"),
             (any("数据" in item for item in confirmations), "expected data confirmation point"),
             (any("筛选" in item or "导出" in item for item in checks), "expected acceptance checks"),
         ],
@@ -1984,17 +2059,17 @@ def check_execution_plan_user_format() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_execution_plan.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--format",
             "user",
         ),
-        ["执行计划", "推进顺序", "Codex 可以自动处理", "需要你确认", "完成后可以这样验收"],
+        ["执行计划", "推进顺序", "Codex 可以自动处理", "Codex 的分工策略", "subagent", "需要你确认", "完成后可以这样验收"],
         "Execution plan user format explains plan without internal terms.",
         forbidden_fragments=["python3", ".gstack", "boundary", "gate", "spec", "JSON", "建议 lane", "git", "CLI"],
     )
@@ -2149,7 +2224,7 @@ def check_requirement_readiness_json() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_requirement_readiness.py",
             "--raw",
-            "谁会用：运营同事；他们想完成：按月份和 条目 筛选项目看板；现在的问题是：人工查找太慢；成功后第一眼看到：有月份和 条目 筛选结果；用户会这样操作：选择月份、输入 条目、查看表格；数据来源：先用假数据；这次不做：真实数据、数据库、发布和代码提交流程；是否涉及线上、数据库、真实数据、发布或代码提交流程：暂时都不涉及；我会这样验收：输入 条目 后只看到匹配结果",
+            "谁会用：运营同事；他们想完成：按月份和 SKU 筛选经营看板；现在的问题是：人工查找太慢；成功后第一眼看到：有月份和 SKU 筛选结果；用户会这样操作：选择月份、输入 SKU、查看表格；数据来源：先用假数据；这次不做：真实数据、数据库、发布和代码提交流程；是否涉及线上、数据库、真实数据、发布或代码提交流程：暂时都不涉及；我会这样验收：输入 SKU 后只看到匹配结果",
             "--format",
             "json",
         ),
@@ -2248,11 +2323,11 @@ def check_acceptance_plan_json() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_acceptance_plan.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收，怎么验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收，怎么验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--format",
@@ -2283,11 +2358,11 @@ def check_acceptance_plan_user_format() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_acceptance_plan.py",
             "--raw",
-            "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收，怎么验收",
+            "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收，怎么验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--format",
@@ -2390,7 +2465,7 @@ def check_ci_failure_user_format() -> SmokeResult:
 
 
 def check_continue_runner_json() -> SmokeResult:
-    payload, details = load_json_command(
+    payload, details = load_json_command_with_active_fixture(
         "continue-runner-json",
         python_command(
             ".gstack/scripts/nontechnical_continue.py",
@@ -2403,15 +2478,19 @@ def check_continue_runner_json() -> SmokeResult:
     actions = (payload or {}).get("codex_next_actions", [])
     confirmations = (payload or {}).get("needs_user_confirmation", [])
     non_actions = (payload or {}).get("non_actions", [])
+    autonomy_condition = (any("不会每一步" in item for item in confirmations), "expected no repeated continue prompt guidance")
+    subagent_condition = (any("subagent" in item for item in actions), "expected Codex-owned subagent decision")
     return check_conditions(
         "continue-runner-json",
         "Continue helper exposes current state, next actions, and non-actions.",
         payload,
         details,
         [
-            ((payload or {}).get("status") in {"continue-current-task", "current-task-complete", "no-active-task"}, "unexpected continue status"),
+            ((payload or {}).get("status") == "continue-current-task", "expected active fixture to continue current task"),
             (isinstance(actions, list) and len(actions) >= 1, "expected Codex next actions"),
+            subagent_condition,
             (isinstance(confirmations, list) and len(confirmations) >= 1, "expected confirmation guidance"),
+            autonomy_condition,
             (isinstance(non_actions, list) and any("敏感配置" in item for item in non_actions), "expected sensitive-config non-action"),
         ],
     )
@@ -2829,6 +2908,7 @@ def check_delivery_summary_json() -> SmokeResult:
     actions = (payload or {}).get("acceptance_actions", [])
     risks = (payload or {}).get("risks_and_non_actions", [])
     confirmations = (payload or {}).get("needs_user_confirmation", [])
+    suggestions = (payload or {}).get("next_step_suggestions", [])
     return check_conditions(
         "delivery-summary-json",
         "Delivery summary helper exposes shareable summary fields.",
@@ -2839,6 +2919,7 @@ def check_delivery_summary_json() -> SmokeResult:
             (isinstance(changed, list) and len(changed) >= 1, "expected changed items"),
             (isinstance(actions, list) and len(actions) >= 1, "expected acceptance actions"),
             (isinstance(risks, list) and len(risks) >= 1, "expected risks and non-actions"),
+            (isinstance(suggestions, list) and len(suggestions) >= 1, "expected next-step suggestions"),
             (isinstance(confirmations, list) and len(confirmations) >= 1, "expected confirmation guidance"),
         ],
     )
@@ -2854,7 +2935,7 @@ def check_delivery_summary_user_format() -> SmokeResult:
             "--format",
             "user",
         ),
-        ["可以直接这样发给团队", "本次交付", "这次改了什么", "怎么验收", "风险和未做", "需要你确认"],
+        ["可以直接这样发给团队", "本次交付", "这次改了什么", "怎么验收", "风险和未做", "下一步建议", "需要你确认"],
         "Delivery summary user format explains completion summary without internal terms.",
         forbidden_fragments=["python3", ".gstack", "boundary", "gate", "spec", "JSON", "建议 lane", "git", "CLI", " PR", "commit", "push", "merge"],
     )
@@ -2866,11 +2947,11 @@ def check_formal_kickoff_json() -> SmokeResult:
             "complex",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
                 "--topic",
@@ -2893,11 +2974,11 @@ def check_formal_kickoff_json() -> SmokeResult:
             "not-reviewed",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
                 "--topic",
@@ -2940,11 +3021,11 @@ def check_formal_kickoff_user_format() -> SmokeResult:
             "complex",
             [
                 "--raw",
-                "我想做一个完整的项目看板，支持搜索筛选、数据同步、导出和多人验收",
+                "我想做一个完整的经营看板，支持搜索筛选、数据同步、导出和多人验收",
                 "--audience",
                 "运营同事",
                 "--success",
-                "能看到按月份和 条目 过滤后的结果",
+                "能看到按月份和 SKU 过滤后的结果",
                 "--non-goal",
                 "不改生产数据库",
                 "--topic",
@@ -2999,11 +3080,11 @@ def check_guided_kickoff_plan() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_guided_kickoff.py",
             "--raw",
-            "我想做一个完整的项目看板，支持筛选、导出和多人验收",
+            "我想做一个完整的经营看板，支持筛选、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--format",
@@ -3021,11 +3102,11 @@ def check_guided_kickoff_formal_json() -> SmokeResult:
         python_command(
             ".gstack/scripts/nontechnical_guided_kickoff.py",
             "--raw",
-            "我已经说清楚了，正式开工做一个项目看板，支持筛选、导出和多人验收",
+            "我已经说清楚了，正式开工做一个经营看板，支持筛选、导出和多人验收",
             "--audience",
             "运营同事",
             "--success",
-            "能按月份和 条目 筛选并导出",
+            "能按月份和 SKU 筛选并导出",
             "--non-goal",
             "不改生产数据库",
             "--formal",

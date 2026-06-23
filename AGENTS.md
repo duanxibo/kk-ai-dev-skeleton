@@ -61,6 +61,10 @@
 
 默认模式是 `autonomous`：用户说明目标，agent 负责需求整理、实现、验证、文档同步和本地恢复。
 
+在 `autonomous` 下，用户对低风险范围说“同意 / 可以 / 我确认 / 继续做”以后，不需要每个内部阶段都再让用户说一次“继续”。Codex 应在 active boundary 内继续推进本地可证明的实现、验证、文档同步、门禁恢复和必要的 subagent 分工；只有遇到业务多解、真实数据、生产、数据库、破坏性动作或 git workflow action 时才暂停确认。
+
+实现顺序、测试组合、门禁恢复路径、文档同步方式和 subagent 策略属于 Codex 的工程决策，不应作为选择题交给非技术用户。
+
 用户可以为单次任务切换：
 
 - `autonomous`：除非遇到高风险决策，否则继续推进
@@ -94,6 +98,8 @@
 - required gates
 - spec sync plan
 - verification plan
+
+`subagent plan` 必须记录是否使用、为何使用或为何不用。中大型任务、跨模块探索、独立 review、QA / 文档治理，或用户反馈“没有看到使用 subagent”时，默认至少评估并优先启用 read-only explorer / reviewer；只有单文件小改、强耦合写范围或同步成本明显高于收益时，才写 `Mode: not-used` 和具体原因。
 
 ## Required Flow（固定流程）
 
@@ -151,3 +157,5 @@ requirement-brief
 4. 运行 `python3 .gstack/scripts/spec_sync_guard.py`。
 5. 在 `.gstack/qa-reports/` 下写 QA evidence。
 6. 把可复用 pitfall 或 pattern 写入 `.gstack/knowledge/`、`.gstack/rules/` 或 `.gstack/learnings/`。
+7. 最终交付回复必须包含下一步建议；可以是验收、处理反馈、补剩余风险、进入下一轮修改或转入下一个优先任务。
+8. 如果本轮因为用户一句“继续 / 同意 / 我确认”进入低风险推进，确认最终总结说明哪些工作是 Codex 自主决策完成的，以及哪些高风险动作没有执行。

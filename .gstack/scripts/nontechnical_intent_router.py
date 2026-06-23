@@ -245,8 +245,8 @@ CI_FAILURE_CONTEXT_KEYWORDS = (
     "engineering-smoke",
     "natural-language-dev",
     "runtime-artifact-guard",
-    "app-backend",
-    "restricted-module",
+    "lunhui-backend",
+    "product-review",
     "zm-demo",
 )
 
@@ -475,8 +475,8 @@ SCOPE_CHANGE_KEYWORDS = (
     "能点的版本",
     "后面再接真实数据",
     "后续再接真实数据",
-    "受限业务模块可以动",
-    "可以动受限业务模块",
+    "商品审核可以动",
+    "可以动商品审核",
     "不要动数据库",
 )
 
@@ -669,6 +669,29 @@ def is_confirmation_response_request(text: str) -> bool:
     return has_any(text, *CONFIRMATION_RESPONSE_KEYWORDS)
 
 
+def is_high_risk_authorization_text(text: str) -> bool:
+    return has_any(
+        text,
+        "真实数据",
+        "生产",
+        "线上",
+        "数据库",
+        "上线",
+        "发布",
+        "提交",
+        "推送",
+        "commit",
+        "push",
+        "merge",
+        "pr",
+        "删除",
+        "撤销",
+        "回滚",
+        "reset",
+        "破坏性",
+    )
+
+
 def is_pause_request(text: str) -> bool:
     if is_formal_kickoff_request(text):
         return False
@@ -712,6 +735,8 @@ def is_ci_failure_request(text: str) -> bool:
 
 def is_continue_request(text: str) -> bool:
     if is_formal_kickoff_request(text):
+        return False
+    if is_high_risk_authorization_text(text):
         return False
     if has_any(text, "出错", "报错", "失败", "门禁", "继续不了", "怎么继续", "下一步怎么办"):
         return False
@@ -892,7 +917,7 @@ def acceptance_focus_for(summary: IntakeSummary, intent: str) -> list[str]:
     if intent == "team_sync_explain":
         return ["说明无数据库团队状态同步的能力边界、repo evidence 只读视图路线、需要用户确认项，以及不会执行的高风险动作"]
     if intent == "delivery_summary":
-        return ["读取当前任务 evidence，生成可给团队看的交付总结、验收方式、风险和未做事项"]
+        return ["读取当前任务 evidence，生成可给团队看的交付总结、验收方式、风险和未做事项、下一步建议"]
     if intent == "task_list_explain":
         return ["读取 repo-native task evidence，生成未完成任务、卡住任务和下一步建议的用户可读概览"]
     if intent == "ui_optimization_kickoff":
@@ -973,16 +998,25 @@ def route_meta_intent(raw: str, summary: IntakeSummary) -> IntentRoute | None:
         )
 
     if is_confirmation_response_request(raw):
+        high_risk_confirmation = is_high_risk_authorization_text(raw)
         return IntentRoute(
             raw_request=summary.raw_request,
             intent="confirmation_response",
             confidence="high",
-            route_reason="用户给出简短确认，需要先说明确认范围，不能把模糊确认当成真实数据、生产、数据库、撤销、删除或代码提交流程授权",
+            route_reason="用户给出简短确认；低风险确认可继续本地推进，但不能把它当成真实数据、生产、数据库、撤销、删除或代码提交流程授权",
             internal_entry="nontechnical_confirmation_response.user",
             can_continue=True,
-            needs_user_confirmation=True,
-            user_next_step="Codex 会把这句话当成确认回复，先说明它能确认什么、还需要说清楚什么，以及不会把它当成高风险授权。",
-            user_question="请补充确认范围；如果只是允许低风险整理，可以说“不操作真实数据、不写数据库、不发布、不提交”。",
+            needs_user_confirmation=high_risk_confirmation,
+            user_next_step=(
+                "Codex 会把这句话当成确认回复和低风险继续确认，在当前任务范围内继续本地推进；高风险动作仍需单独授权。"
+                if not high_risk_confirmation
+                else "Codex 会把这句话当成含高风险语义的确认回复，先说明还需要明确哪些授权范围。"
+            ),
+            user_question=(
+                ""
+                if not high_risk_confirmation
+                else "请补充确认范围；如果只是允许低风险整理，可以说“不操作真实数据、不写数据库、不发布、不提交”。"
+            ),
             risk_status=summary.risk_confirmation_status,
             complexity=summary.complexity,
             likely_surface=summary.likely_surface,
@@ -1083,9 +1117,9 @@ def route_meta_intent(raw: str, summary: IntakeSummary) -> IntentRoute | None:
             route_reason="用户在调整已有需求范围，需要先说明保留、排除和后续范围，而不是当成新需求澄清或真实数据风险暂停",
             internal_entry="nontechnical_scope_change.user",
             can_continue=True,
-            needs_user_confirmation=has_any(raw, "可以动", "受限业务模块可以动", "刚才说的不对"),
+            needs_user_confirmation=has_any(raw, "可以动", "商品审核可以动", "刚才说的不对"),
             user_next_step="Codex 会按需求范围调整处理，先说明这次保留什么、先不做什么、后续再做什么和是否需要确认。",
-            user_question="如果要放开之前禁止的业务范围，需要确认这个新范围确实覆盖当前任务。" if has_any(raw, "可以动", "受限业务模块可以动", "刚才说的不对") else "",
+            user_question="如果要放开之前禁止的业务范围，需要确认这个新范围确实覆盖当前任务。" if has_any(raw, "可以动", "商品审核可以动", "刚才说的不对") else "",
             risk_status=summary.risk_confirmation_status,
             complexity=summary.complexity,
             likely_surface=summary.likely_surface,
@@ -1271,7 +1305,7 @@ def route_meta_intent(raw: str, summary: IntakeSummary) -> IntentRoute | None:
             internal_entry="nontechnical_delivery_summary.user",
             can_continue=True,
             needs_user_confirmation=False,
-            user_next_step="Codex 会把当前任务记录转成可给团队看的交付总结，说明改了什么、怎么验收、风险和未做事项。",
+            user_next_step="Codex 会把当前任务记录转成可给团队看的交付总结，说明改了什么、怎么验收、风险和未做事项，以及下一步建议。",
             user_question="",
             risk_status=summary.risk_confirmation_status,
             complexity=summary.complexity,

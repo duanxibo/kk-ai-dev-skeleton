@@ -16,6 +16,7 @@ python3 .gstack/scripts/natural_language_dev_smoke.py --format user
 - 询问现在能不能开始实现。
 - 询问当前需要确认什么。
 - 只做模糊确认。
+- 只做低风险确认时，应能继续 active task，不要求用户再说一次“继续”。
 - 暂停当前任务。
 - 请求撤销或回滚。
 - 索要需求模板。
@@ -25,15 +26,20 @@ python3 .gstack/scripts/natural_language_dev_smoke.py --format user
 - 不想选择技术路线时，让 Codex 给推荐方案。
 - 调整任务范围。
 - 要求继续推进。
+- 要求继续推进时，工程顺序、测试组合、门禁恢复和 subagent 分工由 Codex 决策，不把选择题甩给用户。
 - 查看任务清单。
 - 询问某个具体需求如何验收。
 - 反馈看不到页面变化。
 - 反馈 CI 失败。
 - 索要交付总结。
+- 索要交付总结时，输出必须包含下一步建议。
 - 要求团队状态同步，但不引入数据库。
+- 说“继续同步线上数据”这类高风险继续请求时，必须进入风险确认，不能被当成普通继续。
 
 ## 通过标准
 
 面向用户的输出应隐藏内部路径、raw JSON、boundary 机制和 gate 名称，除非用户明确要求工程细节。
 
-helper 层可以使用内部 evidence，但用户看到的应该是清晰下一步。
+helper 层可以使用内部 evidence，但用户看到的应该是清晰下一步。完成交付总结和最终收口时，用户还必须看到明确的下一步建议。
+
+回归检查必须覆盖：`我确认` 在有 active task 且无高风险原话时返回可继续语义；`继续做` 不重新追问需求；`nontechnical_execution_plan.py` 输出 Codex 的 subagent 分工策略；`继续同步线上数据` 不绕过风险确认。
