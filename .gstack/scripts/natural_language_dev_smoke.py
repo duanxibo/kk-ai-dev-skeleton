@@ -57,6 +57,58 @@ ACTIVE_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Active Task
   status: planned
 """
 
+COMPLETED_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Completed Task
+
+- Task: natural-language-smoke-completed-task
+- Owner: smoke
+
+## Decision Mode
+
+- Mode: autonomous
+
+## Flow Lane
+
+- Lane: fast-lane
+
+## Subagent Plan
+
+- Mode: review
+- Reason:
+  Smoke fixture includes an independent review surface.
+
+## User-visible Acceptance
+
+### Expected Visible Behavior
+
+- 已完成当前低风险体验修复。
+- 下一项低风险体验修复可以继续推进，不需要用户再次回复继续。
+
+### User Actions To Verify
+
+- 查看交付总结，确认下一步建议不会变成暂停点。
+
+## Functional Non-goals
+
+- 不触碰真实数据、生产、数据库或代码提交流程。
+
+## GStack Required Flow
+
+- requirement-brief:
+  status: done
+- plan-ceo-review:
+  status: done
+- requirement-freeze:
+  status: done
+- plan-eng-review:
+  status: done
+- domain-spec-readiness:
+  status: not-required
+- implement:
+  status: done
+- qa:
+  status: done
+"""
+
 
 @dataclass(frozen=True)
 class SmokeResult:
@@ -110,6 +162,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "ci-failure-json": "CI / GitHub 检查失败会进入 CI 失败解释",
     "ci-failure-user-format": "CI 失败解释能直接给用户看",
     "continue-runner-json": "继续推进会读取当前任务并连续推进低风险本地步骤",
+    "continue-runner-completed-autochain-json": "已完成低风险任务会自动串联下一段低风险任务",
     "continue-runner-user-format": "继续推进说明能直接给用户看，且不要求用户每步说继续",
     "mode-control-json": "协作模式表达会进入模式控制",
     "mode-control-user-format": "协作模式说明能直接给用户看",
@@ -120,6 +173,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "team-sync-json": "无数据库团队同步会先说明能力边界",
     "team-sync-user-format": "团队同步说明能直接给用户看",
     "delivery-summary-json": "完成说明会生成团队可读交付总结",
+    "delivery-summary-autonomy-json": "完成说明的下一步建议不会强制用户再说继续",
     "delivery-summary-user-format": "交付总结说明能直接给用户看",
     "task-list-json": "未完成任务请求会生成任务概览",
     "task-list-user-format": "任务概览说明能直接给用户看",
@@ -157,6 +211,7 @@ USER_COVERAGE_LINES = [
     "用户刷新页面但看不到变化时，会得到查看位置、刷新方式和排查步骤。",
     "用户说 CI 或 GitHub 检查失败时，会得到失败检查类型和下一步排查说明。",
     "用户只说继续做、按计划推进或先做第一步时，会继续当前任务而不是重新追问，并且不会每一步都等用户再说继续。",
+    "低风险任务完成后，如果下一项仍是本地可验证低风险任务，会自动进入下一段任务记录并继续推进。",
     "用户说先别改代码、关键地方问我或全自动做完时，会先解释协作模式。",
     "用户不懂技术或不想选技术方案时，会看到推荐方案和第一安全步。",
     "用户要求拆任务、排优先级、里程碑或每阶段验收时，会看到阶段计划和阶段验收方式。",
@@ -224,12 +279,13 @@ def load_json_command(
         return None, details
 
 
-def load_json_command_with_active_fixture(
+def load_json_command_with_fixture(
     check_id: str,
     command: list[str],
+    fixture_text: str,
 ) -> tuple[dict[str, Any] | None, list[str]]:
     fixture_path = REPO_ROOT / ".gstack" / "task-boundaries" / f".natural-language-smoke-active-{os.getpid()}.md"
-    fixture_path.write_text(ACTIVE_TASK_FIXTURE, encoding="utf-8")
+    fixture_path.write_text(fixture_text, encoding="utf-8")
     try:
         relative = fixture_path.relative_to(REPO_ROOT).as_posix()
         return load_json_command(check_id, command, env={ACTIVE_BOUNDARY_ENV: relative})
@@ -238,6 +294,20 @@ def load_json_command_with_active_fixture(
             fixture_path.unlink()
         except FileNotFoundError:
             pass
+
+
+def load_json_command_with_active_fixture(
+    check_id: str,
+    command: list[str],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    return load_json_command_with_fixture(check_id, command, ACTIVE_TASK_FIXTURE)
+
+
+def load_json_command_with_completed_fixture(
+    check_id: str,
+    command: list[str],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    return load_json_command_with_fixture(check_id, command, COMPLETED_TASK_FIXTURE)
 
 
 def check_conditions(
@@ -2478,6 +2548,7 @@ def check_continue_runner_json() -> SmokeResult:
     actions = (payload or {}).get("codex_next_actions", [])
     confirmations = (payload or {}).get("needs_user_confirmation", [])
     non_actions = (payload or {}).get("non_actions", [])
+    auto_chain_status = (payload or {}).get("auto_chain_status", "")
     autonomy_condition = (any("不会每一步" in item for item in confirmations), "expected no repeated continue prompt guidance")
     subagent_condition = (any("subagent" in item for item in actions), "expected Codex-owned subagent decision")
     return check_conditions(
@@ -2487,11 +2558,39 @@ def check_continue_runner_json() -> SmokeResult:
         details,
         [
             ((payload or {}).get("status") == "continue-current-task", "expected active fixture to continue current task"),
+            (auto_chain_status == "continue-current-boundary", "expected continue-current-boundary auto chain status"),
             (isinstance(actions, list) and len(actions) >= 1, "expected Codex next actions"),
             subagent_condition,
             (isinstance(confirmations, list) and len(confirmations) >= 1, "expected confirmation guidance"),
             autonomy_condition,
             (isinstance(non_actions, list) and any("敏感配置" in item for item in non_actions), "expected sensitive-config non-action"),
+        ],
+    )
+
+
+def check_continue_runner_completed_autochain_json() -> SmokeResult:
+    payload, details = load_json_command_with_completed_fixture(
+        "continue-runner-completed-autochain-json",
+        python_command(
+            ".gstack/scripts/nontechnical_continue.py",
+            "--raw",
+            "继续做",
+            "--format",
+            "json",
+        ),
+    )
+    actions = (payload or {}).get("codex_next_actions", [])
+    confirmations = (payload or {}).get("needs_user_confirmation", [])
+    return check_conditions(
+        "continue-runner-completed-autochain-json",
+        "Completed low-risk task can auto-chain the next low-risk slice.",
+        payload,
+        details,
+        [
+            ((payload or {}).get("status") == "current-task-complete", "expected completed fixture status"),
+            ((payload or {}).get("auto_chain_status") == "auto-start-next-low-risk-boundary", "expected low-risk auto-chain status"),
+            (any("自动选择" in item or "下一段" in item for item in actions), "expected next low-risk slice action"),
+            (any("暂时不需要" in item for item in confirmations), "expected no user confirmation for low-risk auto-chain"),
         ],
     )
 
@@ -2909,6 +3008,7 @@ def check_delivery_summary_json() -> SmokeResult:
     risks = (payload or {}).get("risks_and_non_actions", [])
     confirmations = (payload or {}).get("needs_user_confirmation", [])
     suggestions = (payload or {}).get("next_step_suggestions", [])
+    autonomy = (payload or {}).get("next_step_autonomy", "")
     return check_conditions(
         "delivery-summary-json",
         "Delivery summary helper exposes shareable summary fields.",
@@ -2920,7 +3020,36 @@ def check_delivery_summary_json() -> SmokeResult:
             (isinstance(actions, list) and len(actions) >= 1, "expected acceptance actions"),
             (isinstance(risks, list) and len(risks) >= 1, "expected risks and non-actions"),
             (isinstance(suggestions, list) and len(suggestions) >= 1, "expected next-step suggestions"),
+            (autonomy in {"auto-continue-low-risk", "continue-current-task", "needs-current-task"}, "expected next-step autonomy field"),
             (isinstance(confirmations, list) and len(confirmations) >= 1, "expected confirmation guidance"),
+        ],
+    )
+
+
+def check_delivery_summary_autonomy_json() -> SmokeResult:
+    payload, details = load_json_command_with_completed_fixture(
+        "delivery-summary-autonomy-json",
+        python_command(
+            ".gstack/scripts/nontechnical_delivery_summary.py",
+            "--raw",
+            "帮我写一段给团队看的完成说明，说明这次改了什么、怎么验收、还有什么风险",
+            "--format",
+            "json",
+        ),
+    )
+    suggestions = (payload or {}).get("next_step_suggestions", [])
+    confirmations = (payload or {}).get("needs_user_confirmation", [])
+    return check_conditions(
+        "delivery-summary-autonomy-json",
+        "Delivery summary next-step advice distinguishes auto-continuation from user confirmation.",
+        payload,
+        details,
+        [
+            ((payload or {}).get("status") == "ready-to-share", "expected completed task summary"),
+            ((payload or {}).get("next_step_autonomy") == "auto-continue-low-risk", "expected low-risk auto continuation"),
+            (any("不需要你再说" in item for item in suggestions), "expected no repeated continue advice"),
+            (any("停下来让你确认" in item for item in suggestions), "expected high-risk stop condition advice"),
+            (any("暂时不需要" in item for item in confirmations), "expected no immediate confirmation"),
         ],
     )
 
@@ -3186,6 +3315,7 @@ def run_smoke() -> list[SmokeResult]:
         check_ci_failure_json(),
         check_ci_failure_user_format(),
         check_continue_runner_json(),
+        check_continue_runner_completed_autochain_json(),
         check_continue_runner_user_format(),
         check_mode_control_json(),
         check_mode_control_user_format(),
@@ -3198,6 +3328,7 @@ def run_smoke() -> list[SmokeResult]:
         check_team_sync_json(),
         check_team_sync_user_format(),
         check_delivery_summary_json(),
+        check_delivery_summary_autonomy_json(),
         check_delivery_summary_user_format(),
         check_formal_kickoff_json(),
         check_formal_kickoff_user_format(),

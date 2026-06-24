@@ -32,6 +32,7 @@ class DeliverySummary:
     task_done: bool
     progress: str
     current_stage: str
+    next_step_autonomy: str
     changed_items: list[str]
     acceptance_actions: list[str]
     expected_results: list[str]
@@ -129,6 +130,9 @@ def humanize_internal_detail(text: str) -> str:
             "requirement": "需求记录",
             "boundary": "任务范围记录",
             "scope": "范围",
+            "evidence": "验收记录",
+            "QA": "验收检查",
+            "Required Gates": "必要检查",
             "gate": "内部检查",
             "spec": "规格说明",
             "raw JSON": "内部数据",
@@ -139,6 +143,7 @@ def humanize_internal_detail(text: str) -> str:
         result = text
         for old, new in replacements.items():
             result = result.replace(old, new)
+        result = result.replace("不绕过 ", "不绕过").replace(" 或 ", "或")
         return result
     if any(word in text for word in ("GitHub API", "commit", "push", "merge", "pull", "rebase", "reset", "git workflow action", "git")):
         return "不会执行代码提交流程。"
@@ -174,6 +179,14 @@ def standard_non_actions() -> list[str]:
     ]
 
 
+def next_step_autonomy_for(*, task_done: bool, no_task: bool = False) -> str:
+    if no_task:
+        return "needs-current-task"
+    if task_done:
+        return "auto-continue-low-risk"
+    return "continue-current-task"
+
+
 def next_step_suggestions_for(*, task_done: bool, no_task: bool = False) -> list[str]:
     if no_task:
         return [
@@ -183,10 +196,11 @@ def next_step_suggestions_for(*, task_done: bool, no_task: bool = False) -> list
     if task_done:
         return [
             "先把这份交付总结发给团队或负责人验收，确认本轮结果是否接受。",
-            "验收后再选择下一轮修改：处理反馈、补缺口，或进入下一个优先任务。",
+            "如果下一项仍是本地可验证的低风险任务，Codex 可以直接开启下一段任务记录并继续，不需要你再说“继续”。",
+            "如果下一项涉及业务方向、多种设计选择、真实数据、生产、数据库、破坏性命令或代码提交流程，Codex 会停下来让你确认。",
         ]
     return [
-        "先完成当前未收口阶段和验收记录，再把这份说明升级为最终完成说明。",
+        "先完成当前未收口阶段和验收记录，再把这份说明升级为最终完成说明；当前任务内的低风险本地收尾由 Codex 继续推进。",
         "如果要提前同步团队，请明确标注这是进展总结，并把剩余工作作为下一轮修改建议。",
     ]
 
@@ -232,6 +246,7 @@ def build_no_task_summary(raw: str, query: str) -> DeliverySummary:
         task_done=False,
         progress="0/7",
         current_stage="未找到当前任务",
+        next_step_autonomy=next_step_autonomy_for(task_done=False, no_task=True),
         changed_items=["还不能可靠生成完成说明，因为没有找到当前任务记录。"],
         acceptance_actions=["先让 Codex 恢复或创建当前任务记录，再生成交付总结。"],
         expected_results=["恢复任务记录后，交付总结会包含完成状态、改动内容、验收方式和风险说明。"],
@@ -280,6 +295,7 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
         task_done=task_done,
         progress=progress,
         current_stage=current_stage,
+        next_step_autonomy=next_step_autonomy_for(task_done=task_done),
         changed_items=user_safe_items(expected, "当前任务记录没有写明交付变化，Codex 需要先补充可见结果。"),
         acceptance_actions=user_safe_items(actions, "查看本轮输出或让 Codex 按当前任务记录转述验收结果。"),
         expected_results=user_safe_items(expected, "能看到与本次任务目标一致的结果。"),
@@ -361,6 +377,7 @@ def render_markdown(summary: DeliverySummary) -> str:
         f"- 当前任务：{summary.task or '未找到'}",
         f"- 是否完成：{'是' if summary.task_done else '否'}",
         f"- 当前阶段：{summary.current_stage}",
+        f"- 下一步自治状态：{summary.next_step_autonomy}",
         f"- 进度：{summary.progress}",
         "- 这次改了什么：",
         *[f"  - {item}" for item in summary.changed_items],

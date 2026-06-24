@@ -65,6 +65,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - If Codex needs one deterministic entry to guide a complex request from blank template to readiness, execution plan, or read-only formal kickoff preview, use `python3 .gstack/scripts/nontechnical_guided_kickoff.py --raw "..." --format user` internally. This helper composes requirement readiness, execution plan, and formal kickoff preview; it remains read-only and treats explicit "do not touch production/database/real data" non-goals as safety constraints.
   - If the user says a GitHub / CI / PR check failed, such as "GitHub 检查失败了", "CI 没过", or "PR 检查挂了", this helper may route to `nontechnical_ci_failure.py` and explain the failed check type, Codex's next investigation area, whether the user needs to provide the failed check name or first log lines, and which risky actions Codex will not take.
   - If the user says "继续做", "按你刚才的计划继续推进", "那就先做第一步", or equivalent wording, this helper may route to `nontechnical_continue.py` and explain the current task, current stage, Codex's next step, whether confirmation is needed, and which risky actions Codex will not take. Low-risk continuation means Codex owns implementation order, tests, gate recovery, doc sync, and subagent strategy.
+  - If the current low-risk task is already complete and the phase plan, delivery summary, or next-step advice contains another locally verifiable low-risk task, Codex should create or activate the next minimal task boundary and continue. Stop only for business / product / design decisions, real data, production, databases, destructive commands, code workflow actions, validation failure, or missing evidence.
   - If the user says "先停一下", "暂停这个任务", "不要继续做了", "先到这里", or equivalent wording, this helper may route to `nontechnical_pause.py` and explain the current task, pause understanding, stopped actions, preserved context, resume options, and high-risk non-actions.
   - If the user says "撤销刚才的改动", "不要这个改动了", "回到之前", "回滚刚才那步", or equivalent wording, this helper may route to `nontechnical_undo_request.py` and explain the current task, undo understanding, required undo scope, safe inspection actions, suggested replies, and high-risk non-actions.
   - If the user says "先别改代码", "只给方案", "关键地方问我", "全自动做完", "协作模式怎么选", or equivalent wording, this helper may route to `nontechnical_mode_control.py` and explain the collaboration mode, how this request will be handled, what needs confirmation, and which risky actions Codex will not take.
@@ -243,6 +244,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - Do not treat allowed sensitive configuration files as runtime-artifact defects.
 - When using `nontechnical_continue.py`, preserve continuation semantics.
   - User-facing output should include `我会按继续推进处理`, `当前任务`, `Codex 的下一步`, `需要你确认`, and `这次不会做什么` when active task evidence is available.
+  - Completed low-risk active tasks should explain that Codex can start the next low-risk local task with a new minimal task record instead of asking the user to say "continue" again.
   - Do not route terse continuation prompts to `clarification`, `task_kickoff`, CI failure, error recovery, or formal kickoff unless the user explicitly adds those signals.
 - When using `nontechnical_recommendation.py`, preserve recommendation semantics.
   - User-facing output should include `我会先给推荐方案`, `推荐方案`, `为什么推荐`, `暂不选择`, `第一安全步`, `需要你确认`, and `这次不会做什么`.
@@ -276,6 +278,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - User-facing output should include `可以直接这样发给团队`, `本次交付`, `这次改了什么`, `怎么验收`, `风险和未做`, `下一步建议`, and `需要你确认`.
   - Do not route a team-facing completion note to `acceptance_plan` merely because the utterance contains `怎么验收`.
   - Do not invent QA completion if the current task is not complete or the QA stage is not done.
+  - `下一步建议` must say whether the next step is low-risk auto-continuation, user decision, or high-risk confirmation. It is not a default stop signal when the next step is still a locally verifiable low-risk task.
 - When using `nontechnical_task_starter.py`, preserve risk confirmation controls.
   - Engineering output should keep `risk_confirmation_status` and `risk_controls`.
   - User-facing output should say Codex can first organize the development starting point and will not execute high-risk actions.
@@ -300,6 +303,7 @@ Progress, ambiguity, and team-state requests have special handling.
    - what Codex will not touch,
    - whether user confirmation is needed.
 5. Implement inside the declared boundary.
+   - After a low-risk task is complete, continue into the next planned low-risk slice by creating or activating a new minimal boundary and QA evidence. Pause only when the next slice changes product meaning, has multiple acceptable design outcomes, touches real data / production / databases / destructive actions / code workflow, or lacks local evidence.
 6. Run verification yourself.
    - For user-visible UI, HTML, or visualization tasks, use Browser / Chrome / Playwright to operate the relevant controls.
    - Do not mark the task done using only `rg`, JSON, HTML strings, or a screenshot appearance check.
@@ -310,6 +314,7 @@ Progress, ambiguity, and team-state requests have special handling.
    - whether validation passed,
    - any real risk or unresolved user decision,
    - the recommended next step after this delivery.
+   - whether that recommended next step will be auto-continued by Codex or is waiting for user confirmation.
 
 ## User-Facing Language
 

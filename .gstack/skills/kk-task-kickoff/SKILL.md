@@ -72,6 +72,7 @@ description: |
    - Codex 自行推断 stack domain、Expected Spec Targets、Required Gates 和验证计划。
    - 若可本地证明，直接生成 repo-native evidence；若涉及业务口径多解、真实数据、生产、DB 或 git action，再提示用户确认。
    - 用户已对低风险范围回复“同意 / 可以 / 我确认 / 继续做”时，继续在 active boundary 内推进本地可证明的实现、验证、文档同步、门禁恢复和 subagent 分工；不要把每个内部阶段都交回用户说“继续”。
+   - 低风险任务完成后，如果 phase plan、交付总结或下一步建议里的下一项仍是本地可验证低风险任务，Codex 应自动创建或激活下一段 boundary，并继续推进到下一处高风险 gate、业务决策、验证失败或证据缺口；不要把“下一步建议”当成默认停顿点。
 6. 用自己的话确认：
    - 当前任务属于哪一层
    - 当前主要真源文档是什么
@@ -101,6 +102,7 @@ description: |
 14. 如果任务涉及 adapter 标记为 backend implementation 的路径，`Spec Sync Plan` 必须指向 adapter 定义的项目真源文档，`Verification` 必须列出后端测试或等价契约测试；不要把新后端规范写入 adapter 标记为 deprecated 的旧目录。
 15. 每个正式任务都必须填写 `Subagent Plan`；小任务写 `Mode: not-used` 和原因，复杂任务先用 `kk-subagent-orchestrator` 拆分探索、评审、执行或治理 agent。是否使用 subagent、使用什么 role、读哪些文件、checkpoint / deadline 和回收方式由 Codex 判断，不让用户替 Codex 做工程分工。用户反馈“没看到使用 subagent / 需要用户说继续太频繁”时，默认把这视为协作体验缺口，至少规划 read-only reviewer / explorer，除非 active boundary 证明不适合。
 16. 每个正式任务都必须在 `Autonomy Plan` 中填写 `Goal Mode: enabled / not-used / ask-first`；中大型 `自主执行` 任务可自动启用，`手动控制` 默认不启用。
+   - 如果本任务属于低风险 phase auto-chain，`Autonomy Plan` 必须写明上一段完成证据、下一段为什么仍是低风险、自动继续的停止条件，以及新 boundary / QA evidence 的写入位置。
 17. 如果任务出现以下任一信号，必须在 `Required Gates` 中声明 `data-access`，并调度 `kk-data-kickoff` 产出 gate evidence：
    - 页面、原型、看板接真实数据
    - 前端 mock 替换后端接口

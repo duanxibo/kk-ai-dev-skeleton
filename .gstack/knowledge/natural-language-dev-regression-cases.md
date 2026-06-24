@@ -17,6 +17,7 @@ python3 .gstack/scripts/natural_language_dev_smoke.py --format user
 - 询问当前需要确认什么。
 - 只做模糊确认。
 - 只做低风险确认时，应能继续 active task，不要求用户再说一次“继续”。
+- 低风险任务完成后，如果下一项仍是本地可验证低风险任务，应能自动创建或激活下一段最小任务范围并继续，不要求用户再说一次“继续”。
 - 暂停当前任务。
 - 请求撤销或回滚。
 - 索要需求模板。
@@ -33,6 +34,7 @@ python3 .gstack/scripts/natural_language_dev_smoke.py --format user
 - 反馈 CI 失败。
 - 索要交付总结。
 - 索要交付总结时，输出必须包含下一步建议。
+- 交付总结里的下一步建议必须说明下一项是低风险自动继续、等待业务决策，还是等待高风险授权；不能把“下一步建议”本身变成默认暂停点。
 - 要求团队状态同步，但不引入数据库。
 - 说“继续同步线上数据”这类高风险继续请求时，必须进入风险确认，不能被当成普通继续。
 
@@ -42,4 +44,4 @@ python3 .gstack/scripts/natural_language_dev_smoke.py --format user
 
 helper 层可以使用内部 evidence，但用户看到的应该是清晰下一步。完成交付总结和最终收口时，用户还必须看到明确的下一步建议。
 
-回归检查必须覆盖：`我确认` 在有 active task 且无高风险原话时返回可继续语义；`继续做` 不重新追问需求；`nontechnical_execution_plan.py` 输出 Codex 的 subagent 分工策略；`继续同步线上数据` 不绕过风险确认。
+回归检查必须覆盖：`我确认` 在有 active task 且无高风险原话时返回可继续语义；`继续做` 不重新追问需求；已完成低风险任务返回可审计的 auto-chain 状态；`nontechnical_delivery_summary.py` 输出下一步自治状态；`nontechnical_execution_plan.py` 输出 Codex 的 subagent 分工策略；`继续同步线上数据` 不绕过风险确认。

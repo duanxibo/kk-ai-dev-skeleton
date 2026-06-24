@@ -25,7 +25,7 @@ STAGE_ACTIONS = {
     "domain-spec-readiness": "先确认需要同步的真源文档，或写明本轮不需要改业务规格。",
     "implement": "继续完成当前任务的实现和文档同步。",
     "qa": "继续运行验证，把结果写入验收记录。",
-    "complete": "当前任务已经收口；继续推进时会开启下一段最小优化，而不是重复追问这段任务的成功样子。",
+    "complete": "当前任务已经收口；如果下一段仍是低风险本地任务，Codex 会开启下一段最小优化，而不是重复追问这段任务的成功样子。",
 }
 
 
@@ -37,6 +37,7 @@ class ContinuePlan:
     task: str
     task_done: bool
     current_stage: str
+    auto_chain_status: str
     progress: str
     codex_next_actions: list[str]
     needs_user_confirmation: list[str]
@@ -57,6 +58,8 @@ def confirmation_for(status: str, blocked: bool) -> list[str]:
         return ["需要你告诉我这次要继续哪件事，或让我先恢复当前任务记录。"]
     if blocked:
         return ["当前任务记录显示有卡住项；Codex 会先修本地能证明的问题，涉及业务口径、真实数据、生产、数据库或代码提交流程时再问你。"]
+    if status == "current-task-complete":
+        return ["如果下一段仍是低风险本地任务，暂时不需要；Codex 会先创建下一段最小任务范围和验收记录继续推进。"]
     return ["暂时不需要；Codex 可以先在当前任务范围内继续推进本地可证明步骤，不会每一步都等你再说“继续”。"]
 
 
@@ -78,9 +81,25 @@ def actions_for_stage(stage: str, task_done: bool, blocked: bool) -> list[str]:
         actions.append("继续时会保持原有任务范围，不把它当成一个全新需求重新追问。")
         actions.append("完成后会重新运行验证，并把结果写入验收记录。")
     else:
-        actions.append("如果你是说继续优化整个骨架，Codex 会选择下一条未覆盖的非技术用户体验继续做。")
-        actions.append("下一段仍会先补最小任务范围和验收口径，再实现和验证。")
+        actions.append("如果计划或下一步建议里已经有下一条低风险本地任务，Codex 会自动选择它继续做。")
+        actions.append("下一段仍会先补最小任务范围和验收口径，再实现和验证；这不是无边界执行。")
     return actions
+
+
+def auto_chain_status_for(status: str) -> str:
+    if status == "no-active-task":
+        return "needs-current-task"
+    if status == "current-task-complete":
+        return "auto-start-next-low-risk-boundary"
+    return "continue-current-boundary"
+
+
+def auto_chain_status_label(status: str) -> str:
+    if status == "auto-start-next-low-risk-boundary":
+        return "下一段如果仍是低风险本地任务，Codex 会自动开最小任务范围继续。"
+    if status == "continue-current-boundary":
+        return "继续当前低风险本地步骤，不需要你每一步都说“继续”。"
+    return "需要先恢复当前任务记录，才能判断是否可以继续。"
 
 
 def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
@@ -94,6 +113,7 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
             task="",
             task_done=False,
             current_stage="未找到当前任务",
+            auto_chain_status=auto_chain_status_for("no-active-task"),
             progress="0/7",
             codex_next_actions=[
                 "先恢复或创建当前任务记录。",
@@ -116,6 +136,7 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
         task=safe_task_name(summary.task),
         task_done=task_done,
         current_stage=summary.current_step_label,
+        auto_chain_status=auto_chain_status_for(status),
         progress=summary.progress,
         codex_next_actions=actions_for_stage(summary.current_step_key, task_done, summary.blocked),
         needs_user_confirmation=confirmation_for(status, summary.blocked),
@@ -146,6 +167,7 @@ def render_user(plan: ContinuePlan) -> str:
         f"当前任务：{plan.task}",
         f"当前状态：{plan.status_reason}",
         f"当前阶段：{plan.current_stage}",
+        f"低风险续跑：{auto_chain_status_label(plan.auto_chain_status)}",
         f"进度：{plan.progress}",
         "",
         "Codex 的下一步：",
@@ -169,6 +191,7 @@ def render_markdown(plan: ContinuePlan) -> str:
         f"- 当前任务：{plan.task or '未找到'}",
         f"- 当前任务是否完成：{'是' if plan.task_done else '否'}",
         f"- 当前阶段：{plan.current_stage}",
+        f"- 低风险续跑状态：{plan.auto_chain_status}",
         f"- 进度：{plan.progress}",
         "- Codex 的下一步：",
         *[f"  - {item}" for item in plan.codex_next_actions],
