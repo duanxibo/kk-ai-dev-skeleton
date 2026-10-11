@@ -75,7 +75,7 @@ Codex 应负责：
 - 创建或更新 `adapters/my-project/adapter.md`
 - 创建或更新 `adapters/my-project/runtime.json`
 - 创建或保留 `stack/my-project/`，作为后续应用源码、spec、测试、fixtures 和项目脚本的默认真源目录
-- 如果检测到根目录已有 `src/`、`prisma/`、`e2e/`、`package.json` 等应用代码或配置，先输出迁移计划，不自动搬迁
+- 如果检测到根目录已有 `src/`、`prisma/`、`e2e/`、`package.json` 等应用代码或配置，优先用 adapter 适配现有布局，不自动搬迁；迁移是可选任务
 - 运行 doctor、guard 和 smoke 检查
 - 生成接入总结、剩余问题和试点任务建议
 
@@ -251,3 +251,13 @@ python3 .gstack/scripts/spec_sync_guard.py
 ## 能力保真规则
 
 改骨架时，不要移除自然语言旅程、gate、QA 维度、dashboard 行为或 doctor 检查。除非你用等价或更好的能力替代，并同步更新 smoke tests。
+
+## 轻量接入与授权范围
+
+- 已有项目默认保留源码布局，由 adapter 指向现有源码、规格和测试；目录迁移不是接入前提。
+- 低风险小任务可用 `python3 .gstack/scripts/autopilot_bootstrap.py --compact-evidence ...`，将需求、评审、边界、QA 合并为一份记录。QA 必须填写真实验证结果。
+- 自动推进只限用户已授权目标；独立下一步建议不能自动变成新任务。已明确授权的动作不重复询问。
+- adapter 缺失、JSON 损坏或字段类型不合法时，关键 guard 默认报错。旧 adapter 至少应显式声明 `paths.implementation_prefixes`（纯元数据 adapter 可用空列表），其余路径以项目实际情况填写。`load_adapter_runtime(..., strict=False)` 仅用于显式兼容/诊断，返回告警和空路径，不代表检查通过。
+- `.github/workflows/ci.yml` 在 PR 和 main push 上运行 Python 3.11/3.12 行为测试、adapter 校验和 smoke。流程记录不替代测试、独立审查或权限隔离。
+
+已有项目升级时，`--apply-runtime --dry-run --format json` 的 `preserved_differences` 会列出与来源不同的文件及双方 SHA-256。它不能区分旧版本和用户定制，必须先审查差异；现有文件仍保留。

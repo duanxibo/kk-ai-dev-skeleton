@@ -64,7 +64,7 @@
 ## Stack-first Adoption Layout
 
 - 适用场景：
-  新项目或已有项目首次接入 KK Dev Skeleton，需要避免应用代码长期散落在仓库一级目录。
+  新项目或已有项目首次接入 KK Dev Skeleton，应通过 adapter 明确实际源码与规格路径；已有项目默认保留布局，不强制迁移目录。
 - 推荐做法：
   初始化 helper 默认创建或保留 `stack/<adapter>/`，并把实现、spec、测试、fixtures 和项目脚本路由到 `stack/<adapter>/...`。已有根目录 `src/`、`prisma/`、`e2e/`、`package.json` 等只报告为迁移候选。
 - 不适用场景：

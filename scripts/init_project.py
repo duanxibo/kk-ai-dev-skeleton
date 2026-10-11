@@ -9,6 +9,7 @@ dry-run, apply safe metadata scaffolding, verify, and report adapter readiness.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -152,7 +153,7 @@ DEFAULT_ADAPTER_MD = """# 默认项目 Adapter
 
 ## 实现路径
 
-默认初始化会创建 `stack/<project>/`。如果真实项目已有 `src/`、`prisma/`、`e2e/`、`packages/`、`services/` 或其它根目录代码，不要让 Codex 静默接受散落一级目录的最终形态；先生成迁移计划，再分步迁入项目自己的正式实现路径。
+新项目可使用 `stack/<project>/`。已有项目默认保留 `src/`、`prisma/`、`e2e/`、`packages/`、`services/` 等现有布局，由 adapter 指向实际源码和规格路径；只有用户要求或具体工程问题需要时，才单独规划目录迁移。
 
 推荐默认：
 
@@ -1873,7 +1874,11 @@ required_gates:
 - Ask the user only for business choices, product or design multi-choice decisions, real data access, production operations, database changes, destructive commands, and git workflow authorization.
 - Ambiguous replies such as "ok", "confirmed", "continue", or "do it" do not authorize git, production, database, real-data write, destructive, or rollback actions.
 - Do not operate on production, databases, real data, destructive commands, external services, or git workflow actions without explicit user authorization.
-- Preserve existing project files by default; generated installer actions should create missing files and report what they changed.
+- Preserve existing project files and source layout by default; map existing paths through the adapter. Directory migration is optional.
+- Continue only within the user-authorized goal or explicit phase plan. A next-step suggestion does not authorize a new task.
+- For low-risk fast-lane tasks, use `autopilot_bootstrap.py --compact-evidence` to combine requirement, review, boundary and QA sections in one file; mark QA done only after actual verification.
+- Prior user authorization persists; do not ask again for already authorized actions.
+- Evidence records and guards do not replace independent tests, user acceptance or environment permissions.
 """,
         "README.md": f"""# {display_name}
 
@@ -2651,6 +2656,7 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
     would_create: list[str] = []
     preserved_paths: list[str] = []
     source_missing: list[str] = []
+    preserved_differences: list[dict[str, str]] = []
 
     for relative_path in RUNTIME_BUNDLE_FILES:
         source = SOURCE_REPO_ROOT / relative_path
@@ -2660,6 +2666,15 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
             continue
         if target.exists():
             preserved_paths.append(relative_path)
+            source_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            target_digest = hashlib.sha256(target.read_bytes()).hexdigest() if target.is_file() else "not-a-file"
+            if source_digest != target_digest:
+                preserved_differences.append({
+                    "path": relative_path,
+                    "source_sha256": source_digest,
+                    "target_sha256": target_digest,
+                    "action": "review-before-upgrade",
+                })
             continue
         if dry_run:
             would_create.append(relative_path)
@@ -2680,6 +2695,9 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
     else:
         message = "runtime bundle files already present"
 
+    if preserved_differences:
+        message += f"; {len(preserved_differences)} existing files differ from source: review before upgrade (preserved, not overwritten)"
+
     return {
         "created": bool(created_paths),
         "ok": not source_missing,
@@ -2688,6 +2706,7 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
         "would_create": would_create,
         "preserved_paths": preserved_paths,
         "source_missing": source_missing,
+        "preserved_differences": preserved_differences,
         "message": message,
     }
 
@@ -2784,7 +2803,7 @@ def plan_adoption(state: dict[str, Any]) -> list[str]:
 
     if state["root_code_paths"]:
         joined = "、".join(f"`{path}`" for path in state["root_code_paths"])
-        steps.append(f"检测到根目录代码或配置：{joined}。不自动移动，先生成迁移计划。")
+        steps.append(f"检测到根目录代码或配置：{joined}。不自动移动，优先用 adapter 适配现有布局；目录迁移为可选。")
 
     if state["formal_stack_prefixes"]:
         steps.append("后续实现继续以 adapter runtime 中的 formal stack prefixes 为默认工程入口。")

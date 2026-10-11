@@ -244,6 +244,18 @@ class InitProjectTest(unittest.TestCase):
         self.assertFalse((self.root / ".gstack" / "scripts" / "adapter_runtime.py").exists())
         self.assertFalse((self.root / ".gstack" / "scripts" / "gstack_loop.py").exists())
 
+    def test_runtime_upgrade_reports_drift_without_overwriting(self):
+        relative = ".gstack/scripts/adapter_runtime.py"
+        target = self.root / relative
+        target.parent.mkdir(parents=True)
+        target.write_text("# user customization\n", encoding="utf-8")
+        for dry_run in (True, False):
+            result = self.module.copy_runtime_bundle(dry_run=dry_run)
+            drift = next(item for item in result["preserved_differences"] if item["path"] == relative)
+            self.assertNotEqual(drift["source_sha256"], drift["target_sha256"])
+            self.assertEqual(drift["action"], "review-before-upgrade")
+            self.assertEqual(target.read_text(), "# user customization\n")
+
     def test_cli_apply_core_rewrite_and_validate_json(self):
         (self.root / "src").mkdir()
         (self.root / "docs").mkdir()

@@ -470,6 +470,42 @@ required_gates:
 
 
 def write_files(paths: EvidencePaths, args: argparse.Namespace, mode: Mode) -> None:
+    if getattr(args, "compact_evidence", False):
+        paths.boundary.parent.mkdir(parents=True, exist_ok=True)
+        text = boundary_text(args, paths, mode)
+        text = text.replace("使用 fast-lane requirement、fast-lane review、boundary 和 QA evidence。", "requirement、review、boundary 和 QA evidence 合并在本文件的不同章节。")
+        text = text.replace(".gstack/qa-reports/<pending-qa-report>.md", repo_relative(paths.boundary))
+        text += f"""
+## Compact Evidence
+
+- Strategy: compact
+- AI 语义复核: {'yes' if args.ai_reviewed else 'no'}
+- 仅适用于低风险 fast-lane；扩大范围或涉及真实数据、生产、数据库时改用完整流程。
+
+## Compact Requirement
+
+- Goal: {args.goal}
+- Acceptance: {'; '.join(args.must) or args.goal}
+- Non-goals: {'; '.join(args.non_goal) or '不扩大任务范围'}
+
+## Compact Review
+
+- Scope: {'; '.join(args.allowed) or '见 Allowed Files'}
+- Result: {'pass' if args.ai_reviewed else 'pending-review'}
+- Verification plan: {'; '.join(args.verification) or '待补实际验证命令'}
+- Exit conditions: 需求多解、影响面扩大、真实数据、生产、数据库或未授权动作。
+- 同一 agent 的复核不等于独立验证。
+
+## Compact QA
+
+- Status: pending
+- Command: 待运行
+- Result: 待记录实际结果；不能把生成 scaffold 视为 QA 通过。
+"""
+        paths.boundary.write_text(text, encoding="utf-8")
+        if args.activate:
+            LOCAL_POINTER.write_text(active_boundary_text(paths.boundary), encoding="utf-8")
+        return
     paths.requirement.parent.mkdir(parents=True, exist_ok=True)
     paths.review.parent.mkdir(parents=True, exist_ok=True)
     paths.boundary.parent.mkdir(parents=True, exist_ok=True)
@@ -532,6 +568,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="not-required",
     )
     parser.add_argument("--activate", action="store_true", help="Set generated boundary active locally.")
+    parser.add_argument("--compact-evidence", action="store_true", help="Combine low-risk fast-lane evidence in one boundary file; QA remains pending until verified.")
     parser.add_argument("--force", action="store_true", help="Overwrite existing generated files.")
     parser.add_argument("--dry-run", action="store_true", help="Print planned files and do not write.")
     parser.add_argument(
@@ -550,6 +587,8 @@ def main(argv: list[str] | None = None) -> int:
     args.title = args.title or args.topic
     slug = slugify(args.topic)
     paths = build_paths(args.date, slug)
+    if args.compact_evidence:
+        paths = EvidencePaths(paths.boundary, paths.boundary, paths.boundary)
     mode = parse_mode(args.mode, source="user-this-task") if args.mode else current_mode()
     ensure_can_write(paths, force=args.force)
 

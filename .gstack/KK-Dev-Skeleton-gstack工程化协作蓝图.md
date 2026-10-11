@@ -104,7 +104,7 @@ requirement-brief
 -> QA
 ```
 
-小任务可以走 `fast-lane`，但不能没有记录：
+小任务可以走 `fast-lane`，以下内容可合并到一份 task boundary 文档，不要求分开创建文件：
 
 - 最小 requirement
 - 最小 review

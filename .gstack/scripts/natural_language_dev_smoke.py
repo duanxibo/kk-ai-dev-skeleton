@@ -19,6 +19,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ACTIVE_BOUNDARY_ENV = "KK_ACTIVE_BOUNDARY"
+DEFAULT_SMOKE_ENV: dict[str, str] = {}
 
 ACTIVE_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Active Task
 
@@ -38,6 +39,20 @@ ACTIVE_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Active Task
 - Mode: review
 - Reason:
   Smoke fixture includes an independent review surface.
+
+## User-visible Acceptance
+
+### Expected Visible Behavior
+
+- 用户能看到本轮改动并验证结果。
+
+### User Actions To Verify
+
+- 执行本轮验收步骤并检查结果。
+
+## Functional Non-goals
+
+- 不扩大任务范围，不操作真实数据、生产、数据库或代码提交流程。
 
 ## GStack Required Flow
 
@@ -81,11 +96,11 @@ COMPLETED_TASK_FIXTURE = """# Task Boundary: Natural Language Smoke Completed Ta
 ### Expected Visible Behavior
 
 - 已完成当前低风险体验修复。
-- 下一项低风险体验修复可以继续推进，不需要用户再次回复继续。
+- 只有明确属于已授权目标的下一阶段可以继续；独立建议需要新任务授权。
 
 ### User Actions To Verify
 
-- 查看交付总结，确认下一步建议不会变成暂停点。
+- 查看交付总结，确认下一项的授权范围。
 
 ## Functional Non-goals
 
@@ -162,7 +177,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "ci-failure-json": "CI / GitHub 检查失败会进入 CI 失败解释",
     "ci-failure-user-format": "CI 失败解释能直接给用户看",
     "continue-runner-json": "继续推进会读取当前任务并连续推进低风险本地步骤",
-    "continue-runner-completed-autochain-json": "已完成低风险任务会自动串联下一段低风险任务",
+    "continue-runner-completed-autochain-json": "已完成任务的下一项需要明确授权",
     "continue-runner-user-format": "继续推进说明能直接给用户看，且不要求用户每步说继续",
     "mode-control-json": "协作模式表达会进入模式控制",
     "mode-control-user-format": "协作模式说明能直接给用户看",
@@ -173,7 +188,7 @@ USER_CHECK_LABELS: dict[str, str] = {
     "team-sync-json": "无数据库团队同步会先说明能力边界",
     "team-sync-user-format": "团队同步说明能直接给用户看",
     "delivery-summary-json": "完成说明会生成团队可读交付总结",
-    "delivery-summary-autonomy-json": "完成说明的下一步建议不会强制用户再说继续",
+    "delivery-summary-autonomy-json": "完成说明的下一步建议明确任务授权范围",
     "delivery-summary-user-format": "交付总结说明能直接给用户看",
     "task-list-json": "未完成任务请求会生成任务概览",
     "task-list-user-format": "任务概览说明能直接给用户看",
@@ -211,7 +226,7 @@ USER_COVERAGE_LINES = [
     "用户刷新页面但看不到变化时，会得到查看位置、刷新方式和排查步骤。",
     "用户说 CI 或 GitHub 检查失败时，会得到失败检查类型和下一步排查说明。",
     "用户只说继续做、按计划推进或先做第一步时，会继续当前任务而不是重新追问，并且不会每一步都等用户再说继续。",
-    "低风险任务完成后，如果下一项仍是本地可验证低风险任务，会自动进入下一段任务记录并继续推进。",
+    "低风险阶段只在已授权目标内串联，独立下一步建议需要新任务授权。",
     "用户说先别改代码、关键地方问我或全自动做完时，会先解释协作模式。",
     "用户不懂技术或不想选技术方案时，会看到推荐方案和第一安全步。",
     "用户要求拆任务、排优先级、里程碑或每阶段验收时，会看到阶段计划和阶段验收方式。",
@@ -245,7 +260,7 @@ def run(command: list[str], *, env: dict[str, str] | None = None) -> subprocess.
         capture_output=True,
         text=True,
         check=False,
-        env={**os.environ, **(env or {})},
+        env={**os.environ, **DEFAULT_SMOKE_ENV, **(env or {})},
     )
 
 
@@ -2583,14 +2598,14 @@ def check_continue_runner_completed_autochain_json() -> SmokeResult:
     confirmations = (payload or {}).get("needs_user_confirmation", [])
     return check_conditions(
         "continue-runner-completed-autochain-json",
-        "Completed low-risk task can auto-chain the next low-risk slice.",
+        "Completed task requires authorization before starting a new task.",
         payload,
         details,
         [
             ((payload or {}).get("status") == "current-task-complete", "expected completed fixture status"),
-            ((payload or {}).get("auto_chain_status") == "auto-start-next-low-risk-boundary", "expected low-risk auto-chain status"),
+            ((payload or {}).get("auto_chain_status") == "needs-next-task-authorization", "expected next-task authorization boundary"),
             (any("自动选择" in item or "下一段" in item for item in actions), "expected next low-risk slice action"),
-            (any("暂时不需要" in item for item in confirmations), "expected no user confirmation for low-risk auto-chain"),
+            (any("授权" in item for item in confirmations), "expected authorization check for a new task"),
         ],
     )
 
@@ -3020,7 +3035,7 @@ def check_delivery_summary_json() -> SmokeResult:
             (isinstance(actions, list) and len(actions) >= 1, "expected acceptance actions"),
             (isinstance(risks, list) and len(risks) >= 1, "expected risks and non-actions"),
             (isinstance(suggestions, list) and len(suggestions) >= 1, "expected next-step suggestions"),
-            (autonomy in {"auto-continue-low-risk", "continue-current-task", "needs-current-task"}, "expected next-step autonomy field"),
+            (autonomy in {"needs-next-task-authorization", "continue-current-task", "needs-current-task"}, "expected next-step autonomy field"),
             (isinstance(confirmations, list) and len(confirmations) >= 1, "expected confirmation guidance"),
         ],
     )
@@ -3046,8 +3061,8 @@ def check_delivery_summary_autonomy_json() -> SmokeResult:
         details,
         [
             ((payload or {}).get("status") == "ready-to-share", "expected completed task summary"),
-            ((payload or {}).get("next_step_autonomy") == "auto-continue-low-risk", "expected low-risk auto continuation"),
-            (any("不需要你再说" in item for item in suggestions), "expected no repeated continue advice"),
+            ((payload or {}).get("next_step_autonomy") == "needs-next-task-authorization", "expected next-task authorization boundary"),
+            (any("已授权" in item for item in suggestions), "expected scoped continuation advice"),
             (any("停下来让你确认" in item for item in suggestions), "expected high-risk stop condition advice"),
             (any("暂时不需要" in item for item in confirmations), "expected no immediate confirmation"),
         ],
@@ -3259,7 +3274,7 @@ def check_guided_kickoff_formal_json() -> SmokeResult:
     )
 
 
-def run_smoke() -> list[SmokeResult]:
+def _run_smoke() -> list[SmokeResult]:
     return [
         check_broad_intake(),
         check_complex_intake(),
@@ -3409,6 +3424,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--format", choices=("markdown", "json", "user"), default="markdown")
     return parser
+
+
+def run_smoke() -> list[SmokeResult]:
+    """Use synthetic task state so CI never depends on a developer's active pointer."""
+    fixture = REPO_ROOT / ".gstack/task-boundaries" / f".natural-language-smoke-default-{os.getpid()}.md"
+    previous = dict(DEFAULT_SMOKE_ENV)
+    fixture.write_text(ACTIVE_TASK_FIXTURE, encoding="utf-8")
+    DEFAULT_SMOKE_ENV[ACTIVE_BOUNDARY_ENV] = fixture.relative_to(REPO_ROOT).as_posix()
+    try:
+        return _run_smoke()
+    finally:
+        DEFAULT_SMOKE_ENV.clear()
+        DEFAULT_SMOKE_ENV.update(previous)
+        fixture.unlink(missing_ok=True)
 
 
 def main(argv: list[str] | None = None) -> int:

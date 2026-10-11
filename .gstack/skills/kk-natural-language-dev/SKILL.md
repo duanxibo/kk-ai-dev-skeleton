@@ -278,7 +278,7 @@ Progress, ambiguity, and team-state requests have special handling.
   - User-facing output should include `可以直接这样发给团队`, `本次交付`, `这次改了什么`, `怎么验收`, `风险和未做`, `下一步建议`, and `需要你确认`.
   - Do not route a team-facing completion note to `acceptance_plan` merely because the utterance contains `怎么验收`.
   - Do not invent QA completion if the current task is not complete or the QA stage is not done.
-  - `下一步建议` must say whether the next step is low-risk auto-continuation, user decision, or high-risk confirmation. It is not a default stop signal when the next step is still a locally verifiable low-risk task.
+  - `下一步建议` must say whether the next step is low-risk auto-continuation, user decision, or high-risk confirmation. Continue only when the next step is explicitly part of the user-authorized goal or phase plan. A standalone recommendation does not authorize a new task.
 - When using `nontechnical_task_starter.py`, preserve risk confirmation controls.
   - Engineering output should keep `risk_confirmation_status` and `risk_controls`.
   - User-facing output should say Codex can first organize the development starting point and will not execute high-risk actions.

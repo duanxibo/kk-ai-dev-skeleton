@@ -134,7 +134,7 @@ Codex / 维护者背后的确定性本机准备入口：
 - `stack/<project>/fixtures/`
 - `stack/<project>/scripts/`
 
-已有项目如果在根目录存在 `src/`、`app/`、`prisma/`、`e2e/`、`packages/`、`services/` 或框架配置文件，应先列为迁移候选并生成迁移计划；不要把一级目录散落状态当成初始化后的最终目标。
+已有项目如果在根目录存在 `src/`、`app/`、`prisma/`、`e2e/`、`packages/`、`services/` 或框架配置文件，默认保留现有布局并由 adapter 映射；目录迁移仅在明确需要时另行规划。
 
 框架核心不得写死某个业务项目路径，但可以保持 `stack/<project>/` 的可复用布局约束。
 

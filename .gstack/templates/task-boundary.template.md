@@ -64,7 +64,7 @@
 - Reason:
   为什么本轮采用该 lane
 - Evidence Strategy:
-  - `fast-lane`：使用 `fast-lane-requirement`、`fast-lane-review`、boundary 和 QA
+  - `fast-lane`：优先用 `autopilot_bootstrap.py --compact-evidence`，将 requirement、review、boundary 和 QA 合并到同一文件；保留实际验证结果
   - `standard`：使用完整 requirement / review / freeze / eng review / domain spec readiness / QA
   - `discovery`：先 office-hours / plan review 澄清，冻结后再转入 `standard` 或 `fast-lane`
 

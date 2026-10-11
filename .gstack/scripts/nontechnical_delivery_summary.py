@@ -183,7 +183,7 @@ def next_step_autonomy_for(*, task_done: bool, no_task: bool = False) -> str:
     if no_task:
         return "needs-current-task"
     if task_done:
-        return "auto-continue-low-risk"
+        return "needs-next-task-authorization"
     return "continue-current-task"
 
 
@@ -196,7 +196,7 @@ def next_step_suggestions_for(*, task_done: bool, no_task: bool = False) -> list
     if task_done:
         return [
             "先把这份交付总结发给团队或负责人验收，确认本轮结果是否接受。",
-            "如果下一项仍是本地可验证的低风险任务，Codex 可以直接开启下一段任务记录并继续，不需要你再说“继续”。",
+            "只有下一项明确属于用户已授权的目标或阶段计划，Codex 才可继续；独立下一步建议需要新的任务授权。",
             "如果下一项涉及业务方向、多种设计选择、真实数据、生产、数据库、破坏性命令或代码提交流程，Codex 会停下来让你确认。",
         ]
     return [
