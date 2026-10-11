@@ -180,3 +180,5 @@ Codex / 维护者背后的确定性本机准备入口：
 - `.gstack/scripts/acceptance_contract.py`：验收项、指定命令和任务语义绑定；执行回执与任务完成分开验证。
 - `.gstack/scripts/target_verification.py`：接入项目明确配置产品测试、可选独立 CI，不推测命令或覆盖现有 pipeline。
 - `.gstack/scripts/runtime_upgrade.py`：升级预检、隔离兼容、写入与恢复模块。
+
+- `.gstack/scripts/next_action.py`：共享只读下一步提醒与可复制用户输入；各入口保留已有字段并新增结构化建议。

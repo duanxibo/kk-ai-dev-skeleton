@@ -12,7 +12,7 @@ import html
 import json
 import os
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -88,6 +88,7 @@ class TaskSummary:
     evidence_missing: list[str]
     acceptance_status: str = "not-checked"
     acceptance_issue: str = ""
+    next_action: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -494,7 +495,7 @@ def summarize_boundary(path: Path, active: Path | None) -> TaskSummary:
             acceptance_status = 'historical-record'
     next_key = next_step(records)
     historical_label = '历史记录已收口，未验证当前验收' if acceptance_status == 'historical-record' else ''
-    return TaskSummary(
+    summary = TaskSummary(
         boundary=repo_relative(path),
         task=first_task_line(text, path),
         owner=owner,
@@ -517,6 +518,8 @@ def summarize_boundary(path: Path, active: Path | None) -> TaskSummary:
         acceptance_status=acceptance_status,
         acceptance_issue=acceptance_issue,
     )
+    from next_action import next_action_for
+    return replace(summary, next_action=asdict(next_action_for(asdict(summary))))
 
 
 def task_is_open(summary: TaskSummary) -> bool:
@@ -698,6 +701,7 @@ def render_markdown(payload: dict[str, object]) -> str:
 
 
 def render_explanation(payload: dict[str, object]) -> str:
+    from next_action import next_action_for, render_reminder
     tasks = payload["tasks"]
     assert isinstance(tasks, list)
     filters = payload.get("filters", {})
@@ -710,7 +714,8 @@ def render_explanation(payload: dict[str, object]) -> str:
                 [
                     "当前没有设置本地任务。",
                     "下一步：让 Codex 先恢复或创建当前任务记录，然后再继续推进。",
-                    "需要你确认：暂时不需要，除非要判断新的业务范围或生产操作。",
+                    "需要你确认：请描述要做的目标，或明确要恢复哪项任务。",
+                    "", render_reminder(next_action_for(None)),
                 ]
             )
         return "\n".join(
@@ -742,7 +747,12 @@ def render_explanation(payload: dict[str, object]) -> str:
         warnings = item.get("evidence_missing") or []
         reasons = item.get("blocked_reasons") or []
 
-        if item.get('acceptance_status') == 'historical-record':
+        guidance = next_action_for(item)
+        if guidance.status == 'manual-review':
+            state_line = '当前为手动控制，先说明计划，不自主修改文件。'
+            next_line = '下一步：' + guidance.recommended_next_step
+            confirm_line = '需要你确认：具体执行范围；提醒不会切换为自主执行。'
+        elif item.get('acceptance_status') == 'historical-record':
             state_line = "历史记录标记完成，当前验收尚未重新验证。"
             next_line = "下一步：需要交付说明时，先重新验证对应任务。"
             confirm_line = "需要你确认：下一项任务仍需明确授权。"
@@ -770,6 +780,7 @@ def render_explanation(payload: dict[str, object]) -> str:
             ]
         )
 
+        lines.extend(["", render_reminder(guidance), ""])
         if warnings:
             lines.append(f"注意：内部证据有 {len(warnings)} 处找不到，完成判断可能不可靠，Codex 需要先修正记录。")
 

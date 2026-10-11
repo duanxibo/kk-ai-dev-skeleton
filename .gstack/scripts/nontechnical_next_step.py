@@ -34,6 +34,7 @@ class NextStepResult:
     helper_status: str
     needs_user_confirmation: bool
     user_response: str
+    next_action: dict | None = None
 
 
 def optional_arg(flag: str, value: str) -> list[str]:
@@ -502,6 +503,13 @@ def helper_for_route(route: IntentRoute, args: argparse.Namespace) -> tuple[str,
 def build_next_step(args: argparse.Namespace) -> NextStepResult:
     route = build_route(args)
     helper_entry, helper_status, helper_output = helper_for_route(route, args)
+    from next_action import current_next_action, render_reminder
+    guidance = current_next_action(REPO_ROOT, intent=route.intent, helper_status=helper_status,
+                                   needs_confirmation=route.needs_user_confirmation)
+    response = sanitize_user_output(helper_output)
+    # A routed pause/error must supersede a helper's generic current-task footer.
+    response = response.split("\n下一步提醒：", 1)[0].rstrip()
+    response += "\n\n" + render_reminder(guidance)
     return NextStepResult(
         raw_request=route.raw_request,
         intent=route.intent,
@@ -509,7 +517,8 @@ def build_next_step(args: argparse.Namespace) -> NextStepResult:
         helper_entry=helper_entry,
         helper_status=helper_status,
         needs_user_confirmation=route.needs_user_confirmation,
-        user_response=sanitize_user_output(helper_output),
+        user_response=response,
+        next_action=asdict(guidance),
     )
 
 

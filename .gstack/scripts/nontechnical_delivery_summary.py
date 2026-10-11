@@ -42,6 +42,7 @@ class DeliverySummary:
     non_actions: list[str]
     next_step_suggestions: list[str]
     next_user_message: str
+    next_action: dict | None = None
 
 
 def compact(raw: str) -> str:
@@ -255,7 +256,7 @@ def build_no_task_summary(raw: str, query: str) -> DeliverySummary:
         needs_user_confirmation=["需要先确认要总结哪一项任务，或让 Codex 恢复当前任务记录。"],
         non_actions=standard_non_actions(),
         next_step_suggestions=next_step_suggestions_for(task_done=False, no_task=True),
-        next_user_message="我需要先找到当前任务记录，才能生成可靠的团队完成说明。",
+        next_user_message="请帮我找到要总结的任务，先确认进度和验收记录。",
     )
 
 
@@ -295,6 +296,11 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
         else ["当前任务还没全部收口；如果要发给团队，请标注为当前进展总结而不是最终完成说明。"]
     )
 
+    from next_action import next_action_for
+    guidance = next_action_for({**item, "current_step_key": "complete" if task_done else ("qa" if current_step == "complete" else current_step),
+                                "acceptance_status": "verified" if task_done else item.get("acceptance_status", "not-checked")})
+    if guidance.status == "manual-review":
+        confirmations = ["当前为手动控制；先说明计划，执行或修改文件需要明确范围授权。"]
     return DeliverySummary(
         raw_request=raw,
         status="ready-to-share" if task_done else "progress-summary",
@@ -303,7 +309,8 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
         task_done=task_done,
         progress=progress,
         current_stage=current_stage,
-        next_step_autonomy=next_step_autonomy_for(task_done=task_done),
+        next_step_autonomy=("needs-execution-authorization" if guidance.status == "manual-review"
+                            else next_step_autonomy_for(task_done=task_done)),
         changed_items=user_safe_items(expected, "当前任务记录没有写明交付变化，Codex 需要先补充可见结果。"),
         acceptance_actions=user_safe_items(actions, "查看本轮输出或让 Codex 按当前任务记录转述验收结果。"),
         expected_results=user_safe_items(expected, "能看到与本次任务目标一致的结果。"),
@@ -315,12 +322,16 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
         ),
         needs_user_confirmation=confirmations,
         non_actions=standard_non_actions(),
-        next_step_suggestions=next_step_suggestions_for(task_done=task_done),
-        next_user_message="我会把当前任务记录转成一段可以给团队看的完成说明。",
+        next_step_suggestions=([guidance.recommended_next_step] if guidance.status == "manual-review"
+                               else next_step_suggestions_for(task_done=task_done)),
+        next_user_message=guidance.suggested_user_input,
+        next_action=asdict(guidance),
     )
 
 
 def render_user(summary: DeliverySummary) -> str:
+    from next_action import NextAction, next_action_for, render_reminder
+    reminder = render_reminder(NextAction(**summary.next_action) if summary.next_action else next_action_for(None))
     lines = [
         "可以直接这样发给团队：",
         "",
@@ -344,7 +355,7 @@ def render_user(summary: DeliverySummary) -> str:
                 *[f"- {item}" for item in summary.non_actions],
             ]
         )
-        return "\n".join(lines)
+        return "\n".join([*lines, "", reminder])
 
     lines.extend(
         [
@@ -373,7 +384,7 @@ def render_user(summary: DeliverySummary) -> str:
             *[f"- {item}" for item in summary.needs_user_confirmation],
         ]
     )
-    return "\n".join(lines)
+    return "\n".join([*lines, "", reminder])
 
 
 def render_markdown(summary: DeliverySummary) -> str:
