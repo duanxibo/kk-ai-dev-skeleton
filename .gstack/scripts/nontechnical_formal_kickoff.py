@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from argparse import Namespace
+from acceptance_contract import scaffold as acceptance_scaffold
 from autopilot_bootstrap import EvidencePaths, compact_boundary_text
 from codex_mode import current_mode
 
@@ -622,7 +623,7 @@ def write_package(
     )
     paths.review.write_text(review_text(args, summary, paths, lane, package.acceptance_checks), encoding="utf-8")
     paths.boundary.write_text(
-        boundary_text(args, summary, paths, lane, package.forbidden_paths, package.acceptance_checks),
+        boundary_text(args, summary, paths, lane, package.forbidden_paths, package.acceptance_checks) + acceptance_scaffold(package.acceptance_checks),
         encoding="utf-8",
     )
     paths.qa.write_text(qa_text(args, package), encoding="utf-8")

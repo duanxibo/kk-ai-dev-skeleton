@@ -586,7 +586,7 @@
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 2,
+    "bundle_version": 3,
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -606,6 +606,9 @@
       "--report"
     ],
     "files": [
+      ".gstack/scripts/acceptance_contract.py",
+      ".gstack/scripts/target_verification.py",
+      ".gstack/scripts/runtime_upgrade.py",
       ".gstack/scripts/adapter_runtime.py",
       ".gstack/scripts/evidence_contract.py",
       ".gstack/scripts/qa_verify.py",
@@ -694,7 +697,7 @@
       "Does not overwrite existing target runtime scripts by default.",
       "Does not copy project business stack, archive, blueprint, shared data, credentials, or data-access helpers."
     ],
-    "release_version": "0.2.0"
+    "release_version": "0.3.0"
   },
   "authorization": {
     "classifier_version": "chat-authorization-v2",
@@ -782,5 +785,10 @@
     "does not execute destructive commands",
     "does not perform git workflow actions without explicit user authorization",
     "does not mark QA passed without real verification"
-  ]
+  ],
+  "qa_policy": {
+    "acceptance_command_keys": [
+      "qa_verify"
+    ]
+  }
 }

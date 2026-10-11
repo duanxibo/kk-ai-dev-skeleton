@@ -76,13 +76,14 @@ class RuntimeReleaseTest(unittest.TestCase):
                 self.assertEqual((target / 'plain.py').read_text(), 'original')
                 self.assertIn('plain.py', preview['would_create'])
                 result = module.copy_runtime_bundle(dry_run=False, upgrade=True)
-                self.assertEqual(result['updated_paths'], ['plain.py'])
+                self.assertEqual(result['updated_paths'], [])
+                self.assertFalse(result['ok'])
                 self.assertFalse(result['upgrade_complete'])
                 self.assertEqual(result['upgrade_status'], 'conflicts-preserved')
-                self.assertEqual((target / 'plain.py').read_text(), 'updated')
+                self.assertEqual((target / 'plain.py').read_text(), 'original')
                 self.assertEqual((target / 'custom.py').read_text(), 'customized')
                 self.assertEqual(result['preserved_differences'][0]['path'], 'custom.py')
-                self.assertEqual(json.loads((target / '.gstack/runtime-install.json').read_text())['release_version'], '0.2.0')
+                self.assertEqual(json.loads((target / '.gstack/runtime-install.json').read_text())['release_version'], module.RELEASE_VERSION)
 
 
 if __name__ == '__main__':

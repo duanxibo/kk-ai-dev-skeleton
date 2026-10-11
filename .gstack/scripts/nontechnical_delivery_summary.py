@@ -275,7 +275,15 @@ def build_delivery_summary(args: argparse.Namespace) -> DeliverySummary:
     current_step = str(item.get("current_step_key") or "")
     current_stage = str(item.get("current_step") or "未知")
     task_done = current_step == "complete"
+    if task_done and boundary_path:
+        from acceptance_contract import task_completion_check
+        task_done, issue = task_completion_check(REPO_ROOT, boundary_path)
+        if not task_done:
+            current_stage = '验收需要重新验证'
+            item = {**item, 'qa_status': 'needs-verification'}
     progress = str(item.get("progress") or "0/7")
+    if not task_done and progress == "7/7":
+        progress = "6/7"
 
     expected = parse_section_field_items(boundary_text, "User-visible Acceptance", "Expected Visible Behavior")
     actions = parse_section_field_items(boundary_text, "User-visible Acceptance", "User Actions To Verify")

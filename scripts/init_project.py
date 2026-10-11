@@ -24,6 +24,7 @@ from typing import Any
 SCRIPT_PATH = Path(__file__).resolve()
 SOURCE_REPO_ROOT = SCRIPT_PATH.parents[1]
 REPO_ROOT = SOURCE_REPO_ROOT
+sys.path.insert(0, str(SOURCE_REPO_ROOT / ".gstack/scripts"))
 DEFAULT_ADAPTER = REPO_ROOT / "adapters" / "default"
 ACTIVE_BOUNDARY = REPO_ROOT / ".gstack" / "task-boundaries" / "CURRENT.local.md"
 SKELETON_MARKER = ".gstack/KK-Dev-Skeleton-gstack工程化协作蓝图.md"
@@ -284,6 +285,9 @@ LOOP_REQUIRED_COMMAND_KEYS = (
 )
 
 RUNTIME_BUNDLE_FILES = (
+    ".gstack/scripts/acceptance_contract.py",
+    ".gstack/scripts/target_verification.py",
+    ".gstack/scripts/runtime_upgrade.py",
     ".gstack/scripts/evidence_contract.py",
     ".gstack/scripts/qa_verify.py",
     ".gstack/scripts/source_coverage.py",
@@ -536,8 +540,8 @@ def smoke_tests_section() -> dict[str, Any]:
 
 def runtime_bundle_section() -> dict[str, Any]:
     return {
-        "bundle_version": 2,
-        "release_version": "0.2.0",
+        "bundle_version": BUNDLE_VERSION,
+        "release_version": RELEASE_VERSION,
         "mode": "explicit-copy",
         "source": "skeleton-source-repo",
         "write_policy": "create-missing-preserve-existing",
@@ -1184,8 +1188,8 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 2,
-        "release_version": "0.2.0",
+    "bundle_version": 3,
+    "release_version": "0.3.0",
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -1380,6 +1384,16 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
 }
 '''
 )
+
+# Embedded metadata is the standalone installer release source; no runtime imports required.
+RELEASE_VERSION = DEFAULT_RUNTIME["runtime_bundle"]["release_version"]
+BUNDLE_VERSION = DEFAULT_RUNTIME["runtime_bundle"]["bundle_version"]
+# Generated metadata uses the same release and bundle allowlist as runtime installation.
+DEFAULT_RUNTIME["runtime_bundle"]["bundle_version"] = BUNDLE_VERSION
+DEFAULT_RUNTIME["runtime_bundle"]["release_version"] = RELEASE_VERSION
+DEFAULT_RUNTIME["runtime_bundle"]["files"] = list(RUNTIME_BUNDLE_FILES)
+DEFAULT_RUNTIME["commands"]["qa_verify"] = ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+DEFAULT_RUNTIME["qa_policy"] = {"acceptance_command_keys": ["qa_verify"]}
 
 PORTABLE_CORE_FILES = (
     "AGENTS.md",
@@ -1794,7 +1808,9 @@ def runtime_payload(
                 "archive_prefixes": shape["archive_prefixes"],
                 "forbidden_default_prefixes": shape["forbidden_default_prefixes"],
             },
+            "qa_policy": {"acceptance_command_keys": ["qa_verify"]},
             "commands": {
+                "qa_verify": ["python3", ".gstack/scripts/target_verification.py"],
                 "detect": ["python3", "scripts/init_project.py", "--adapter", adapter, "--detect"],
                 "plan": ["python3", "scripts/init_project.py", "--adapter", adapter, "--plan"],
                 "rewrite_adapter_dry_run": ["python3", "scripts/init_project.py", "--adapter", adapter, "--rewrite-adapter", "--dry-run"],
@@ -2657,6 +2673,11 @@ def copy_core_bundle(adapter: str, *, project_name: str | None, dry_run: bool) -
 
 
 def copy_runtime_bundle(*, dry_run: bool, upgrade: bool = False) -> dict[str, Any]:
+    if upgrade:
+        from runtime_upgrade import upgrade_runtime_bundle
+        return upgrade_runtime_bundle(source_root=SOURCE_REPO_ROOT, target_root=REPO_ROOT,
+                                      files=RUNTIME_BUNDLE_FILES, dry_run=dry_run,
+                                      release_version=RELEASE_VERSION)
     manifest_path = REPO_ROOT / ".gstack" / "runtime-install.json"
     try:
         baseline = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -2683,14 +2704,6 @@ def copy_runtime_bundle(*, dry_run: bool, upgrade: bool = False) -> dict[str, An
             target_digest = hashlib.sha256(target.read_bytes()).hexdigest() if target.is_file() else "not-a-file"
             if source_digest == target_digest:
                 installed_hashes[relative_path] = source_digest
-            elif upgrade and target_digest == installed_hashes.get(relative_path):
-                if dry_run:
-                    would_create.append(relative_path)
-                else:
-                    shutil.copy2(source, target)
-                    updated_paths.append(relative_path)
-                    installed_hashes[relative_path] = source_digest
-                continue
             else:
                 preserved_differences.append({
                     "path": relative_path,
@@ -2709,7 +2722,7 @@ def copy_runtime_bundle(*, dry_run: bool, upgrade: bool = False) -> dict[str, An
 
     if not dry_run:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(json.dumps({"release_version": "0.2.0", "files": installed_hashes}, indent=2) + "\n", encoding="utf-8")
+        manifest_path.write_text(json.dumps({"release_version": RELEASE_VERSION, "files": installed_hashes}, indent=2) + "\n", encoding="utf-8")
 
     if source_missing:
         message = f"runtime bundle source files missing: {', '.join(source_missing)}"
@@ -2738,7 +2751,7 @@ def copy_runtime_bundle(*, dry_run: bool, upgrade: bool = False) -> dict[str, An
         "upgrade_complete": not source_missing and not preserved_differences,
         "upgrade_status": "conflicts-preserved" if preserved_differences else ("missing-source" if source_missing else "complete"),
         "updated_paths": updated_paths,
-        "release_version": "0.2.0",
+        "release_version": RELEASE_VERSION,
         "message": message,
     }
 
@@ -3693,6 +3706,9 @@ def main() -> int:
     if args.repo_root:
         configure_repo_root(Path(args.repo_root).expanduser().resolve())
     adapter = slugify(args.adapter)
+    if args.upgrade_runtime and not args.apply_runtime:
+        print("--upgrade-runtime requires --apply-runtime", file=sys.stderr)
+        return 2
 
     if args.pilot_output and not args.pilot:
         print("--pilot-output requires --pilot", file=sys.stderr)

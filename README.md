@@ -255,7 +255,7 @@ python3 .gstack/scripts/spec_sync_guard.py
 ## 轻量接入与授权范围
 
 - 已有项目默认保留源码布局，由 adapter 指向现有源码、规格和测试；目录迁移不是接入前提。
-- 低风险小任务可用 `python3 .gstack/scripts/autopilot_bootstrap.py --compact-evidence ...`，将需求、评审、边界、QA 合并为一份记录。QA 必须通过 `qa_verify.py --command-key qa_verify` 执行 adapter 中的验证命令，并记录 `Execution Receipt`；手写“通过”不能放行。
+- 低风险小任务可用 `python3 .gstack/scripts/autopilot_bootstrap.py --compact-evidence ...`，将需求、评审、边界、QA 合并为一份记录。QA 完成必须通过 `qa_verify.py --boundary <任务边界>` 执行验收映射中的命令并记录回执；仅执行普通命令不能标记产品验收完成。
 - 自动推进只限用户已授权目标；独立下一步建议不能自动变成新任务。已明确授权的动作不重复询问。
 - adapter 缺失、JSON 损坏或字段类型不合法时，关键 guard 默认报错。旧 adapter 至少应显式声明 `paths.implementation_prefixes`（纯元数据 adapter 可用空列表），其余路径以项目实际情况填写。`load_adapter_runtime(..., strict=False)` 仅用于显式兼容/诊断，返回告警和空路径，不代表检查通过。
 - `.github/workflows/ci.yml` 在 PR 和 main push 上运行 Python 3.11/3.12 行为测试、adapter 校验和 smoke。流程记录不替代测试、独立审查或权限隔离。
@@ -266,6 +266,10 @@ python3 .gstack/scripts/spec_sync_guard.py
 
 当前 plugin 与 runtime bundle release 为 `0.2.0`。JSON `version` 是配置 schema 版本，不能代替发布版本。使用固定 tag 或 commit 的骨架 checkout 安装，避免把浮动 main 当成可复现版本。
 
-安装记录 `.gstack/runtime-install.json` 保存已安装文件的 SHA-256。显式执行 `scripts/init_project.py --apply-runtime --upgrade-runtime --dry-run` 预览，然后去掉 `--dry-run` 应用：只升级与上次安装记录一致的文件，定制文件保留并报告冲突。旧安装没有记录时保守保留差异，人工合并后重新运行安装建立基线。release 号表示来源；`preserved_differences` 必须清空后才能认定完整升级。
+安装记录 `.gstack/runtime-install.json` 保存已安装文件的 SHA-256。显式执行 `scripts/init_project.py --apply-runtime --upgrade-runtime --dry-run` 预览，然后去掉 `--dry-run` 应用：先整包检查和隔离兼容验证，有定制冲突就整包停止；写入失败恢复旧脚本和安装清单。旧安装没有记录时保守保留差异，人工合并后重新运行安装建立基线。release 号表示来源；`preserved_differences` 必须清空后才能认定完整升级。
 
 语义复核通过、无风险且不改变 UI/API/数据，并通过 `--allowed` 明确实际文件范围的 fast-lane 正式 kickoff 自动使用一份简短记录；草稿和复杂任务保留完整流程。QA 仍需实际执行与执行 receipt。
+
+实际项目接入时，先用 `target_verification.py --configure-command-json '<实际产品测试的 JSON argv>'` 配置断言测试，再在 boundary 的 `Acceptance Verification` 中对应每项验收。`qa_verify.py --boundary <任务路径>` 自动运行所有映射命令；旧的 `--command-key` 单独执行仍可用于诊断，不构成产品验收。可选 `target_verification.py --install-ci-boundary <任务路径>` 安装独立 CI，保留已有 workflow；依赖安装及后续任务选择由项目配置。
+
+升级兼容检查覆盖脚本编译、adapter 以及 Loop/QA 命令依赖；不替代产品验收，也不保证断电或进程被杀时原子恢复。

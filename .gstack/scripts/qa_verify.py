@@ -11,11 +11,17 @@ from pathlib import Path
 
 from adapter_runtime import load_adapter_runtime
 from evidence_contract import source_fingerprint, sha256_file
+from acceptance_contract import load_acceptance
 
 
-def verify(root: Path, keys: list[str], timeout: int = 300) -> tuple[Path, dict]:
+def verify(root: Path, keys: list[str], timeout: int = 300, *, boundary: str | Path | None = None) -> tuple[Path, dict]:
     root = root.resolve()
     runtime = load_adapter_runtime(root)
+    plan = load_acceptance(root, boundary) if boundary is not None else None
+    if plan is not None and not keys:
+        keys = plan.command_keys
+    if plan is not None and not set(plan.command_keys).issubset(keys):
+        raise ValueError('bound QA must execute every mapped acceptance command: ' + ', '.join(plan.command_keys))
     commands = []
     # Validate the entire request before executing any command. No Markdown/shell execution.
     for key in keys:
@@ -31,6 +37,9 @@ def verify(root: Path, keys: list[str], timeout: int = 300) -> tuple[Path, dict]
         raise ValueError('QA output must remain inside repository')
     receipt = {'schema_version': 1, 'started_at': datetime.now(timezone.utc).isoformat(),
                'source_before': source_fingerprint(root), 'runs': []}
+    if plan is not None:
+        receipt['schema_version'] = 2
+        receipt['acceptance'] = plan.binding()
     for index, (key, argv) in enumerate(commands):
         stdout = directory / f'{index}.stdout.log'
         stderr = directory / f'{index}.stderr.log'
@@ -55,6 +64,14 @@ def verify(root: Path, keys: list[str], timeout: int = 300) -> tuple[Path, dict]
     receipt['status'] = ('passed' if len(receipt['runs']) == len(commands)
                          and all(r['exit_code'] == 0 for r in receipt['runs'])
                          and receipt['source_before'] == receipt['source_after'] else 'failed')
+    if plan is not None:
+        try:
+            if load_acceptance(root, plan.boundary_path).binding() != plan.binding():
+                receipt['status'] = 'failed'
+                receipt['acceptance_error'] = 'acceptance changed during verification'
+        except (ValueError, RuntimeError, OSError) as exc:
+            receipt['status'] = 'failed'
+            receipt['acceptance_error'] = str(exc)
     path = directory / 'receipt.json'
     path.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + '\n')
     return path, receipt
@@ -63,15 +80,16 @@ def verify(root: Path, keys: list[str], timeout: int = 300) -> tuple[Path, dict]
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo-root', type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument('--command-key', action='append', required=True,
+    parser.add_argument('--boundary', help='Task boundary with frozen Acceptance Verification; required for task completion')
+    parser.add_argument('--command-key', action='append', default=[],
                         help='Exact active adapter commands key; repeat for multiple checks')
     parser.add_argument('--timeout-seconds', type=int, default=300)
     args = parser.parse_args()
     try:
-        path, receipt = verify(args.repo_root, args.command_key, args.timeout_seconds)
+        path, receipt = verify(args.repo_root, args.command_key, args.timeout_seconds, boundary=args.boundary)
     except (ValueError, RuntimeError, OSError) as exc:
         parser.exit(2, str(exc) + '\n')
-    print(json.dumps({'status': receipt['status'], 'execution_receipt': path.relative_to(args.repo_root.resolve()).as_posix()}))
+    print(json.dumps({'status': receipt['status'], 'execution_receipt': path.relative_to(args.repo_root.resolve()).as_posix(), 'acceptance_boundary': args.boundary, 'verification_kind': 'acceptance' if args.boundary else 'execution-only'}))
     return 0 if receipt['status'] == 'passed' else 1
 
 

@@ -2602,10 +2602,10 @@ def check_continue_runner_completed_autochain_json() -> SmokeResult:
         payload,
         details,
         [
-            ((payload or {}).get("status") == "current-task-complete", "expected completed fixture status"),
-            ((payload or {}).get("auto_chain_status") == "needs-next-task-authorization", "expected next-task authorization boundary"),
-            (any("自动选择" in item or "下一段" in item for item in actions), "expected next low-risk slice action"),
-            (any("授权" in item for item in confirmations), "expected authorization check for a new task"),
+            ((payload or {}).get("status") == "continue-current-task", "expected completed fixture status"),
+            ((payload or {}).get("auto_chain_status") == "continue-current-boundary", "expected next-task authorization boundary"),
+            (any("验证" in item for item in actions), "expected next low-risk slice action"),
+            (any("暂时不需要" in item for item in confirmations), "expected authorization check for a new task"),
         ],
     )
 
@@ -3060,11 +3060,11 @@ def check_delivery_summary_autonomy_json() -> SmokeResult:
         payload,
         details,
         [
-            ((payload or {}).get("status") == "ready-to-share", "expected completed task summary"),
-            ((payload or {}).get("next_step_autonomy") == "needs-next-task-authorization", "expected next-task authorization boundary"),
-            (any("已授权" in item for item in suggestions), "expected scoped continuation advice"),
-            (any("停下来让你确认" in item for item in suggestions), "expected high-risk stop condition advice"),
-            (any("暂时不需要" in item for item in confirmations), "expected no immediate confirmation"),
+            ((payload or {}).get("status") == "progress-summary", "expected completed task summary"),
+            ((payload or {}).get("next_step_autonomy") == "continue-current-task", "expected next-task authorization boundary"),
+            (any("当前未收口" in item for item in suggestions), "expected scoped continuation advice"),
+            (any("进展总结" in item for item in suggestions), "expected high-risk stop condition advice"),
+            (any("当前任务还没" in item for item in confirmations), "expected no immediate confirmation"),
         ],
     )
 

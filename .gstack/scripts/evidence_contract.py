@@ -31,7 +31,7 @@ def section(text: str, header: str) -> str:
 
 
 def field(text: str, name: str) -> str:
-    match = re.search(r'^\s*-\s*' + re.escape(name) + r':\s*(.*?)\s*$', text, re.M)
+    match = re.search(r'^[ \t]*-[ \t]*' + re.escape(name) + r':[ \t]*(.*?)[ \t]*$', text, re.M)
     return match.group(1).strip().strip('`') if match else ''
 
 
@@ -125,7 +125,7 @@ def qa_check(root: Path, text: str) -> tuple[bool, str]:
             receipt = json.loads(path.read_text())
             if not isinstance(receipt, dict):
                 raise ValueError('receipt must be a JSON object')
-            if receipt.get('schema_version') != 1 or receipt.get('status') != 'passed':
+            if receipt.get('schema_version') not in (1, 2) or receipt.get('status') != 'passed':
                 raise ValueError('receipt is not a successful execution')
             if receipt.get('source_before') != current or receipt.get('source_after') != current:
                 raise ValueError('QA receipt is stale or verification changed source; rerun verification')
