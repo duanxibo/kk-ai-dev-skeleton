@@ -408,3 +408,7 @@ At minimum, re-test:
 - team task-state sync without database,
 - team-facing completion / delivery summary,
 - user asks how to verify completion.
+
+## Proactive next-action reminders
+
+At onboarding, progress, blockage and delivery, include one recommended next action and one copyable user-perspective reply without waiting for a next-step question. Use the shared read-only `next_action.py` selector or the existing home/progress/continue/delivery entry. Explain whether a reply is required; within an authorized task continue autonomously and label the text optional. No active task requires a goal; blocked work requires diagnosis; stale acceptance requires verification; verified completion should offer user acceptance before any new task. Respect explicit pause and manual control. Suggested replies do not grant new-task, git or high-risk authorization. Users should not have to run commands or choose technical stages.

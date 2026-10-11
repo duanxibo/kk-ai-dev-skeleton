@@ -586,7 +586,7 @@
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 3,
+    "bundle_version": 4,
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -606,6 +606,7 @@
       "--report"
     ],
     "files": [
+      ".gstack/scripts/next_action.py",
       ".gstack/scripts/acceptance_contract.py",
       ".gstack/scripts/target_verification.py",
       ".gstack/scripts/runtime_upgrade.py",
@@ -697,7 +698,7 @@
       "Does not overwrite existing target runtime scripts by default.",
       "Does not copy project business stack, archive, blueprint, shared data, credentials, or data-access helpers."
     ],
-    "release_version": "0.3.0"
+    "release_version": "0.3.1"
   },
   "authorization": {
     "classifier_version": "chat-authorization-v2",

@@ -38,6 +38,7 @@ class HomeResult:
     recovery_summary: list[str]
     non_actions: list[str]
     helper_status: list[HelperStatus]
+    next_action: dict | None = None
 
 
 def python_command(*args: str) -> list[str]:
@@ -148,13 +149,16 @@ def build_home() -> HomeResult:
     if not recovery_summary:
         recovery_summary = ["暂时不需要你做技术操作；Codex 会先检查当前协作状态。"]
 
+    from next_action import current_next_action
+    guidance = current_next_action(REPO_ROOT)
     return HomeResult(
         status="home-ready",
+        next_action=asdict(guidance),
         current_task=current_task,
         current_state=current_state,
         next_step=next_step,
         options=[
-            "继续当前任务：直接说“继续做”。",
+            "当前推荐：" + guidance.recommended_next_step,
             "开始复杂需求：直接说“我要做...”，或照填下面几行。",
             "验收当前结果：直接说“我怎么知道它真的好了”。",
             "出错后恢复：直接说“出错了，帮我看下一步怎么办”。",
@@ -208,6 +212,9 @@ def render_user(result: HomeResult) -> str:
     lines.extend(f"- {item}" for item in result.recovery_summary)
     lines.extend(["", "这次不会做什么："])
     lines.extend(f"- {item}" for item in result.non_actions)
+    from next_action import NextAction, render_reminder
+    if result.next_action:
+        lines.extend(["", render_reminder(NextAction(**result.next_action))])
     return "\n".join(lines)
 
 

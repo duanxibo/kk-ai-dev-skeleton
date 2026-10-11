@@ -285,6 +285,7 @@ LOOP_REQUIRED_COMMAND_KEYS = (
 )
 
 RUNTIME_BUNDLE_FILES = (
+    ".gstack/scripts/next_action.py",
     ".gstack/scripts/acceptance_contract.py",
     ".gstack/scripts/target_verification.py",
     ".gstack/scripts/runtime_upgrade.py",
@@ -1188,8 +1189,8 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 3,
-    "release_version": "0.3.0",
+    "bundle_version": 4,
+    "release_version": "0.3.1",
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -1900,6 +1901,8 @@ required_gates:
 - For low-risk fast-lane tasks, use `autopilot_bootstrap.py --compact-evidence` to combine requirement, review, boundary and QA sections in one file; mark QA done only after actual verification.
 - Prior user authorization persists; do not ask again for already authorized actions.
 - Evidence records and guards do not replace independent tests, user acceptance or environment permissions.
+- Proactively end onboarding, progress, blockers and delivery replies with one recommended next action and one copyable user input. Explain whether a reply is required; do not require another "continue" inside an already authorized task.
+- Use the read-only `next_action.py` / natural-language helpers when installed. Suggested text never authorizes a new task, production, database, destructive or git action; respect pauses and prefer acceptance before a new goal.
 """,
         "README.md": f"""# {display_name}
 

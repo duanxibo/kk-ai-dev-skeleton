@@ -1,0 +1,3 @@
+# Copyable next-action text needs routing and authorization checks
+
+A reminder can be readable but route to the wrong helper: words about "not doing" may select scope-change, "completion" plus acceptance may select delivery, and negated risky words may still trigger conservative risk classification. Test the actual generated reply through the router rather than only checking that it is nonempty. Keep task state and intent separate, and give explicit pause, failure diagnostics and manual control priority over generic continuation. Use user-perspective wording and explain when it is optional. Mirror authorization constraints in the main status text and the reminder; a safe footer cannot correct an unsafe body. A next-step suggestion never creates a new task authorization.

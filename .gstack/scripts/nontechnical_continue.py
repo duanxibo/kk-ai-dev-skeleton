@@ -43,6 +43,7 @@ class ContinuePlan:
     needs_user_confirmation: list[str]
     non_actions: list[str]
     next_user_message: str
+    next_action: dict | None = None
 
 
 def compact(raw: str) -> str:
@@ -56,6 +57,8 @@ def safe_task_name(task: str) -> str:
 def confirmation_for(status: str, blocked: bool) -> list[str]:
     if status == "no-active-task":
         return ["需要你告诉我这次要继续哪件事，或让我先恢复当前任务记录。"]
+    if status == "manual-review":
+        return ["当前为手动控制，先说明计划；修改文件或继续执行需要明确范围授权。"]
     if blocked:
         return ["当前任务记录显示有卡住项；Codex 会先修本地能证明的问题，涉及业务口径、真实数据、生产、数据库或代码提交流程时再问你。"]
     if status == "current-task-complete":
@@ -87,6 +90,8 @@ def actions_for_stage(stage: str, task_done: bool, blocked: bool) -> list[str]:
 
 
 def auto_chain_status_for(status: str) -> str:
+    if status == "manual-review":
+        return "needs-execution-authorization"
     if status == "no-active-task":
         return "needs-current-task"
     if status == "current-task-complete":
@@ -95,6 +100,8 @@ def auto_chain_status_for(status: str) -> str:
 
 
 def auto_chain_status_label(status: str) -> str:
+    if status == "needs-execution-authorization":
+        return "当前为手动控制；先说明计划，等待执行范围授权。"
     if status == "needs-next-task-authorization":
         return "当前任务完成；需要核对下一项授权，不能仅凭低风险自动开新任务。"
     if status == "continue-current-boundary":
@@ -121,7 +128,7 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
             ],
             needs_user_confirmation=confirmation_for("no-active-task", False),
             non_actions=non_actions(),
-            next_user_message="我需要先恢复当前任务记录，再继续推进。",
+            next_user_message="请帮我找回上次任务，先说明进度和剩余事项，不要猜测要继续什么。",
         )
 
     text = read_text(active)
@@ -135,6 +142,15 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
             summary = replace(summary, current_step_key='qa', current_step_label='验收需要重新验证', progress='6/7')
     status = "current-task-complete" if task_done else "continue-current-task"
     reason = "当前任务记录已经显示全部完成。" if task_done else "当前任务记录还有未完成阶段，可以继续推进。"
+    from next_action import next_action_for
+    guidance = next_action_for({
+        "current_step_key": summary.current_step_key,
+        "acceptance_status": "verified" if task_done else getattr(summary, "acceptance_status", "not-checked"),
+        "blocked": summary.blocked, "mode": getattr(summary, "mode", "unknown"),
+    })
+    if guidance.status == "manual-review":
+        status = "manual-review"
+        reason = "当前为手动控制，先说明计划，不自主修改文件。"
     return ContinuePlan(
         raw_request=raw,
         status=status,
@@ -144,14 +160,18 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
         current_stage=summary.current_step_label,
         auto_chain_status=auto_chain_status_for(status),
         progress=summary.progress,
-        codex_next_actions=actions_for_stage(summary.current_step_key, task_done, summary.blocked),
+        codex_next_actions=([guidance.recommended_next_step] if status == "manual-review"
+                            else actions_for_stage(summary.current_step_key, task_done, summary.blocked)),
         needs_user_confirmation=confirmation_for(status, summary.blocked),
         non_actions=non_actions(),
-        next_user_message=("当前任务已完成，请明确下一项任务或已授权的阶段计划。" if task_done else "我会在当前已授权范围内继续推进。"),
+        next_user_message=guidance.suggested_user_input,
+        next_action=asdict(guidance),
     )
 
 
 def render_user(plan: ContinuePlan) -> str:
+    from next_action import NextAction, next_action_for, render_reminder
+    reminder = render_reminder(NextAction(**plan.next_action) if plan.next_action else next_action_for(None))
     if plan.status == "no-active-task":
         lines = [
             "我会按继续推进处理，但现在还缺当前任务记录。",
@@ -165,10 +185,10 @@ def render_user(plan: ContinuePlan) -> str:
             "这次不会做什么：",
             *[f"- {item}" for item in plan.non_actions],
         ]
-        return "\n".join(lines)
+        return "\n".join([*lines, "", reminder])
 
     lines = [
-        "我会按继续推进处理。",
+        ("我会先说明当前方案，等待执行授权。" if plan.status == "manual-review" else "我会按继续推进处理。"),
         "",
         f"当前任务：{plan.task}",
         f"当前状态：{plan.status_reason}",
@@ -185,7 +205,7 @@ def render_user(plan: ContinuePlan) -> str:
         "这次不会做什么：",
         *[f"- {item}" for item in plan.non_actions],
     ]
-    return "\n".join(lines)
+    return "\n".join([*lines, "", reminder])
 
 
 def render_markdown(plan: ContinuePlan) -> str:

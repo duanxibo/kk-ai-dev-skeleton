@@ -231,3 +231,7 @@ Receipts are reproducibility records, not tamper-proof attestations. A repositor
 Explicit `--apply-runtime --upgrade-runtime` now preflights the whole bundle, conflicts and source availability, compiles staged scripts, validates target adapters and loads Loop/QA CLI dependencies before replacing files. Any customization conflict blocks all bundle changes. Write/manifest failures restore previous contents and permissions, remove newly created bundle files, and preserve the old manifest; an exclusive upgrader lock prevents cooperating parallel upgrades. Compatibility checks do not run business acceptance. Power loss, process termination and arbitrary external writers during replacement are outside this bounded rollback guarantee.
 
 `source_coverage.py` discovers known source extensions among Git files and reports paths absent from adapter mappings. The framework source repository uses `adapters/skeleton/`; adopted projects keep their own adapter. Custom languages and ignored generated source require explicit configuration/review; this is a path audit rather than a complete language parser.
+
+## 状态提醒与用户输入
+
+`next_action.py` 是只读建议真源，首页、进度、继续和交付共用它；自然语言入口附加结构化 `next_action` 与可复制输入。agent 默认在引导、状态说明、阻塞和交付时主动呈现提醒。`reply_required=false` 表示可自主推进或先诊断，不要求多一次用户确认；`true` 需要目标、业务决定或结果验收，不是高风险执行授权。不得从历史列表猜测 active task，不得以过期完成记录建议新任务，暂停和手动模式优先于常规续跑。提醒无后台发送，不写共享状态。

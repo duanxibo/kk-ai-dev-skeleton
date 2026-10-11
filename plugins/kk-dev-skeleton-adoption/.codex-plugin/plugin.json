@@ -1,6 +1,6 @@
 {
   "name": "kk-dev-skeleton-adoption",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Codex workflow for adopting and upgrading KK Dev Skeleton runtime bundles.",
   "author": {
     "name": "KK Dev Skeleton Team"

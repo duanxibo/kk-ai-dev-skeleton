@@ -273,3 +273,7 @@ python3 .gstack/scripts/spec_sync_guard.py
 实际项目接入时，先用 `target_verification.py --configure-command-json '<实际产品测试的 JSON argv>'` 配置断言测试，再在 boundary 的 `Acceptance Verification` 中对应每项验收。`qa_verify.py --boundary <任务路径>` 自动运行所有映射命令；旧的 `--command-key` 单独执行仍可用于诊断，不构成产品验收。可选 `target_verification.py --install-ci-boundary <任务路径>` 安装独立 CI，保留已有 workflow；依赖安装及后续任务选择由项目配置。
 
 升级兼容检查覆盖脚本编译、adapter 以及 Loop/QA 命令依赖；不替代产品验收，也不保证断电或进程被杀时原子恢复。
+
+### 下一步提醒
+
+框架在首页、进度、继续推进和交付说明中主动给出一项推荐下一步，并附一句可复制的用户输入，例如“请说明这次结果怎么验收：要看哪里、怎么操作和预期结果；先不要开启新任务。”也可以直接问“下一步干啥”或“下一句怎么说”。文案根据当前任务、阻塞、验收有效性和暂停请求生成；说明是否需要回复，同一已授权任务不要求重复说“继续”。提醒随对话或状态查询呈现，不是后台通知服务；建议不自动授权新任务或高风险操作。
