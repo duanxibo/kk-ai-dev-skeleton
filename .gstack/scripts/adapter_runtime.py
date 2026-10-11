@@ -39,125 +39,13 @@ PATH_VALUE_KEYS = {
     "domain_spec_prefix",
 }
 
+# Compatibility fallback has no project-specific paths or data gates.
 DEFAULT_RUNTIME: dict[str, Any] = {
     "version": 1,
     "name": DEFAULT_ADAPTER,
-    "paths": {
-        "implementation_prefixes": [
-            "app/backend/",
-            "app/frontend/",
-            "scripts/",
-            "tests/",
-            "fixtures/",
-            "app/restricted-module/server/",
-            "app/restricted-module/public/",
-            "app/restricted-module/scripts/",
-            "app/restricted-module/tests/",
-            "app/restricted-module/fixtures/",
-            "archive/baseline/example-baseline/app/",
-            "archive/baseline/example-baseline/scripts/",
-            "archive/baseline/example-baseline/templates/",
-            "archive/baseline/example-baseline/seeds/",
-        ],
-        "spec_prefixes": [
-            "docs/specs/",
-            "app/restricted-module/docs/",
-            "app/restricted-module/specs/",
-            "archive/baseline/example-baseline/docs/",
-        ],
-        "prototype_prefixes": [
-            "archive/baseline/example-baseline/app/",
-            "archive/baseline/example-baseline/scripts/",
-            "archive/baseline/example-baseline/templates/",
-            "archive/baseline/example-baseline/seeds/",
-        ],
-        "backend_implementation_prefixes": [
-            "app/backend/src/main/",
-            "app/backend/pom.xml",
-            "app/restricted-module/server/",
-        ],
-        "backend_test_prefixes": [
-            "app/backend/src/test/",
-            "tests/",
-            "app/restricted-module/tests/",
-        ],
-        "backend_domain_spec_prefix": "docs/specs/",
-        "deprecated_backend_spec_prefixes": [
-            "docs/specs/archive/backend-legacy/",
-        ],
-        "boundary_prefix": ".gstack/task-boundaries/",
-        "requirement_prefix": ".gstack/requirements/",
-        "review_prefix": ".gstack/reviews/",
-        "ceo_review_prefix": ".gstack/reviews/",
-        "eng_review_prefix": ".gstack/reviews/",
-        "qa_prefix": ".gstack/qa-reports/",
-        "design_prefix": ".gstack/designs/",
-        "domain_spec_prefix": "docs/specs/",
-        "data_access_trigger_prefixes": [
-            "app/backend/src/main/",
-            "app/restricted-module/server/",
-            "docs/specs/",
-            "app/restricted-module/docs/",
-            "app/restricted-module/specs/",
-            "app/frontend/",
-            "app/restricted-module/public/",
-            ".gstack/templates/data-interface-design.template.md",
-            ".gstack/knowledge/data-access/source-registry.md",
-            ".gstack/knowledge/data-access/sources/",
-            ".gstack/knowledge/data-access/sql-drafts/",
-            ".gstack/knowledge/data-access/requirement-gaps/",
-        ],
-        "frontend_hint_prefixes": [
-            "archive/baseline/example-baseline/app/",
-            "app/frontend/",
-            "app/restricted-module/public/",
-        ],
-        "prototype_logic_evidence_prefixes": [
-            ".gstack/designs/",
-            ".gstack/reviews/",
-            ".gstack/knowledge/",
-            ".gstack/knowledge/data-access/",
-            "app/",
-            "docs/specs/",
-            "stack/",
-            "archive/baseline/",
-            "baseline/",
-        ],
-    },
-    "commands": {
-        "dev_stack_entry": "scripts/dev_stack.sh",
-        "init_project": "scripts/init_project.py",
-        "doctor": ["python3", ".gstack/scripts/gstack_doctor.py", "check"],
-        "dashboard": ["python3", ".gstack/scripts/gstack_dashboard.py", "show"],
-    },
-    "gates": {
-        "data_access_status_requirements": [
-            {
-                "prefixes": ["app/backend/src/main/", "app/restricted-module/server/"],
-                "statuses": ["done", "blocked", "deferred"],
-                "reason": "business data implementation paths require `data-access` done / blocked / deferred",
-            },
-            {
-                "prefixes": [
-                    "docs/specs/",
-                    "app/restricted-module/docs/",
-                    "app/restricted-module/specs/",
-                ],
-                "statuses": ["done", "not-required"],
-                "reason": "interface/spec/data docs require `data-access` done or reasoned not-required",
-            },
-            {
-                "prefixes": ["app/frontend/", "app/restricted-module/public/"],
-                "statuses": ["done", "not-required", "blocked", "deferred"],
-                "reason": "frontend data wiring requires `data-access` evidence or reasoned not-required",
-            },
-            {
-                "prefixes": [".gstack/templates/data-interface-design.template.md"],
-                "statuses": ["done", "planned"],
-                "reason": "data-interface design changes require `data-access` done or planned",
-            },
-        ],
-    },
+    "paths": {},
+    "commands": {},
+    "gates": {},
 }
 
 
@@ -240,6 +128,66 @@ def _normalize_repo_path(raw: str) -> str:
     return value
 
 
+def _validate_payload(payload: dict[str, Any]) -> None:
+    """Validate before normalization so malformed fields never become silent defaults."""
+    for section in ("loop_runtime", "online_flow_protocol", "runtime_bundle", "authorization", "smoke_tests", "evidence_policy"):
+        if section in payload and not isinstance(payload[section], dict):
+            raise ValueError(f"{section}: expected object")
+    if "version" in payload and (not isinstance(payload["version"], int) or isinstance(payload["version"], bool)):
+        raise ValueError("version: expected integer")
+    if "name" in payload and (not isinstance(payload["name"], str) or not payload["name"].strip()):
+        raise ValueError("name: expected non-empty string")
+    if "non_actions" in payload and (not isinstance(payload["non_actions"], list)
+            or any(not isinstance(v, str) for v in payload["non_actions"])):
+        raise ValueError("non_actions: expected list of strings")
+    for section in ("paths", "commands", "gates"):
+        if section in payload and not isinstance(payload[section], dict):
+            raise ValueError(f"{section}: expected object")
+    paths = payload.get("paths", {})
+    for key, value in paths.items():
+        if key in PATH_VALUE_KEYS or key == "collaboration_root" or key.endswith("_prefix"):
+            if not isinstance(value, str):
+                raise ValueError(f"paths.{key}: expected string")
+            values = [value]
+        elif key in PATH_LIST_KEYS or key.endswith("_prefixes"):
+            if not isinstance(value, list) or any(not isinstance(v, str) for v in value):
+                raise ValueError(f"paths.{key}: expected list of strings")
+            values = value
+        else:
+            continue
+        for value in values:
+            normalized = _normalize_repo_path(value)
+            if (not normalized or normalized.startswith("/") or ":" in normalized
+                    or ".." in normalized.split("/")):
+                raise ValueError(f"paths.{key}: expected non-empty repository-relative path")
+    for key, value in payload.get("commands", {}).items():
+        if not isinstance(value, str) and not (
+            isinstance(value, list) and value and all(isinstance(v, str) and v for v in value)
+        ):
+            raise ValueError(f"commands.{key}: expected command string or non-empty string list")
+    rules = payload.get("gates", {}).get("data_access_status_requirements", [])
+    if not isinstance(rules, list):
+        raise ValueError("gates.data_access_status_requirements: expected list")
+    for index, rule in enumerate(rules):
+        field = f"gates.data_access_status_requirements[{index}]"
+        if not isinstance(rule, dict):
+            raise ValueError(f"{field}: expected object")
+        for key in ("prefixes", "statuses"):
+            value = rule.get(key)
+            if not isinstance(value, list) or not value or any(
+                not isinstance(v, str) or not v.strip() for v in value
+            ):
+                raise ValueError(f"{field}.{key}: expected non-empty list of strings")
+        for prefix in rule["prefixes"]:
+            normalized = _normalize_repo_path(prefix)
+            if normalized.startswith("/") or ":" in normalized or ".." in normalized.split("/"):
+                raise ValueError(f"{field}.prefixes: expected repository-relative paths")
+        if not isinstance(rule.get("reason"), str) or not rule["reason"].strip():
+            raise ValueError(f"{field}.reason: expected non-empty string")
+    if "implementation_prefixes" not in paths:
+        raise ValueError("paths.implementation_prefixes: required list (use [] for a metadata-only adapter)")
+
+
 def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     paths = payload.setdefault("paths", {})
     if not isinstance(paths, dict):
@@ -247,6 +195,8 @@ def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
         paths = payload["paths"]
 
     for key in PATH_LIST_KEYS:
+        if key not in paths:
+            continue
         paths[key] = [_normalize_repo_path(item) for item in _string_tuple(paths.get(key))]
     for key in PATH_VALUE_KEYS:
         if key in paths:
@@ -290,7 +240,7 @@ def load_adapter_runtime(
     repo_root: Path = REPO_ROOT,
     adapter: str | None = None,
     *,
-    strict: bool = False,
+    strict: bool = True,
 ) -> AdapterRuntime:
     repo_root = repo_root.resolve()
     runtime_override = os.environ.get(ADAPTER_RUNTIME_ENV, "").strip()
@@ -310,6 +260,7 @@ def load_adapter_runtime(
             loaded = json.loads(runtime_file.read_text(encoding="utf-8"))
             if not isinstance(loaded, dict):
                 raise ValueError("runtime root must be a JSON object")
+            _validate_payload(loaded)
             payload = _deep_merge(payload, loaded)
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             message = f"adapter runtime invalid: {runtime_file}: {exc}"

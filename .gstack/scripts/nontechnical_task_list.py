@@ -149,7 +149,7 @@ def next_actions(status: str, open_count: int, blocked_count: int, query: str) -
         ]
     if status == "no-open-tasks":
         return [
-            "当前没有未完成任务；如果你要继续优化骨架，Codex 会开启下一段最小改进并补齐任务记录。",
+            "当前没有未完成任务；继续优化前需要明确下一项任务授权，再补齐任务记录。",
         ]
     actions = ["优先看当前任务、卡住任务和未完成任务。"]
     if blocked_count:

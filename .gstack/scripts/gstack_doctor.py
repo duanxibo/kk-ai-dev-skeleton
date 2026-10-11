@@ -573,7 +573,7 @@ def check_core_docs() -> CheckResult:
 
 def check_adapter_runtime() -> CheckResult:
     try:
-        runtime = load_adapter_runtime(REPO_ROOT, strict=False)
+        runtime = load_adapter_runtime(REPO_ROOT, strict=True)
     except RuntimeError as exc:
         return CheckResult(
             "adapter-runtime",

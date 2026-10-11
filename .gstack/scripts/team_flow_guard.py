@@ -174,8 +174,7 @@ def apply_adapter_runtime(config: dict[str, Any]) -> dict[str, Any]:
         "deprecated_backend_spec_prefixes": runtime.path_tuple("deprecated_backend_spec_prefixes"),
     }
     for key, value in runtime_path_mapping.items():
-        if value:
-            paths_config[key] = list(value)
+        paths_config[key] = list(value)
 
     backend_spec_prefix = runtime.path_value("backend_domain_spec_prefix")
     if backend_spec_prefix:
@@ -368,6 +367,40 @@ def parse_required_flow(text: str) -> dict[str, dict[str, str]]:
     return records
 
 
+def compact_evidence_ok(command: str, evidence: str, config: dict[str, Any]) -> bool:
+    """Permit one fast-lane boundary without weakening standard evidence checks."""
+    path = REPO_ROOT / evidence
+    boundary_prefix = config.get("paths", {}).get("boundary_prefix", ".gstack/task-boundaries/")
+    if not has_prefix(evidence, [boundary_prefix]) or not path.is_file():
+        return False
+    if not path.resolve().is_relative_to(REPO_ROOT.resolve()):
+        return False
+    text = path.read_text(encoding="utf-8")
+    if not is_fast_lane(text) or "- Strategy: compact" not in section_lines(text, "Compact Evidence"):
+        return False
+    sections = {
+        "requirement-brief": "Compact Requirement",
+        "requirement-freeze": "Compact Requirement",
+        "plan-ceo-review": "Compact Review",
+        "plan-eng-review": "Compact Review",
+        "qa": "Compact QA",
+        "qa-only": "Compact QA",
+    }
+    section = sections.get(command)
+    if not section:
+        return False
+    lines = section_lines(text, section)
+    if not any(line.strip() for line in lines):
+        return False
+    if command in {"qa", "qa-only"}:
+        return ("- Status: done" in lines
+                and any(line.startswith("- Command: ") and "待" not in line for line in lines)
+                and any(line.startswith("- Result: ") and "待" not in line for line in lines))
+    if command in {"plan-ceo-review", "plan-eng-review"}:
+        return "- Result: pass" in lines and fast_lane_evidence_issue(text) is None
+    return any(line.startswith("- Goal: ") and line[8:].strip() for line in lines)
+
+
 def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) -> tuple[bool, str | None]:
     evidence = record.get("evidence", "")
     if not evidence:
@@ -376,7 +409,7 @@ def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) ->
     evidence = evidence.split()[0].strip().strip("`")
     command_config = config["commands"].get(command, {})
     allowed_prefixes = command_config.get("evidence_prefixes", [])
-    if allowed_prefixes and not has_prefix(evidence, allowed_prefixes):
+    if allowed_prefixes and not has_prefix(evidence, allowed_prefixes) and not compact_evidence_ok(command, evidence, config):
         return False, f"evidence `{evidence}` is outside allowed prefixes: {', '.join(allowed_prefixes)}"
 
     for needle in command_config.get("filename_contains", []):
