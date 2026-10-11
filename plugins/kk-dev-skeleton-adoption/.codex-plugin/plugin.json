@@ -1,6 +1,6 @@
 {
   "name": "kk-dev-skeleton-adoption",
-  "version": "0.1.0+codex.20260618051113",
+  "version": "0.2.0",
   "description": "Codex workflow for adopting and upgrading KK Dev Skeleton runtime bundles.",
   "author": {
     "name": "KK Dev Skeleton Team"
@@ -24,10 +24,10 @@
       "Review"
     ],
     "defaultPrompt": [
-      "\u63a5\u5165 KK Dev Skeleton",
-      "\u68c0\u67e5\u9aa8\u67b6\u63a5\u5165\u72b6\u6001",
-      "\u751f\u6210\u63a5\u5165\u8ba1\u5212\u548c\u62a5\u544a",
-      "\u540c\u6b65 KK Dev Skeleton runtime bundle"
+      "接入 KK Dev Skeleton",
+      "检查骨架接入状态",
+      "生成接入计划和报告",
+      "同步 KK Dev Skeleton runtime bundle"
     ]
   }
 }

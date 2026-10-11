@@ -60,6 +60,7 @@ from pathlib import Path
 from typing import Any
 
 from gstack_dashboard import dashboard_payload
+from evidence_contract import ENG_REQUIRED, ENG_FORBIDDEN, review_check, qa_check
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -1638,33 +1639,8 @@ def engineering_decision_evidence_for(candidate: LoopCandidate | None) -> Engine
     )
 
 
-ENG_REVIEW_REQUIRED_MARKERS: tuple[str, ...] = (
-    "AI 语义复核: yes",
-    "## Codex 自主工程决策",
-    "## 用户决策边界",
-    "## 防技术甩锅检查",
-    "## 验证计划",
-)
-
-
-ENG_REVIEW_FORBIDDEN_USER_DELEGATIONS: tuple[str, ...] = (
-    "需要用户选择测试命令",
-    "需要用户决定测试命令",
-    "需要用户选择代码结构",
-    "需要用户决定代码结构",
-    "请用户选择技术方案",
-    "请用户决定技术方案",
-    "用户决定 subagent 角色",
-    "用户选择 subagent 角色",
-    "用户决定门禁恢复顺序",
-    "用户选择门禁恢复顺序",
-    "让用户选择测试命令",
-    "让用户选择代码结构",
-    "ask user to choose test commands",
-    "ask user to choose code structure",
-    "ask user to choose subagent roles",
-    "ask user to choose gate recovery order",
-)
+ENG_REVIEW_REQUIRED_MARKERS: tuple[str, ...] = ENG_REQUIRED
+ENG_REVIEW_FORBIDDEN_USER_DELEGATIONS: tuple[str, ...] = ENG_FORBIDDEN
 
 
 def safe_repo_path(raw_path: str) -> tuple[Path | None, str]:
@@ -1753,14 +1729,8 @@ def eng_review_evidence_check_for(evidence_path: str) -> EngReviewEvidenceCheck:
             summary="eng-review evidence 文件不存在；需要先写入 repo-native review evidence。",
         )
     text = path.read_text(encoding="utf-8")
-    lowered = text.lower()
-    found_required = [marker for marker in required_markers if marker in text]
-    missing_required = [marker for marker in required_markers if marker not in text]
-    found_forbidden = [
-        marker
-        for marker in forbidden_markers
-        if (marker in text or marker.lower() in lowered)
-    ]
+    required_markers, missing_required, found_forbidden = review_check(text)
+    found_required = [marker for marker in required_markers if marker not in missing_required]
     if found_forbidden:
         status = "needs-rewrite"
         summary = "evidence 出现把工程选择交给用户的表述，需要改写为 Codex 推荐方案。"
@@ -3422,6 +3392,18 @@ def maybe_write_back_stage(
             status="refused",
             reason="无法解析 active boundary path。",
         )
+    if stage_key in {"plan-eng-review", "qa"}:
+        evidence_file = REPO_ROOT / evidence
+        if not evidence_file.is_file():
+            valid, issue = False, "stage evidence must be a file"
+        elif stage_key == "qa":
+            valid, issue = qa_check(REPO_ROOT, evidence_file.read_text(encoding="utf-8"))
+        else:
+            check = eng_review_evidence_check_for(evidence)
+            valid, issue = check.status == "pass", check.summary
+        if not valid:
+            return empty_write_back_result(requested=True, stage_key=stage_key, evidence=evidence,
+                                          boundary=boundary, status="refused", reason=issue)
     note = str(getattr(args, "write_back_note", "") or "").strip()
     updated_fields = update_required_flow_stage(path, stage_key=stage_key, evidence=evidence, note=note)
     return StageWriteBackResult(

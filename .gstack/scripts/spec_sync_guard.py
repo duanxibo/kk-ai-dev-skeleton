@@ -10,12 +10,13 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from evidence_contract import gate_block
 
-from adapter_runtime import load_adapter_runtime
+from source_coverage import load_coverage_runtime, uncovered_sources
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ADAPTER_RUNTIME = load_adapter_runtime(REPO_ROOT)
+ADAPTER_RUNTIME = load_coverage_runtime(REPO_ROOT)
 IMPLEMENTATION_PREFIXES = ADAPTER_RUNTIME.path_tuple("implementation_prefixes")
 SPEC_PREFIXES = ADAPTER_RUNTIME.path_tuple("spec_prefixes")
 STACK_BACKEND_IMPLEMENTATION_PREFIXES = ADAPTER_RUNTIME.path_tuple(
@@ -564,28 +565,7 @@ def validate_fast_lane_draft_guard(path: str) -> list[str]:
 
 
 def required_gate_block(text: str, gate_id: str) -> str | None:
-    lines = text.splitlines()
-    in_required_gates = False
-    in_target_gate = False
-    block: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped == "## Required Gates":
-            in_required_gates = True
-            continue
-        if in_required_gates and stripped.startswith("## "):
-            break
-        if not in_required_gates:
-            continue
-        if stripped.startswith("- gate_id:"):
-            if in_target_gate:
-                break
-            in_target_gate = stripped == f"- gate_id: {gate_id}"
-        if in_target_gate:
-            block.append(stripped)
-    if not block:
-        return None
-    return "\n".join(block)
+    return gate_block(text, gate_id)
 
 
 def validate_required_gates_presence(path: str) -> list[str]:
@@ -1025,6 +1005,13 @@ def main() -> int:
         help="Fail when implementation changed but no review or QA artifact changed.",
     )
     args = parser.parse_args()
+
+    uncovered = uncovered_sources(REPO_ROOT, ADAPTER_RUNTIME)
+    if uncovered:
+        print("FAIL: source files outside active adapter implementation coverage:")
+        for path in uncovered:
+            print(f"  - {path}")
+        return 1
 
     if not inside_git_worktree():
         active_boundary, active_boundary_source, active_boundary_failures, active_boundary_warnings = (

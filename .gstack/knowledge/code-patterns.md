@@ -61,15 +61,15 @@
 - 相关 adapter 或项目路径：
   `.agents/plugins/marketplace.json`、`plugins/MARKETPLACE_INSTALL.md`、`tests/test_plugin_marketplace.py`。
 
-## Stack-first Adoption Layout
+## Preserve Existing Adoption Layout
 
 - 适用场景：
   新项目或已有项目首次接入 KK Dev Skeleton，应通过 adapter 明确实际源码与规格路径；已有项目默认保留布局，不强制迁移目录。
 - 推荐做法：
-  初始化 helper 默认创建或保留 `stack/<adapter>/`，并把实现、spec、测试、fixtures 和项目脚本路由到 `stack/<adapter>/...`。已有根目录 `src/`、`prisma/`、`e2e/`、`package.json` 等只报告为迁移候选。
+  初始化 helper 默认保留实际源码布局；adapter 指向现有 `src/`、`prisma/`、`e2e/` 或 monorepo 路径。新建示例可以使用 `stack/<adapter>/`，接入既有项目不创建空的平行源码树。
 - 不适用场景：
   不适用于未经用户确认的自动搬迁。移动已有项目代码必须先有迁移计划、验证计划和回滚方案。
 - 验证方式：
-  `scripts/init_project.py --apply` 的测试必须断言 `stack/<adapter>/`、`specs/`、`src/`、`tests/` 等被创建，并且报告中列出根目录迁移候选。
+  `scripts/init_project.py --apply` 的测试必须断言既有源码保留、不创建平行 `stack/<adapter>/`，adapter 覆盖真实实现路径。
 - 相关 adapter 或项目路径：
   `scripts/init_project.py`、`adapters/default/runtime.json`、`tests/test_init_project.py`。

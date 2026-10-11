@@ -213,3 +213,13 @@ subagent 策略属于 Codex 的工程调度能力：中大型任务、跨模块�
 - `--pilot` / `--pilot-output`：在隔离目录跑接入试点。
 
 已接入项目升级时，不再使用旧的 `--upgrade-plan` 或 `--upgrade-apply` 口径。Codex 应先运行 detect/plan，再用 `--apply-core --dry-run`、`--apply-runtime --dry-run`、`--rewrite-adapter --dry-run` 形成增量计划，最后在 boundary 和用户授权范围内执行安全的 create-missing 或 metadata rewrite。
+
+## Shared review and executed QA contract
+
+`evidence_contract.py` is the shared validator for Loop and team-flow engineering review. Compact review includes scope, verification plan, engineering ownership, user decision boundary and delegation check; standard review keeps the existing sections. A matching filename alone does not complete review.
+
+QA requires `- Execution Receipt: output/qa/<run>/receipt.json`. Run `python3 .gstack/scripts/qa_verify.py --command-key qa_verify` after configuring the active adapter `commands.qa_verify` as an exact argv array. Additional `--command-key` values can verify builds or project tests; commands execute without a shell. The runner records exit codes, timeout status, stdout/stderr hashes and before/after source fingerprints. Missing, failed, modified-log or stale receipts fail QA and Loop write-back. Updating evidence status does not stale receipts; changing source or verification configuration requires rerunning checks. Logs remain ignored local output, and clones must regenerate receipts.
+
+These receipts are local reproducibility records, not tamper-proof attestations: an author with repository write access can fabricate them. Independent CI reruns tests and audits coverage against the actual checked-out source. Neither review headings nor an exit code proves that tests cover the intended product behavior.
+
+`source_coverage.py` discovers known source extensions among Git files and reports paths absent from adapter mappings. The framework source repository uses `adapters/skeleton/`; adopted projects keep their own adapter. Custom languages and ignored generated source require explicit configuration/review; this is a path audit rather than a complete language parser.

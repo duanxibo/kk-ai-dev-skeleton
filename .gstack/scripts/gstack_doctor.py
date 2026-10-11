@@ -17,6 +17,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 from adapter_runtime import ADAPTER_ENV, ADAPTER_RUNTIME_ENV, load_adapter_runtime
+from source_coverage import load_coverage_runtime, uncovered_sources
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -573,7 +574,7 @@ def check_core_docs() -> CheckResult:
 
 def check_adapter_runtime() -> CheckResult:
     try:
-        runtime = load_adapter_runtime(REPO_ROOT, strict=True)
+        runtime = load_coverage_runtime(REPO_ROOT)
     except RuntimeError as exc:
         return CheckResult(
             "adapter-runtime",
@@ -591,6 +592,9 @@ def check_adapter_runtime() -> CheckResult:
         f"spec prefixes: {len(runtime.path_tuple('spec_prefixes'))}",
         f"data-access trigger prefixes: {len(runtime.path_tuple('data_access_trigger_prefixes'))}",
     ]
+    uncovered = uncovered_sources(REPO_ROOT, runtime)
+    if uncovered:
+        return CheckResult("adapter-runtime", "fail", "源码未被 active adapter 覆盖。", details + uncovered)
     if runtime.warnings:
         details.extend(runtime.warnings)
         return CheckResult(

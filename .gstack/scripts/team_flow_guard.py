@@ -9,9 +9,11 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from evidence_contract import gate_block
 from typing import Any
 
 from adapter_runtime import load_adapter_runtime
+from evidence_contract import is_compact, review_check, qa_check, section, field
 
 try:
     import tomllib  # type: ignore[import-not-found]
@@ -378,6 +380,11 @@ def compact_evidence_ok(command: str, evidence: str, config: dict[str, Any]) -> 
     text = path.read_text(encoding="utf-8")
     if not is_fast_lane(text) or "- Strategy: compact" not in section_lines(text, "Compact Evidence"):
         return False
+    if command == "domain-spec-readiness":
+        spec = section(text, "Spec Sync Plan")
+        _required, missing, forbidden = review_check(text)
+        return (field(spec, "Spec Impact") == "not-required"
+                and bool(field(spec, "Allowed No-Spec-Change Reason")) and not missing and not forbidden)
     sections = {
         "requirement-brief": "Compact Requirement",
         "requirement-freeze": "Compact Requirement",
@@ -386,19 +393,19 @@ def compact_evidence_ok(command: str, evidence: str, config: dict[str, Any]) -> 
         "qa": "Compact QA",
         "qa-only": "Compact QA",
     }
-    section = sections.get(command)
-    if not section:
+    section_name = sections.get(command)
+    if not section_name:
         return False
-    lines = section_lines(text, section)
+    lines = section_lines(text, section_name)
     if not any(line.strip() for line in lines):
         return False
     if command in {"qa", "qa-only"}:
-        return ("- Status: done" in lines
-                and any(line.startswith("- Command: ") and "待" not in line for line in lines)
-                and any(line.startswith("- Result: ") and "待" not in line for line in lines))
+        return field(section(text, "Compact QA"), "Status") == "done" and qa_check(REPO_ROOT, text)[0]
     if command in {"plan-ceo-review", "plan-eng-review"}:
-        return "- Result: pass" in lines and fast_lane_evidence_issue(text) is None
-    return any(line.startswith("- Goal: ") and line[8:].strip() for line in lines)
+        _required, missing, forbidden = review_check(text)
+        return not missing and not forbidden
+    requirement = section(text, "Compact Requirement")
+    return all(field(requirement, key) for key in ("Goal", "Acceptance", "Non-goals"))
 
 
 def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) -> tuple[bool, str | None]:
@@ -416,8 +423,19 @@ def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) ->
         if needle not in Path(evidence).name:
             return False, f"evidence filename must contain `{needle}`"
 
-    if not (REPO_ROOT / evidence).exists():
-        return False, f"evidence file missing: `{evidence}`"
+    path = (REPO_ROOT / evidence).resolve()
+    if not path.is_relative_to(REPO_ROOT.resolve()) or not path.is_file():
+        return False, f"evidence must be an existing repository file: `{evidence}`"
+    text = path.read_text(encoding="utf-8")
+    # Validate content even if a configured prefix already matches.
+    if is_compact(text) and command in {"requirement-brief", "requirement-freeze", "plan-ceo-review", "plan-eng-review", "qa", "qa-only"} and not compact_evidence_ok(command, evidence, config):
+        return False, "compact evidence does not satisfy the shared content contract"
+    if command == "plan-eng-review":
+        _required, missing, forbidden = review_check(text)
+        if missing or forbidden:
+            return False, f"engineering review missing {missing}; forbidden delegations {forbidden}"
+    if command in {"qa", "qa-only"}:
+        return qa_check(REPO_ROOT, text)
     return True, None
 
 
@@ -626,28 +644,7 @@ def validate_user_visible_qa_evidence(
 
 
 def required_gate_block(text: str, gate_id: str) -> str | None:
-    lines = text.splitlines()
-    in_required_gates = False
-    in_target_gate = False
-    block: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped == "## Required Gates":
-            in_required_gates = True
-            continue
-        if in_required_gates and stripped.startswith("## "):
-            break
-        if not in_required_gates:
-            continue
-        if stripped.startswith("- gate_id:"):
-            if in_target_gate:
-                break
-            in_target_gate = stripped == f"- gate_id: {gate_id}"
-        if in_target_gate:
-            block.append(stripped)
-    if not block:
-        return None
-    return "\n".join(block)
+    return gate_block(text, gate_id)
 
 
 def validate_required_gates_presence(text: str, boundary: str) -> list[str]:
@@ -703,6 +700,9 @@ def validate_commands(
 
         status = record.get("status", "")
         required_status = config["commands"].get(command, {}).get("required_status", "done")
+        if command == "domain-spec-readiness" and status == "not-required":
+            if compact_evidence_ok(command, evidence_path(record), config):
+                continue
         if status != required_status:
             failures.append(
                 f"Required command `{command}` must be `{required_status}`, got `{status or 'missing'}`."

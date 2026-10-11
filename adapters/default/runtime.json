@@ -385,6 +385,15 @@
     "spec_sync": [
       "python3",
       ".gstack/scripts/spec_sync_guard.py"
+    ],
+    "qa_verify": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
     ]
   },
   "gates": {
@@ -577,7 +586,7 @@
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 1,
+    "bundle_version": 2,
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -598,6 +607,9 @@
     ],
     "files": [
       ".gstack/scripts/adapter_runtime.py",
+      ".gstack/scripts/evidence_contract.py",
+      ".gstack/scripts/qa_verify.py",
+      ".gstack/scripts/source_coverage.py",
       ".gstack/scripts/autopilot_bootstrap.py",
       ".gstack/scripts/codex_mode.py",
       ".gstack/scripts/gstack_dashboard.py",
@@ -681,7 +693,8 @@
       "Does not install a background service, dashboard daemon, production connector, database tool, or git automation.",
       "Does not overwrite existing target runtime scripts by default.",
       "Does not copy project business stack, archive, blueprint, shared data, credentials, or data-access helpers."
-    ]
+    ],
+    "release_version": "0.2.0"
   },
   "authorization": {
     "classifier_version": "chat-authorization-v2",
