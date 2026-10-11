@@ -167,3 +167,12 @@ Codex / 维护者背后的确定性本机准备入口：
 ## 公开安全规则
 
 不要把私有项目历史、密钥、生产配置、真实客户数据或未脱敏 fixtures 拷进公开骨架。
+
+## Evidence 与 runtime 升级真源
+
+- `.gstack/scripts/evidence_contract.py`：Loop 与 team flow 共用 evidence 契约。
+- `.gstack/scripts/qa_verify.py`：执行 adapter 白名单验证命令并生成绑定源码状态的 receipt。
+- `.gstack/scripts/source_coverage.py`：真实实现文件的 adapter 覆盖审计；骨架自身使用 `adapters/skeleton/`。
+- `.gstack/scripts/autopilot_bootstrap.py`：简短单记录 fast-lane；正式 kickoff 只自动选择通过 `--allowed` 明确范围、经语义复核且不涉及风险或 UI/API/数据的任务。
+- `scripts/init_project.py`：`.gstack/runtime-install.json` 记录安装哈希；`--upgrade-runtime` 只升级未定制且有基线的文件。
+- plugin manifest 的 `version` 与 runtime bundle 的 `release_version`：发布版本；配置 schema `version` 独立维护。

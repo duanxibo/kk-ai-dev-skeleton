@@ -31,3 +31,20 @@ jobs:
         run: python3 .gstack/scripts/gstack_loop_contract_smoke.py --format user
       - name: Natural language journey regression
         run: python3 .gstack/scripts/natural_language_dev_smoke.py --format user
+      - name: Audit source coverage
+        run: python3 .gstack/scripts/source_coverage.py
+      - name: Validate spec synchronization against event base
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE"
+          else
+            base="$PUSH_BASE"
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-list --max-parents=0 HEAD)"
+          fi
+          python3 .gstack/scripts/spec_sync_guard.py --base "$base" --strict-evidence

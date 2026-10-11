@@ -13,7 +13,10 @@ import json
 import os
 import subprocess
 import sys
-from dataclasses import asdict, dataclass
+import tempfile
+from unittest.mock import patch
+import qa_verify
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -1795,81 +1798,42 @@ def check_subagent_timeout_policy() -> ContractResult:
 
 
 def check_stage_write_back_contract() -> ContractResult:
-    temp_boundary = REPO_ROOT / ".gstack" / "task-boundaries" / f"contract-smoke-writeback-{os.getpid()}.tmp.md"
-    temp_boundary.write_text(
-        "\n".join(
-            [
-                "# Contract Smoke Writeback",
-                "",
-                "## GStack Required Flow",
-                "",
-                "- qa:",
-                "  status: pending",
-                "  evidence:",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    item = gstack_loop.LoopCandidate(
-        task="contract writeback",
-        boundary=temp_boundary.relative_to(REPO_ROOT).as_posix(),
-        active=True,
-        blocked=False,
-        progress="6/7",
-        current_stage_key="qa",
-        current_stage="qa",
-        next_step="qa",
-        selection_reason="contract smoke",
-        blocked_reasons=[],
-        evidence_missing=[],
-    )
     failures: list[str] = []
-    try:
-        dry_run_result = gstack_loop.maybe_write_back_stage(
-            run_args("--dry-run", "--write-back", "--write-back-evidence", ".gstack/scripts/gstack_loop.py"),
-            candidate=item,
-            stage_key="qa",
-            report_status="passed",
-        )
-        if dry_run_result.performed:
-            failures.append("dry-run write-back should not perform")
-        missing_evidence_result = gstack_loop.maybe_write_back_stage(
-            run_args("--execute", "--write-back", "--write-back-evidence", ".gstack/missing-evidence.md"),
-            candidate=item,
-            stage_key="qa",
-            report_status="passed",
-        )
-        if missing_evidence_result.performed:
-            failures.append("missing evidence write-back should not perform")
-        failed_result = gstack_loop.maybe_write_back_stage(
-            run_args("--execute", "--write-back", "--write-back-evidence", ".gstack/scripts/gstack_loop.py"),
-            candidate=item,
-            stage_key="qa",
-            report_status="failed",
-        )
-        if failed_result.performed:
-            failures.append("failed report write-back should not perform")
-        passed_result = gstack_loop.maybe_write_back_stage(
-            run_args("--execute", "--write-back", "--write-back-evidence", ".gstack/scripts/gstack_loop.py", "--write-back-note", "contract smoke"),
-            candidate=item,
-            stage_key="qa",
-            report_status="passed",
-        )
-        if not passed_result.performed:
-            failures.append(f"passed write-back should perform: {passed_result.reason}")
-        updated = temp_boundary.read_text(encoding="utf-8")
-        if "status: done" not in updated:
-            failures.append("write-back did not set status: done")
-        if "evidence: `.gstack/scripts/gstack_loop.py`" not in updated:
-            failures.append("write-back did not write evidence path")
-        if "note: contract smoke" not in updated:
-            failures.append("write-back did not write note")
-    finally:
-        temp_boundary.unlink(missing_ok=True)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        adapter = root / "adapters/default"
+        adapter.mkdir(parents=True)
+        (adapter / "runtime.json").write_text(json.dumps({
+            "version": 1, "name": "default", "paths": {"implementation_prefixes": []},
+            "commands": {"verify": [sys.executable, "-c", "print('contract verified')"]}, "gates": {},
+        }))
+        boundary = root / ".gstack/task-boundaries/contract.md"
+        boundary.parent.mkdir(parents=True)
+        boundary.write_text("# Contract\n## GStack Required Flow\n- qa:\n  status: pending\n  evidence:\n")
+        report = root / ".gstack/qa-reports/contract.md"
+        report.parent.mkdir(parents=True)
+        report.write_text("- Command: never executed\n- Result: claimed pass\n")
+        evidence = report.relative_to(root).as_posix()
+        item = replace(candidate("qa"), boundary=boundary.relative_to(root).as_posix())
+        with patch.object(gstack_loop, "REPO_ROOT", root):
+            def attempt(*flags, status="passed"):
+                return gstack_loop.maybe_write_back_stage(
+                    run_args(*flags, "--write-back", "--write-back-evidence", evidence, "--write-back-note", "contract smoke"),
+                    candidate=item, stage_key="qa", report_status=status)
+            for result in [attempt("--dry-run"), attempt("--execute", status="failed"), attempt("--execute")]:
+                if result.performed:
+                    failures.append("dry-run, failed or handwritten QA must refuse write-back")
+            receipt_path, _receipt = qa_verify.verify(root, ["verify"])
+            report.write_text("- Execution Receipt: " + receipt_path.relative_to(root).as_posix() + "\n")
+            passed = attempt("--execute")
+            if not passed.performed:
+                failures.append("verified QA must allow write-back: " + passed.reason)
+            updated = boundary.read_text()
+            if "status: done" not in updated or f"evidence: `{evidence}`" not in updated or "note: contract smoke" not in updated:
+                failures.append("verified write-back did not record status/evidence/note")
     if failures:
         return fail("stage-write-back", "Stage write-back safety contract regressed.", failures)
-    return ok("stage-write-back", "Stage write-back requires execute, passed status and existing evidence before updating boundary.")
+    return ok("stage-write-back", "QA write-back requires explicit execution and current source-bound successful verification.")
 
 
 def check_write_back_json_schema() -> ContractResult:

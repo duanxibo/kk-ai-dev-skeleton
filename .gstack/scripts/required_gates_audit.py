@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from adapter_runtime import load_adapter_runtime
+from evidence_contract import parse_gates
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -326,26 +327,7 @@ def clean_value(value: str) -> str:
 
 
 def parse_required_gates(text: str) -> list[dict[str, str]]:
-    lines = section_lines(text, "Required Gates")
-    gates: list[dict[str, str]] = []
-    current: dict[str, str] | None = None
-
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line in {"```yaml", "```"} or line == "required_gates:":
-            continue
-        item_match = re.match(r"^-\s*(?P<key>[a-z_]+):\s*(?P<value>.*)$", line)
-        field_match = re.match(r"^(?P<key>[a-z_]+):\s*(?P<value>.*)$", line)
-        if item_match:
-            if current:
-                gates.append(current)
-            current = {item_match.group("key"): clean_value(item_match.group("value"))}
-            continue
-        if field_match and current is not None:
-            current[field_match.group("key")] = clean_value(field_match.group("value"))
-    if current:
-        gates.append(current)
-    return gates
+    return parse_gates(text)
 
 
 def validate_gate(boundary: str, gate: dict[str, str]) -> list[str]:

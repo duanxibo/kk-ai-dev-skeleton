@@ -16,6 +16,9 @@ SCRIPTS = ROOT / '.gstack/scripts'
 sys.path.insert(0, str(SCRIPTS))
 import nontechnical_continue as continuation
 import team_flow_guard as guard
+import gstack_loop as loop
+import qa_verify
+import required_gates_audit as gate_audit
 
 
 class ScopedContinuationTest(unittest.TestCase):
@@ -67,15 +70,54 @@ class CompactEvidenceTest(unittest.TestCase):
         for stage in ('requirement-brief', 'requirement-freeze', 'plan-ceo-review', 'plan-eng-review'):
             self.assertTrue(self.check_evidence(stage), stage)
 
-    def test_qa_requires_actual_command_and_result(self):
+    def test_qa_requires_execution_receipt(self):
         self.assertFalse(self.check_evidence('qa'))
         text = self.file.read_text().replace('- Status: pending', '- Status: done')
-        self.file.write_text(text)
+        self.file.write_text(text.replace('- Command: 待运行', '- Command: never-executed')
+                            .replace('- Result: 待记录实际结果；不能把生成 scaffold 视为 QA 通过。', '- Result: claimed success'))
         self.assertFalse(self.check_evidence('qa'))
-        self.file.write_text(text.replace('- Command: 待运行', '- Command: python3 -m unittest')
-                            .replace('- Result: 待记录实际结果；不能把生成 scaffold 视为 QA 通过。',
-                                     '- Result: 7 tests passed'))
+        adapter = self.root / 'adapters/default'
+        adapter.mkdir(parents=True)
+        (adapter / 'runtime.json').write_text(json.dumps({
+            'version': 1, 'name': 'default', 'paths': {'implementation_prefixes': ['src/']},
+            'commands': {'verify': [sys.executable, '-c', 'print("verified")']}, 'gates': {},
+        }))
+        path, receipt = qa_verify.verify(self.root, ['verify'])
+        self.file.write_text(self.file.read_text().replace('- Execution Receipt: 待生成',
+            '- Execution Receipt: ' + path.relative_to(self.root).as_posix()))
         self.assertTrue(self.check_evidence('qa'))
+
+    def test_loop_and_team_guard_share_compact_review_contract(self):
+        with patch.object(loop, 'REPO_ROOT', self.root):
+            self.assertEqual(loop.eng_review_evidence_check_for(self.path).status, 'pass')
+        self.assertTrue(self.check_evidence('plan-eng-review'))
+        self.file.write_text(self.file.read_text().replace('- Result: pass', '- Result: pending'))
+        with patch.object(loop, 'REPO_ROOT', self.root):
+            self.assertNotEqual(loop.eng_review_evidence_check_for(self.path).status, 'pass')
+        self.assertFalse(self.check_evidence('plan-eng-review'))
+
+    def test_compact_gate_records_are_all_parsed(self):
+        gates = gate_audit.parse_required_gates(self.file.read_text())
+        self.assertEqual(len(gates), 6)
+        self.assertEqual({g['gate_id'] for g in gates}, {'data-access', 'data-query',
+                         'prototype-logic-extraction', 'subagent-plan', 'doc-backfill', 'data-knowledge-sync'})
+        self.assertTrue(all(g.get('done_criteria') for g in gates))
+
+    def test_full_compact_lifecycle_completes_with_actual_qa(self):
+        self.test_qa_requires_execution_receipt()
+        text = self.file.read_text().replace('  status: pending', '  status: done')
+        self.file.write_text(text)
+        records = guard.parse_required_flow(text)
+        with patch.object(guard, 'REPO_ROOT', self.root):
+            failures = guard.validate_commands(records, self.config['pre_push_requires'], self.config, allow_qa_only=True)
+        self.assertEqual(failures, [])
+        self.file.write_text(text.replace('- Spec Impact: `not-required`', '- Spec Impact: `pending`'))
+        with patch.object(guard, 'REPO_ROOT', self.root):
+            failures = guard.validate_commands(records, self.config['pre_push_requires'], self.config, allow_qa_only=True)
+        self.assertTrue(any('domain-spec-readiness' in failure for failure in failures))
+
+    def test_compact_implementation_record_is_accepted(self):
+        self.assertTrue(self.check_evidence('implement'))
 
     def test_standard_lane_cannot_use_compact_exception(self):
         self.file.write_text(self.file.read_text().replace('- Lane: `fast-lane`', '- Lane: `standard`'))

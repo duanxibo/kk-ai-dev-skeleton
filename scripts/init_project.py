@@ -284,6 +284,9 @@ LOOP_REQUIRED_COMMAND_KEYS = (
 )
 
 RUNTIME_BUNDLE_FILES = (
+    ".gstack/scripts/evidence_contract.py",
+    ".gstack/scripts/qa_verify.py",
+    ".gstack/scripts/source_coverage.py",
     ".gstack/scripts/adapter_runtime.py",
     ".gstack/scripts/autopilot_bootstrap.py",
     ".gstack/scripts/codex_mode.py",
@@ -533,7 +536,8 @@ def smoke_tests_section() -> dict[str, Any]:
 
 def runtime_bundle_section() -> dict[str, Any]:
     return {
-        "bundle_version": 1,
+        "bundle_version": 2,
+        "release_version": "0.2.0",
         "mode": "explicit-copy",
         "source": "skeleton-source-repo",
         "write_policy": "create-missing-preserve-existing",
@@ -1180,7 +1184,8 @@ DEFAULT_RUNTIME: dict[str, Any] = json.loads(
     ]
   },
   "runtime_bundle": {
-    "bundle_version": 1,
+    "bundle_version": 2,
+        "release_version": "0.2.0",
     "mode": "explicit-copy",
     "source": "skeleton-source-repo",
     "write_policy": "create-missing-preserve-existing",
@@ -2651,7 +2656,15 @@ def copy_core_bundle(adapter: str, *, project_name: str | None, dry_run: bool) -
     }
 
 
-def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
+def copy_runtime_bundle(*, dry_run: bool, upgrade: bool = False) -> dict[str, Any]:
+    manifest_path = REPO_ROOT / ".gstack" / "runtime-install.json"
+    try:
+        baseline = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        baseline = {}
+    baseline_hashes = baseline.get("files", {}) if isinstance(baseline, dict) else {}
+    installed_hashes = dict(baseline_hashes) if isinstance(baseline_hashes, dict) else {}
+    updated_paths: list[str] = []
     created_paths: list[str] = []
     would_create: list[str] = []
     preserved_paths: list[str] = []
@@ -2668,7 +2681,17 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
             preserved_paths.append(relative_path)
             source_digest = hashlib.sha256(source.read_bytes()).hexdigest()
             target_digest = hashlib.sha256(target.read_bytes()).hexdigest() if target.is_file() else "not-a-file"
-            if source_digest != target_digest:
+            if source_digest == target_digest:
+                installed_hashes[relative_path] = source_digest
+            elif upgrade and target_digest == installed_hashes.get(relative_path):
+                if dry_run:
+                    would_create.append(relative_path)
+                else:
+                    shutil.copy2(source, target)
+                    updated_paths.append(relative_path)
+                    installed_hashes[relative_path] = source_digest
+                continue
+            else:
                 preserved_differences.append({
                     "path": relative_path,
                     "source_sha256": source_digest,
@@ -2682,6 +2705,11 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         created_paths.append(relative_path)
+        installed_hashes[relative_path] = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    if not dry_run:
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps({"release_version": "0.2.0", "files": installed_hashes}, indent=2) + "\n", encoding="utf-8")
 
     if source_missing:
         message = f"runtime bundle source files missing: {', '.join(source_missing)}"
@@ -2707,6 +2735,10 @@ def copy_runtime_bundle(*, dry_run: bool) -> dict[str, Any]:
         "preserved_paths": preserved_paths,
         "source_missing": source_missing,
         "preserved_differences": preserved_differences,
+        "upgrade_complete": not source_missing and not preserved_differences,
+        "upgrade_status": "conflicts-preserved" if preserved_differences else ("missing-source" if source_missing else "complete"),
+        "updated_paths": updated_paths,
+        "release_version": "0.2.0",
         "message": message,
     }
 
@@ -3635,6 +3667,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--apply", action="store_true", help="Apply safe adapter metadata scaffolding.")
     parser.add_argument("--apply-core", action="store_true", help="Apply portable core collaboration files plus adapter metadata.")
     parser.add_argument("--apply-runtime", action="store_true", help="Apply portable core plus explicit Loop runtime script bundle from the skeleton source checkout.")
+    parser.add_argument("--upgrade-runtime", action="store_true", help="With --apply-runtime, upgrade only files unchanged since recorded installation; preserve customizations.")
     parser.add_argument("--rewrite-adapter", action="store_true", help="Rewrite adapter metadata for the target project's detected or declared shape.")
     parser.add_argument("--formal-stack-prefix", action="append", help="Override detected formal stack prefix for --rewrite-adapter. Repeatable.")
     parser.add_argument("--domain-spec-prefix", action="append", help="Override detected domain/spec prefix for --rewrite-adapter. Repeatable.")
@@ -3688,7 +3721,7 @@ def main() -> int:
 
     runtime_apply_result: dict[str, Any] | None = None
     if args.apply_runtime:
-        runtime_apply_result = copy_runtime_bundle(dry_run=args.dry_run)
+        runtime_apply_result = copy_runtime_bundle(dry_run=args.dry_run, upgrade=args.upgrade_runtime)
 
     rewrite_result: dict[str, Any] | None = None
     if args.rewrite_adapter:

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "name": "skeleton",
+  "description": "Framework source repository adapter; never installed as the target project adapter.",
+  "paths": {
+    "implementation_prefixes": [
+      ".gstack/scripts/",
+      "scripts/",
+      "tests/",
+      "plugins/",
+      "examples/"
+    ],
+    "spec_prefixes": [
+      ".gstack/knowledge/",
+      "adapters/",
+      "README.md"
+    ],
+    "backend_domain_spec_prefix": "stack/default/specs/"
+  },
+  "commands": {},
+  "gates": {}
+}

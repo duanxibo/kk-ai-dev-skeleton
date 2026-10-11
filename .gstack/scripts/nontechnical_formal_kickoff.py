@@ -21,6 +21,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from argparse import Namespace
+from autopilot_bootstrap import EvidencePaths, compact_boundary_text
+from codex_mode import current_mode
+
 from nontechnical_intake import IntakeSummary, build_summary
 from nontechnical_task_starter import (
     build_acceptance_checks,
@@ -588,6 +592,17 @@ def write_package(
     lane: str,
 ) -> None:
     ensure_can_write(paths, force=args.force)
+    if paths.requirement == paths.boundary:
+        compact_args = Namespace(title=args.topic or args.raw, goal=package.summary.understood_goal,
+            allowed=list(getattr(args, "allowed", [])), forbidden=package.forbidden_paths, non_goal=[args.non_goal] if args.non_goal else [],
+            must=package.acceptance_checks, verification=["待 Codex 根据实际改动补齐验证命令"],
+            ai_reviewed=args.ai_reviewed, spec_impact="pending", spec_target=[])
+        paths.boundary.parent.mkdir(parents=True, exist_ok=True)
+        paths.boundary.write_text(compact_boundary_text(compact_args,
+            EvidencePaths(paths.boundary, paths.boundary, paths.boundary), current_mode(), root=REPO_ROOT), encoding="utf-8")
+        if args.activate:
+            LOCAL_POINTER.write_text(active_boundary_text(paths.boundary), encoding="utf-8")
+        return
     paths.requirement.parent.mkdir(parents=True, exist_ok=True)
     paths.review.parent.mkdir(parents=True, exist_ok=True)
     paths.boundary.parent.mkdir(parents=True, exist_ok=True)
@@ -635,6 +650,20 @@ def build_formal_package(args: argparse.Namespace) -> FormalKickoffPackage:
     forbidden_scopes, forbidden_paths = detect_forbidden_scopes(args.raw, args.non_goal)
     acceptance_checks = build_acceptance_checks(args, summary, forbidden_scopes)
     lane = normalize_lane(summary)
+    # Only reviewed, non-UI, risk-free fast-lane tasks get a single record.
+    allowed = list(getattr(args, "allowed", []))
+    for value in allowed:
+        candidate = Path(value)
+        if not value.strip() or candidate.is_absolute() or ".." in candidate.parts or value in {".", "*", "**", "**/*"} or "\\" in value or ":" in value:
+            raise SystemExit("--allowed must name a specific repository-relative scope")
+        if not (REPO_ROOT / candidate).resolve().is_relative_to(REPO_ROOT.resolve()):
+            raise SystemExit("--allowed must remain within the repository")
+    use_compact = bool(allowed) and lane == "fast-lane" and args.ai_reviewed and not summary.risks and not any(
+        word in (args.raw + str(summary.likely_surface)).lower()
+        for word in ("ui", "页面", "界面", "dashboard", "前端", "html", "prototype", "原型", "data", "api", "数据库", "数据", "接口", "查询", "sql", "dto", "migration")
+    )
+    if use_compact:
+        paths = FormalPaths(paths.boundary, paths.boundary, paths.boundary, paths.boundary)
     status = status_for(summary, args.ai_reviewed)
     can_write = summary.can_continue and args.ai_reviewed
     if args.write and not can_write:
@@ -740,6 +769,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--non-goal", default="", help="Optional explicit non-goals or forbidden scope.")
     parser.add_argument("--risk-confirmation", default="", help="Optional user confirmation constraining high-risk actions.")
     parser.add_argument("--topic", default="", help="Filename topic. Defaults to --raw.")
+    parser.add_argument("--allowed", action="append", default=[], help="Explicit repository-relative implementation scope; repeatable. Required for automatic compact evidence.")
     parser.add_argument("--title", default="", help="Human-readable task title.")
     parser.add_argument("--date", default=date.today().isoformat())
     parser.add_argument("--ai-reviewed", action="store_true", help="Allow formal write after Codex semantic review.")

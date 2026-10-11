@@ -469,39 +469,57 @@ required_gates:
 """
 
 
+def compact_boundary_text(args: argparse.Namespace, paths: EvidencePaths, mode: Mode, *, root: Path | None = None) -> str:
+    """One record; keep parseable boundary fields without the full scaffold."""
+    evidence = paths.boundary.relative_to(root or REPO_ROOT).as_posix()
+    reviewed = "done" if args.ai_reviewed else "pending"
+    lines = [f"# {args.title} Task Boundary", "## Goal", f"- {args.goal}",
+             "## Allowed Files", *[f"- {item}" for item in dict.fromkeys([evidence, *args.allowed])],
+             "## Forbidden Files", *[f"- {item}" for item in (args.forbidden or ["真实凭证、生产、数据库、破坏性动作和未授权 git workflow action"])],
+             "## Functional Non-goals", *[f"- {item}" for item in (args.non_goal or ["不扩大任务范围"])],
+             "## Decision Mode", f"- Mode: `{mode.label}`", "## Flow Lane", "- Lane: `fast-lane`",
+             "## Autonomy Plan", "- Goal Mode: `not-used`", "- Codex May Do Without Asking: 范围内实现和本地验证；新目标需授权。",
+             "## Subagent Plan", "- Mode: `not-used`", "- Reason: 范围明确的小任务；扩大范围时重新规划。",
+             "## User-visible Acceptance", "- Expected Visible Behavior:",
+             *[f"  - {item}" for item in (args.must or [args.goal])], "- User Actions To Verify: 运行 Verification 中的检查。",
+             "## Generated Artifact Policy", "- 本文件是唯一任务记录；验证日志和 receipt 不作为产品源码。",
+             "## GStack Required Flow"]
+    for stage in ("requirement-brief", "plan-ceo-review", "requirement-freeze", "plan-eng-review", "domain-spec-readiness", "implement", "qa"):
+        status = "pending" if stage in ("implement", "qa") else reviewed
+        if stage == "domain-spec-readiness" and args.ai_reviewed and args.spec_impact == "not-required":
+            status = "not-required"
+        lines.extend([f"- {stage}:", f"  status: {status}", f"  evidence: `{evidence}`"])
+    lines.extend(["## Required Gates", "```yaml", "required_gates:"])
+    for gate in ("data-access", "data-query", "prototype-logic-extraction", "subagent-plan", "doc-backfill", "data-knowledge-sync"):
+        status = ("done" if gate == "subagent-plan" else "not-required") if args.ai_reviewed else "pending"
+        owner = "kk-task-kickoff" if gate == "prototype-logic-extraction" else "kk-subagent-orchestrator" if gate == "subagent-plan" else "kk-doc-sync" if gate == "data-knowledge-sync" else "kk-data-kickoff" if gate == "data-access" else "kk-data-query" if gate == "data-query" else "kk-doc-backfill"
+        before = "plan-eng-review" if gate in ("data-access", "data-query", "prototype-logic-extraction") else "implement" if gate == "subagent-plan" else "review"
+        lines.append("  - " + json.dumps({"gate_id": gate, "trigger_reason": "小任务语义复核；涉及数据或 UI 时退出 compact", "owner": owner, "required_before": before, "status": status, "evidence_path": evidence, "evidence_section": "Required Gates", "blocking_reason": "", "done_criteria": "已复核不涉及此风险"}, ensure_ascii=False))
+    lines.extend(["```", "## Spec Sync Plan", f"- Spec Impact: `{args.spec_impact}`",
+                  *[f"- Expected Spec Targets: {item}" for item in args.spec_target],
+                  "- Allowed No-Spec-Change Reason: 不改变产品或工程真源；改变时同步规格。",
+                  "## Required Knowledge", "- AGENTS.md、active adapter 和受影响真源。", "## Verification",
+                  *[f"- {item}" for item in (args.verification or ["待补实际验证命令"])],
+                  "## Lessons To Write Back", "- 可复用问题写入 knowledge。",
+                  "## Compact Evidence", "- Strategy: compact", f"- AI 语义复核: {'yes' if args.ai_reviewed else 'no'}",
+                  "## Compact Requirement", f"- Goal: {args.goal}", f"- Acceptance: {'; '.join(args.must) or args.goal}",
+                  f"- Non-goals: {'; '.join(args.non_goal) or '不扩大任务范围'}",
+                  "## Compact Review", f"- Scope: {'; '.join(args.allowed) or '见 Allowed Files'}",
+                  f"- Result: {'pass' if args.ai_reviewed else 'pending-review'}",
+                  f"- Verification plan: {'; '.join(args.verification) or '待补实际验证命令'}",
+                  "- Exit conditions: 需求多解、数据、UI、生产、数据库、扩大范围或未授权动作。",
+                  "- Engineering decisions: 范围内实现、测试和恢复由 Codex 决定。",
+                  "- User decisions: 产品多解、新目标和高风险动作由用户确认。",
+                  "- Delegation check: 不把实现、测试或目录选择交给用户。",
+                  "- 同一 agent 的 review 不等于独立验证。", "## Compact QA", "- Status: pending",
+                  "- Command: 待运行", "- Result: 待记录真实结果", "- Execution Receipt: 待生成"])
+    return "\n".join(lines) + "\n"
+
+
 def write_files(paths: EvidencePaths, args: argparse.Namespace, mode: Mode) -> None:
     if getattr(args, "compact_evidence", False):
         paths.boundary.parent.mkdir(parents=True, exist_ok=True)
-        text = boundary_text(args, paths, mode)
-        text = text.replace("使用 fast-lane requirement、fast-lane review、boundary 和 QA evidence。", "requirement、review、boundary 和 QA evidence 合并在本文件的不同章节。")
-        text = text.replace(".gstack/qa-reports/<pending-qa-report>.md", repo_relative(paths.boundary))
-        text += f"""
-## Compact Evidence
-
-- Strategy: compact
-- AI 语义复核: {'yes' if args.ai_reviewed else 'no'}
-- 仅适用于低风险 fast-lane；扩大范围或涉及真实数据、生产、数据库时改用完整流程。
-
-## Compact Requirement
-
-- Goal: {args.goal}
-- Acceptance: {'; '.join(args.must) or args.goal}
-- Non-goals: {'; '.join(args.non_goal) or '不扩大任务范围'}
-
-## Compact Review
-
-- Scope: {'; '.join(args.allowed) or '见 Allowed Files'}
-- Result: {'pass' if args.ai_reviewed else 'pending-review'}
-- Verification plan: {'; '.join(args.verification) or '待补实际验证命令'}
-- Exit conditions: 需求多解、影响面扩大、真实数据、生产、数据库或未授权动作。
-- 同一 agent 的复核不等于独立验证。
-
-## Compact QA
-
-- Status: pending
-- Command: 待运行
-- Result: 待记录实际结果；不能把生成 scaffold 视为 QA 通过。
-"""
+        text = compact_boundary_text(args, paths, mode)
         paths.boundary.write_text(text, encoding="utf-8")
         if args.activate:
             LOCAL_POINTER.write_text(active_boundary_text(paths.boundary), encoding="utf-8")
