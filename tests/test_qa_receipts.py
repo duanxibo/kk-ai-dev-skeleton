@@ -45,7 +45,7 @@ class ReceiptTest(unittest.TestCase):
         report.parent.mkdir(parents=True)
         report.write_text(text)
         with patch.object(guard, 'REPO_ROOT', self.root):
-            self.assertTrue(guard.evidence_ok('qa', {'evidence': '.gstack/qa-reports/result.md'}, self.config)[0])
+            self.assertFalse(guard.evidence_ok('qa', {'evidence': '.gstack/qa-reports/result.md'}, self.config)[0])  # Execution-only is not product acceptance.
         self.assertIs(loop.qa_check, guard.qa_check)
 
     def test_handwritten_pass_is_rejected(self):

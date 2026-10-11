@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+from acceptance_contract import scaffold as acceptance_scaffold
 from codex_mode import Mode, current_mode, parse_mode
 
 
@@ -292,6 +293,10 @@ def boundary_text(args: argparse.Namespace, paths: EvidencePaths, mode: Mode) ->
 
 {bullet_lines(args.non_goal)}
 
+## User-visible Acceptance
+
+{bullet_lines(args.must or [args.goal])}
+
 ## Decision Mode
 
 - Mode: `{mode.label}`
@@ -513,7 +518,7 @@ def compact_boundary_text(args: argparse.Namespace, paths: EvidencePaths, mode: 
                   "- Delegation check: 不把实现、测试或目录选择交给用户。",
                   "- 同一 agent 的 review 不等于独立验证。", "## Compact QA", "- Status: pending",
                   "- Command: 待运行", "- Result: 待记录真实结果", "- Execution Receipt: 待生成"])
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines) + "\n" + acceptance_scaffold(args.must or [args.goal])
 
 
 def write_files(paths: EvidencePaths, args: argparse.Namespace, mode: Mode) -> None:
@@ -529,7 +534,7 @@ def write_files(paths: EvidencePaths, args: argparse.Namespace, mode: Mode) -> N
     paths.boundary.parent.mkdir(parents=True, exist_ok=True)
     paths.requirement.write_text(requirement_text(args, paths, mode), encoding="utf-8")
     paths.review.write_text(review_text(args, paths, mode), encoding="utf-8")
-    paths.boundary.write_text(boundary_text(args, paths, mode), encoding="utf-8")
+    paths.boundary.write_text(boundary_text(args, paths, mode) + acceptance_scaffold(args.must or [args.goal]), encoding="utf-8")
     if args.activate:
         LOCAL_POINTER.write_text(active_boundary_text(paths.boundary), encoding="utf-8")
 

@@ -51,6 +51,7 @@ STATUS_LABELS = {
     "blocked": "卡住",
     "deferred": "延后",
     "in-progress": "进行中",
+    "needs-verification": "需要重新验证",
 }
 
 
@@ -85,6 +86,8 @@ class TaskSummary:
     stages: list[StageSummary]
     active: bool
     evidence_missing: list[str]
+    acceptance_status: str = "not-checked"
+    acceptance_issue: str = ""
 
 
 @dataclass(frozen=True)
@@ -478,7 +481,19 @@ def summarize_boundary(path: Path, active: Path | None) -> TaskSummary:
     lane = parse_bullet_field(section_lines(text, "Flow Lane"), "Lane") or "unknown"
     mode = parse_bullet_field(section_lines(text, "Decision Mode"), "Mode") or "unknown"
     owner, owner_source = owner_and_source(text)
+    is_active = bool(active and path.resolve() == active.resolve())
+    acceptance_status, acceptance_issue = 'not-checked', ''
+    if next_step(records) == 'complete':
+        if is_active:
+            from acceptance_contract import task_completion_check
+            valid, acceptance_issue = task_completion_check(REPO_ROOT, path)
+            acceptance_status = 'verified' if valid else 'needs-verification'
+            if not valid:
+                records.setdefault('qa', {})['status'] = 'needs-verification'
+        else:
+            acceptance_status = 'historical-record'
     next_key = next_step(records)
+    historical_label = '历史记录已收口，未验证当前验收' if acceptance_status == 'historical-record' else ''
     return TaskSummary(
         boundary=repo_relative(path),
         task=first_task_line(text, path),
@@ -487,18 +502,20 @@ def summarize_boundary(path: Path, active: Path | None) -> TaskSummary:
         lane=lane,
         mode=mode,
         current_step_key=next_key,
-        current_step_label=current_step(records),
-        current_step=current_step(records),
+        current_step_label=historical_label or current_step(records),
+        current_step=historical_label or current_step(records),
         progress=progress(records),
         next_step=next_key,
-        next_step_label=next_step_label(records),
+        next_step_label=historical_label or next_step_label(records),
         qa_status=stage_status(records, "qa"),
         implement_status=stage_status(records, "implement"),
         blocked=bool(blockers),
         blocked_reasons=blockers,
         stages=summarize_stages(records),
-        active=bool(active and path.resolve() == active.resolve()),
+        active=is_active,
         evidence_missing=evidence_missing(records),
+        acceptance_status=acceptance_status,
+        acceptance_issue=acceptance_issue,
     )
 
 
@@ -725,10 +742,14 @@ def render_explanation(payload: dict[str, object]) -> str:
         warnings = item.get("evidence_missing") or []
         reasons = item.get("blocked_reasons") or []
 
-        if current_step_key == "complete":
-            state_line = "已完成，没有卡住。"
-            next_line = "下一步：这项任务已经收口，可以继续开启下一段改进。"
-            confirm_line = "需要你确认：不需要。"
+        if item.get('acceptance_status') == 'historical-record':
+            state_line = "历史记录标记完成，当前验收尚未重新验证。"
+            next_line = "下一步：需要交付说明时，先重新验证对应任务。"
+            confirm_line = "需要你确认：下一项任务仍需明确授权。"
+        elif current_step_key == "complete":
+            state_line = "当前验收已验证，没有卡住。"
+            next_line = "下一步：核对下一项是否属于用户已明确授权的目标。"
+            confirm_line = "需要你确认：独立下一项任务需要新的授权。"
         elif blocked:
             state_line = f"还没完成，目前卡在 {next_step_label_value}。"
             reason_text = "；".join(human_blocker(reason) for reason in reasons) if reasons else "任务记录显示有卡住项，但没有写明原因"
@@ -807,7 +828,7 @@ def render_verification(payload: dict[str, object]) -> str:
                 qa_evidence = str(stage.get("evidence") or "")
                 break
 
-        complete_line = "已完成，可以按下面步骤验收。" if current_step_key == "complete" else "还没有完成最终收口，下面是当前任务记录里的验收计划。"
+        complete_line = "历史记录标记完成，当前验收尚未重新验证。" if item.get("acceptance_status") == "historical-record" else "已完成，可以按下面步骤验收。" if current_step_key == "complete" else "还没有完成最终收口，下面是当前任务记录里的验收计划。"
         lines.extend(
             [
                 f"{prefix}当前任务：{task}",

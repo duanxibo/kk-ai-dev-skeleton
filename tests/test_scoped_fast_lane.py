@@ -27,7 +27,8 @@ class ScopedContinuationTest(unittest.TestCase):
                                   task='demo', progress='7/7', blocked=False)
         with patch.object(continuation, 'active_boundary', return_value=Path('demo.md')), \
              patch.object(continuation, 'read_text', return_value=''), \
-             patch.object(continuation, 'summarize_boundary', return_value=summary):
+             patch.object(continuation, 'summarize_boundary', return_value=summary), \
+             patch('acceptance_contract.task_completion_check', return_value=(True, 'verified')):
             plan = continuation.build_continue_plan(argparse.Namespace(raw='继续做'))
         self.assertEqual(plan.auto_chain_status, 'needs-next-task-authorization')
         self.assertTrue(any('授权' in s for s in plan.needs_user_confirmation))
@@ -45,7 +46,7 @@ class CompactEvidenceTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         target = self.root / '.gstack/scripts'
         target.mkdir(parents=True)
-        for name in ('autopilot_bootstrap.py', 'codex_mode.py'):
+        for name in ('autopilot_bootstrap.py', 'codex_mode.py', 'acceptance_contract.py', 'evidence_contract.py', 'adapter_runtime.py'):
             shutil.copy2(SCRIPTS / name, target / name)
         result = subprocess.run([
             sys.executable, str(target / 'autopilot_bootstrap.py'),
@@ -80,12 +81,37 @@ class CompactEvidenceTest(unittest.TestCase):
         adapter.mkdir(parents=True)
         (adapter / 'runtime.json').write_text(json.dumps({
             'version': 1, 'name': 'default', 'paths': {'implementation_prefixes': ['src/']},
-            'commands': {'verify': [sys.executable, '-c', 'print("verified")']}, 'gates': {},
+            'commands': {'qa_verify': [sys.executable, '-c', 'assert 2 + 3 == 5']}, 'gates': {},
         }))
-        path, receipt = qa_verify.verify(self.root, ['verify'])
+        self.file.write_text(self.file.read_text().replace('\"command_keys\": []', '\"command_keys\": [\"qa_verify\"]'))
+        path, receipt = qa_verify.verify(self.root, ['qa_verify'], boundary=self.path)
         self.file.write_text(self.file.read_text().replace('- Execution Receipt: 待生成',
             '- Execution Receipt: ' + path.relative_to(self.root).as_posix()))
         self.assertTrue(self.check_evidence('qa'))
+
+    def test_default_four_file_scaffold_can_complete_bound_acceptance(self):
+        result = subprocess.run([
+            sys.executable, str(self.root / '.gstack/scripts/autopilot_bootstrap.py'),
+            '--topic', 'full-fix', '--goal', 'Correct addition', '--allowed', 'src/app.py',
+            '--must', 'Adding two and three yields five', '--verification', 'product tests',
+            '--ai-reviewed', '--format', 'json',
+        ], capture_output=True, text=True, check=True)
+        files = json.loads(result.stdout)['files']
+        self.assertGreater(len(set(files.values())), 1)
+        boundary = self.root / files['boundary']
+        boundary.write_text(boundary.read_text().replace('"command_keys": []', '"command_keys": ["qa_verify"]'))
+        adapter = self.root / 'adapters/default'
+        adapter.mkdir(parents=True)
+        (adapter / 'runtime.json').write_text(json.dumps({
+            'version': 1, 'name': 'default', 'paths': {'implementation_prefixes': []},
+            'commands': {'qa_verify': [sys.executable, '-c', 'assert 2 + 3 == 5']},
+        }))
+        receipt_path, receipt = qa_verify.verify(self.root, [], boundary=boundary)
+        self.assertEqual(receipt['status'], 'passed')
+        from acceptance_contract import qa_completion_check
+        self.assertTrue(qa_completion_check(self.root,
+            '- Execution Receipt: ' + receipt_path.relative_to(self.root).as_posix(),
+            boundary=boundary)[0])
 
     def test_loop_and_team_guard_share_compact_review_contract(self):
         with patch.object(loop, 'REPO_ROOT', self.root):
@@ -122,6 +148,12 @@ class CompactEvidenceTest(unittest.TestCase):
     def test_standard_lane_cannot_use_compact_exception(self):
         self.file.write_text(self.file.read_text().replace('- Lane: `fast-lane`', '- Lane: `standard`'))
         self.assertFalse(self.check_evidence('plan-eng-review'))
+
+    def test_empty_review_field_does_not_consume_the_next_line(self):
+        self.file.write_text(self.file.read_text().replace('- Scope: src/demo.py', '- Scope:'))
+        self.assertFalse(self.check_evidence('plan-eng-review'))
+        with patch.object(loop, 'REPO_ROOT', self.root):
+            self.assertNotEqual(loop.eng_review_evidence_check_for(self.path).status, 'pass')
 
     def test_missing_review_section_is_rejected(self):
         self.file.write_text(self.file.read_text().replace('## Compact Review', '## Missing Review'))

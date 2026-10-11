@@ -174,5 +174,9 @@ Codex / 维护者背后的确定性本机准备入口：
 - `.gstack/scripts/qa_verify.py`：执行 adapter 白名单验证命令并生成绑定源码状态的 receipt。
 - `.gstack/scripts/source_coverage.py`：真实实现文件的 adapter 覆盖审计；骨架自身使用 `adapters/skeleton/`。
 - `.gstack/scripts/autopilot_bootstrap.py`：简短单记录 fast-lane；正式 kickoff 只自动选择通过 `--allowed` 明确范围、经语义复核且不涉及风险或 UI/API/数据的任务。
-- `scripts/init_project.py`：`.gstack/runtime-install.json` 记录安装哈希；`--upgrade-runtime` 只升级未定制且有基线的文件。
+- `scripts/init_project.py`：`.gstack/runtime-install.json` 记录安装哈希；`--upgrade-runtime` 调用 runtime_upgrade 整包预检、隔离验证并在写入失败时回退；有定制冲突整包停止。
 - plugin manifest 的 `version` 与 runtime bundle 的 `release_version`：发布版本；配置 schema `version` 独立维护。
+
+- `.gstack/scripts/acceptance_contract.py`：验收项、指定命令和任务语义绑定；执行回执与任务完成分开验证。
+- `.gstack/scripts/target_verification.py`：接入项目明确配置产品测试、可选独立 CI，不推测命令或覆盖现有 pipeline。
+- `.gstack/scripts/runtime_upgrade.py`：升级预检、隔离兼容、写入与恢复模块。

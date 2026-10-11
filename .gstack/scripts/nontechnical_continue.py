@@ -14,7 +14,7 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 
-from gstack_dashboard import active_boundary, read_text, summarize_boundary
+from gstack_dashboard import REPO_ROOT, active_boundary, read_text, summarize_boundary
 
 
 STAGE_ACTIONS = {
@@ -127,6 +127,12 @@ def build_continue_plan(args: argparse.Namespace) -> ContinuePlan:
     text = read_text(active)
     summary = summarize_boundary(active, active)
     task_done = summary.current_step_key == "complete"
+    if task_done:
+        from acceptance_contract import task_completion_check
+        task_done, issue = task_completion_check(REPO_ROOT, active)
+        if not task_done:
+            from dataclasses import replace
+            summary = replace(summary, current_step_key='qa', current_step_label='验收需要重新验证', progress='6/7')
     status = "current-task-complete" if task_done else "continue-current-task"
     reason = "当前任务记录已经显示全部完成。" if task_done else "当前任务记录还有未完成阶段，可以继续推进。"
     return ContinuePlan(

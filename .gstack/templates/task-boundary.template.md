@@ -255,3 +255,11 @@ required_gates:
 - 正常情况下由 `$kk-task-kickoff` 自动完成
 - 只有维护脚本、排障或手工修复时，才执行：
   `bash .gstack/scripts/use_boundary.sh <this-boundary-file>`
+
+## Acceptance Verification
+
+将每个 User-visible Acceptance 验收项映射到 active adapter 明确指定的验收命令。下面的空 command_keys 是待配置状态，不能完成 QA；Codex 根据实际测试补齐，不能用框架 smoke 替代产品断言。
+
+```json
+{"version":1,"criteria":[{"id":"AC-1","description":"填写本次具体可观察验收行为","command_keys":[]}]}
+```

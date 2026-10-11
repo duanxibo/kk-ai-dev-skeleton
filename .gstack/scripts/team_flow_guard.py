@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from evidence_contract import gate_block
+from acceptance_contract import qa_completion_check
 from typing import Any
 
 from adapter_runtime import load_adapter_runtime
@@ -400,7 +401,7 @@ def compact_evidence_ok(command: str, evidence: str, config: dict[str, Any]) -> 
     if not any(line.strip() for line in lines):
         return False
     if command in {"qa", "qa-only"}:
-        return field(section(text, "Compact QA"), "Status") == "done" and qa_check(REPO_ROOT, text)[0]
+        return field(section(text, "Compact QA"), "Status") == "done" and qa_completion_check(REPO_ROOT, text, boundary=evidence)[0]
     if command in {"plan-ceo-review", "plan-eng-review"}:
         _required, missing, forbidden = review_check(text)
         return not missing and not forbidden
@@ -408,7 +409,7 @@ def compact_evidence_ok(command: str, evidence: str, config: dict[str, Any]) -> 
     return all(field(requirement, key) for key in ("Goal", "Acceptance", "Non-goals"))
 
 
-def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) -> tuple[bool, str | None]:
+def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any], *, boundary: str | None = None) -> tuple[bool, str | None]:
     evidence = record.get("evidence", "")
     if not evidence:
         return False, "missing evidence path"
@@ -435,7 +436,7 @@ def evidence_ok(command: str, record: dict[str, str], config: dict[str, Any]) ->
         if missing or forbidden:
             return False, f"engineering review missing {missing}; forbidden delegations {forbidden}"
     if command in {"qa", "qa-only"}:
-        return qa_check(REPO_ROOT, text)
+        return qa_completion_check(REPO_ROOT, text, boundary=boundary or (evidence if is_compact(text) else None))
     return True, None
 
 
@@ -683,6 +684,7 @@ def validate_commands(
     config: dict[str, Any],
     *,
     allow_qa_only: bool,
+    boundary: str | None = None,
 ) -> list[str]:
     failures: list[str] = []
     for command in required:
@@ -709,7 +711,7 @@ def validate_commands(
             )
             continue
 
-        evidence_valid, evidence_error = evidence_ok(command, record, config)
+        evidence_valid, evidence_error = evidence_ok(command, record, config, boundary=boundary)
         if not evidence_valid:
             failures.append(
                 f"Required command `{record_name or command}` has invalid evidence: {evidence_error}."
@@ -1042,6 +1044,7 @@ def main() -> int:
                 required,
                 config,
                 allow_qa_only=True,
+                boundary=boundary,
             )
         )
 
@@ -1052,6 +1055,7 @@ def main() -> int:
                 ["domain-spec-readiness"],
                 config,
                 allow_qa_only=True,
+                boundary=boundary,
             )
         )
 

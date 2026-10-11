@@ -1805,11 +1805,14 @@ def check_stage_write_back_contract() -> ContractResult:
         adapter.mkdir(parents=True)
         (adapter / "runtime.json").write_text(json.dumps({
             "version": 1, "name": "default", "paths": {"implementation_prefixes": []},
-            "commands": {"verify": [sys.executable, "-c", "print('contract verified')"]}, "gates": {},
+            "commands": {"verify": [sys.executable, "-c", "assert 2 + 3 == 5"]}, "gates": {},
+            "qa_policy": {"acceptance_command_keys": ["verify"]},
         }))
         boundary = root / ".gstack/task-boundaries/contract.md"
         boundary.parent.mkdir(parents=True)
-        boundary.write_text("# Contract\n## GStack Required Flow\n- qa:\n  status: pending\n  evidence:\n")
+        boundary.write_text("# Contract\n## User-visible Acceptance\n- Verification can complete the active QA stage\n## Acceptance Verification\n```json\n" + json.dumps({
+            "version": 1, "criteria": [{"id": "AC-1", "description": "Verification can complete the active QA stage", "command_keys": ["verify"]}]
+        }) + "\n```\n## GStack Required Flow\n- qa:\n  status: pending\n  evidence:\n")
         report = root / ".gstack/qa-reports/contract.md"
         report.parent.mkdir(parents=True)
         report.write_text("- Command: never executed\n- Result: claimed pass\n")
@@ -1823,7 +1826,7 @@ def check_stage_write_back_contract() -> ContractResult:
             for result in [attempt("--dry-run"), attempt("--execute", status="failed"), attempt("--execute")]:
                 if result.performed:
                     failures.append("dry-run, failed or handwritten QA must refuse write-back")
-            receipt_path, _receipt = qa_verify.verify(root, ["verify"])
+            receipt_path, _receipt = qa_verify.verify(root, ["verify"], boundary=boundary)
             report.write_text("- Execution Receipt: " + receipt_path.relative_to(root).as_posix() + "\n")
             passed = attempt("--execute")
             if not passed.performed:

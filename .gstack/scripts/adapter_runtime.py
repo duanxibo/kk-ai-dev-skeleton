@@ -165,6 +165,16 @@ def _validate_payload(payload: dict[str, Any]) -> None:
             isinstance(value, list) and value and all(isinstance(v, str) and v for v in value)
         ):
             raise ValueError(f"commands.{key}: expected command string or non-empty string list")
+    policy = payload.get("qa_policy")
+    if policy is not None:
+        if not isinstance(policy, dict):
+            raise ValueError("qa_policy: expected object")
+        keys = policy.get("acceptance_command_keys")
+        if not isinstance(keys, list) or not keys or any(not isinstance(k, str) or not k for k in keys):
+            raise ValueError("qa_policy.acceptance_command_keys: expected nonempty command key list")
+        for key in keys:
+            if not isinstance(payload.get("commands", {}).get(key), list):
+                raise ValueError(f"qa_policy.acceptance_command_keys: commands.{key} must be an argv array")
     rules = payload.get("gates", {}).get("data_access_status_requirements", [])
     if not isinstance(rules, list):
         raise ValueError("gates.data_access_status_requirements: expected list")

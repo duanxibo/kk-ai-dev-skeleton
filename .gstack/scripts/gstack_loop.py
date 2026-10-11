@@ -60,7 +60,8 @@ from pathlib import Path
 from typing import Any
 
 from gstack_dashboard import dashboard_payload
-from evidence_contract import ENG_REQUIRED, ENG_FORBIDDEN, review_check, qa_check
+from evidence_contract import ENG_REQUIRED, ENG_FORBIDDEN, review_check, qa_check, is_compact
+from acceptance_contract import qa_completion_check
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -3304,7 +3305,10 @@ def update_required_flow_stage(
             lines.insert(stage_end, f"  note: {note}")
         updated.append("note")
 
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    result_text = "\n".join(lines) + "\n"
+    if stage_key == "qa" and is_compact(result_text):
+        result_text = re.sub(r"(## Compact QA\n.*?^- Status: )[^\n]+", r"\g<1>done", result_text, flags=re.M | re.S)
+    path.write_text(result_text, encoding="utf-8")
     return updated
 
 
@@ -3397,7 +3401,7 @@ def maybe_write_back_stage(
         if not evidence_file.is_file():
             valid, issue = False, "stage evidence must be a file"
         elif stage_key == "qa":
-            valid, issue = qa_check(REPO_ROOT, evidence_file.read_text(encoding="utf-8"))
+            valid, issue = qa_completion_check(REPO_ROOT, evidence_file.read_text(encoding="utf-8"), boundary=candidate.boundary)
         else:
             check = eng_review_evidence_check_for(evidence)
             valid, issue = check.status == "pass", check.summary
